@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# INKFLOW
 
-## Getting Started
+Plataforma web para tatuadores: página pública con portfolio, consultas, asistente de IA, solicitudes, clientes y turnos.
+Arranca como microapp para un tatuador y está preparada para funcionar como SaaS multi-tatuador.
 
-First, run the development server:
+> Estado: **Fase 0 completa** (base técnica). Todavía no hay funciones de producto. Ver [docs/ROADMAP.md](docs/ROADMAP.md).
+
+## Tecnologías
+
+| Capa | Herramienta |
+|---|---|
+| App | Next.js 16 (App Router, Server Actions), React 19, TypeScript 5.9 |
+| Estilos | Tailwind CSS 4 |
+| Datos, auth y archivos | Supabase (Postgres con RLS, Auth, Storage) |
+| Validación | zod 4 |
+| Tests | Vitest (unit + integración), Playwright (E2E móvil y desktop) |
+| Hosting previsto | Vercel + Supabase |
+
+## Requisitos
+
+- Node.js 22 o superior
+- pnpm 10 (`corepack enable`)
+- Docker (solo para la base de datos local)
+
+## Instalación y ejecución local
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+cp .env.example .env.local
+pnpm db:start        # levanta Supabase local e imprime URL y claves
+# completá .env.local con API URL, Publishable key y Secret key
+pnpm dev             # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Para frenar la base: `pnpm db:stop`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Configuración
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Todas las variables están documentadas en [.env.example](.env.example). La app valida las variables al usarlas y falla con un mensaje que indica cuál falta.
 
-## Learn More
+- `NEXT_PUBLIC_*` llegan al navegador. Nunca pongas un secreto con ese prefijo.
+- `SUPABASE_SECRET_KEY` saltea RLS: se usa solo en código de servidor (`src/server`).
 
-To learn more about Next.js, take a look at the following resources:
+El registro público de cuentas está **desactivado** (`supabase/config.toml`). Las cuentas de tatuadores se crean por invitación.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Testing
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+pnpm lint
+pnpm typecheck
+pnpm test            # unit; los de integración se saltean si no hay Supabase configurado
+pnpm build && pnpm e2e
+```
 
-## Deploy on Vercel
+Tests de integración contra la base local:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+pnpm db:start
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321 \
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<publishable key local> \
+pnpm test
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Si Playwright no puede descargar browsers, usá uno instalado con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/ruta/a/chrome pnpm e2e`.
+
+CI (GitHub Actions) corre lint, typecheck, unit, build, E2E y los tests de integración con Supabase local en cada PR.
+
+## Despliegue
+
+Pendiente (se documenta al cerrar la Fase 1). Plan: proyecto Supabase en la región São Paulo, app en Vercel y migraciones aplicadas con `supabase db push` desde CI, nunca a mano.
+
+## Documentación
+
+- [Arquitectura](docs/ARCHITECTURE.md)
+- [Base de datos](docs/DATABASE.md)
+- [Seguridad](docs/SECURITY.md)
+- [Roadmap](docs/ROADMAP.md)
