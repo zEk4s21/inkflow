@@ -46,6 +46,7 @@ Navegador ──► Next.js (Vercel)
 
 - `middleware.ts` pasa a llamarse `proxy.ts` (ver `node_modules/next/dist/docs/01-app/01-getting-started/16-proxy.md`).
 - `cacheComponents` está activo: los datos por request deben ir dentro de `<Suspense>` o en rutas dinámicas. Ningún dato privado se cachea entre usuarios.
+- `partialPrefetching` está **desactivado**: con él activo, una ruta dinámica inexistente (`/artist/no-existe`) respondía 200 en vez de 404, porque el shell empieza a transmitirse antes de `notFound()`. Hay un test E2E que lo cubre.
 - `AGENTS.md` lo genera Next y apunta a la documentación local de la versión instalada.
 
 ## Integraciones
@@ -65,3 +66,9 @@ Navegador ──► Next.js (Vercel)
 - Primitivas en `src/components/ui`: Button, Spinner, TextField, TextAreaField, SelectField, Badge, RequestStatusBadge, EmptyState, Skeleton, ConfirmDialog (`<dialog>` nativo).
 - Animaciones solo con CSS; todas se desactivan con `prefers-reduced-motion`.
 - Los estados de solicitud viven en `src/config/request-status.ts` (etiqueta y tono), fuente única para UI y base de datos.
+
+## Página pública
+
+- Rutas: `/artist/[slug]` y `/artist/[slug]/work/[workId]`, prerenderizadas con `generateStaticParams`.
+- Los datos salen de `src/server/artists/public-artist.ts`. Hoy devuelve datos demo (`demo-data.ts`); en la Fase 2 consulta Supabase sin cambiar las páginas.
+- Mientras `isDemo` es `true` se muestra un aviso fijo de contenido de ejemplo.

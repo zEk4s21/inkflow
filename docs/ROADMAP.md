@@ -13,8 +13,8 @@ Alcance: microapp para un tatuador, con base preparada para venderse como SaaS.
 ## Fase 1 · Diseño y estructura visual (en curso)
 
 - [x] 1.1 Tokens, tipografías y primitivas UI: catálogo en `/dev/ui` (solo desarrollo). **Pendiente de aprobación visual.** Falta el componente Toast (se suma con los formularios reales).
-- [ ] 1.2 Página pública del artista (contenido demo marcado como tal)
-- [ ] 1.3 Portfolio con filtros y ficha
+- [x] 1.2 Página pública del artista en `/artist/esti`: portada, perfil, proceso, FAQ y contacto. Contenido demo con aviso visible; formulario y asistente marcados como "Próximamente".
+- [x] 1.3 Portfolio con filtros (solo categorías con trabajos) y ficha de trabajo con navegación anterior/siguiente. Fallback si una foto no carga.
 - [ ] 1.4 Shell del panel (desktop, tablet y móvil) con estados vacíos
 
 ## Fase 2 · Fundamentos funcionales
@@ -46,4 +46,5 @@ Presupuestos y pagos manuales, cuidados y seguimiento, auditoría, onboarding de
 
 ## Problemas conocidos
 
-- Ninguno abierto.
+- Las fotos demo son recortes de capturas de Instagram (baja calidad) y no se versionan (`public/demo/` en `.gitignore`). En un clon limpio se ve el reemplazo "Imagen no disponible". Se reemplazan por originales en la Fase 2.
+- La biografía de Esteban no está cargada; textos de proceso y FAQ son provisorios.

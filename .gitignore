@@ -45,3 +45,6 @@ next-env.d.ts
 /test-results/
 /playwright-report/
 /blob-report/
+
+# fotos demo tomadas de capturas de Instagram (no se versionan)
+/public/demo/
