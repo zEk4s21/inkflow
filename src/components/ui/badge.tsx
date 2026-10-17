@@ -3,7 +3,7 @@ import { cn } from "@/lib/cn";
 import { REQUEST_STATUS_META, type RequestStatus, type StatusTone } from "@/config/request-status";
 
 const tones: Record<StatusTone, string> = {
-  accent: "text-accent bg-accent-soft",
+  accent: "text-accent-text bg-accent-soft",
   info: "text-info bg-info/10",
   warning: "text-warning bg-warning/10",
   success: "text-success bg-success/10",

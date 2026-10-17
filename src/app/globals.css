@@ -2,8 +2,9 @@
 
 /*
  * Sistema de diseño de INKFLOW.
- * Contrastes verificados (WCAG): fg 17:1, fg-muted ≥ 6.5:1, fg-subtle ≥ 4.5:1 sobre bg/surface-1/surface-2,
- * accent 5.4:1 sobre bg. Texto sobre accent = ink (5.4:1).
+ * Paleta basada en la identidad de @tattoobyesti: obra 100% black & grey, rojo como único acento.
+ * Contrastes verificados (WCAG): fg 17:1, fg-muted ≥ 6.5:1, fg-subtle ≥ 4.5:1 sobre bg/surface-1/surface-2.
+ * accent (relleno) lleva texto blanco (4.7:1). Para texto rojo sobre fondo oscuro usar accent-text (5.6:1).
  */
 @theme {
   --color-ink: #0a0a0b;
@@ -17,16 +18,17 @@
   --color-fg-muted: #a9a49c;
   --color-fg-subtle: #8a857e;
 
-  --color-accent: #d0694b;
-  --color-accent-hover: #dc7a5d;
-  --color-accent-soft: rgb(208 105 75 / 0.12);
+  --color-accent: #d9322b;
+  --color-accent-hover: #c62a24;
+  --color-accent-text: #e8574b;
+  --color-accent-soft: rgb(217 50 43 / 0.14);
 
   --color-success: #7db592;
   --color-warning: #d9ae62;
   --color-danger: #e57461;
   --color-info: #93a7c4;
 
-  --font-display: var(--font-instrument-serif), ui-serif, Georgia, serif;
+  --font-display: var(--font-anton), "Arial Narrow", Impact, sans-serif;
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 
   --radius-sm: 6px;
@@ -69,7 +71,7 @@
   }
   ::selection {
     background: var(--color-accent);
-    color: var(--color-ink);
+    color: #fff;
   }
   :focus-visible {
     outline: 2px solid var(--color-accent);

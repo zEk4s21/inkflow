@@ -60,8 +60,8 @@ Navegador ──► Next.js (Vercel)
 
 ## Sistema de diseño
 
-- Tokens en `src/app/globals.css` (`@theme` de Tailwind 4): superficies `ink` → `surface-3`, texto `fg` / `fg-muted` / `fg-subtle`, acento óxido `accent` y tonos de estado. Contrastes WCAG AA verificados.
-- Tipografías: Instrument Serif (títulos, `font-display`) y Geist (interfaz), servidas por `next/font`.
+- Tokens en `src/app/globals.css` (`@theme` de Tailwind 4): superficies `ink` → `surface-3`, texto `fg` / `fg-muted` / `fg-subtle`, acento rojo `accent` (relleno, con texto blanco) y `accent-text` (texto rojo sobre oscuro), tomado de la identidad de @tattoobyesti, y tonos de estado. Contrastes WCAG AA verificados.
+- Tipografías: Anton (títulos condensados, `font-display`, en línea con la gráfica de sus reels) y Geist (interfaz), servidas por `next/font`.
 - Primitivas en `src/components/ui`: Button, Spinner, TextField, TextAreaField, SelectField, Badge, RequestStatusBadge, EmptyState, Skeleton, ConfirmDialog (`<dialog>` nativo).
 - Animaciones solo con CSS; todas se desactivan con `prefers-reduced-motion`.
 - Los estados de solicitud viven en `src/config/request-status.ts` (etiqueta y tono), fuente única para UI y base de datos.

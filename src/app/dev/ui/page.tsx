@@ -21,6 +21,7 @@ const swatches = [
   ["fg-muted", "bg-fg-muted"],
   ["fg", "bg-fg"],
   ["accent", "bg-accent"],
+  ["accent-text", "bg-accent-text"],
 ] as const;
 
 /** Catálogo del sistema de diseño. Solo existe en desarrollo. */
@@ -31,17 +32,17 @@ export default function DesignSystemPage() {
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-20 px-4 py-16 sm:px-8">
       <header className="flex flex-col gap-4 animate-rise">
         <p className="text-xs font-medium tracking-[0.2em] text-fg-subtle uppercase">Sistema de diseño · v0.1</p>
-        <h1 className="font-display text-6xl leading-[0.95] sm:text-8xl">
-          Del boceto <em className="text-accent">a la piel.</em>
+        <h1 className="font-display text-6xl leading-[0.95] uppercase sm:text-8xl">
+          Del boceto <span className="text-accent-text">a la piel</span>
         </h1>
         <p className="max-w-xl text-lg leading-relaxed text-fg-muted">
-          Tipografía editorial para los títulos, sans precisa para la interfaz y un único acento óxido usado con
-          moderación.
+          Negro, grafito y blanco para que la obra black &amp; grey sea la protagonista. Títulos condensados con
+          carácter y un único acento rojo usado con moderación.
         </p>
       </header>
 
       <Section title="Color">
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-9">
+        <div className="grid grid-cols-5 gap-3 sm:grid-cols-10">
           {swatches.map(([name, cls]) => (
             <div key={name} className="flex flex-col gap-2">
               <div className={`${cls} aspect-square rounded-md border border-line`} />
@@ -53,8 +54,8 @@ export default function DesignSystemPage() {
 
       <Section title="Tipografía">
         <div className="flex flex-col gap-6">
-          <p className="font-display text-5xl sm:text-6xl">Tradicional japonés</p>
-          <p className="font-display text-3xl italic text-fg-muted">Blackwork, fine line y realismo</p>
+          <p className="font-display text-5xl uppercase sm:text-6xl">Black &amp; Grey</p>
+          <p className="font-display text-3xl text-fg-muted">Puntillismo de arrastre · Blackwork</p>
           <p className="max-w-prose leading-relaxed text-fg-muted">
             Texto de interfaz en Geist. Pensado para leerse cómodo en el celular, con interlineado amplio y contraste
             suficiente en fondos oscuros. Precio de ejemplo: {formatMoney(185000)}.

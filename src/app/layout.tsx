@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Instrument_Serif } from "next/font/google";
+import { Anton, Geist } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -7,11 +7,10 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
-const instrumentSerif = Instrument_Serif({
-  variable: "--font-instrument-serif",
+const anton = Anton({
+  variable: "--font-anton",
   subsets: ["latin"],
   weight: "400",
-  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
@@ -23,7 +22,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="es-AR" className={`${geistSans.variable} ${instrumentSerif.variable} h-full`}>
+    <html lang="es-AR" className={`${geistSans.variable} ${anton.variable} h-full`}>
       <body className="flex min-h-full flex-col">{children}</body>
     </html>
   );
