@@ -10,9 +10,9 @@ Alcance: microapp para un tatuador, con base preparada para venderse como SaaS.
 | 0.2 Documentación base | Hecho | `README.md`, `docs/` |
 | 0.3 Supabase local + `.env.example` + validación de variables | Hecho | Test de integración: registro público rechazado |
 
-## Fase 1 · Diseño y estructura visual (siguiente)
+## Fase 1 · Diseño y estructura visual (en curso)
 
-- [ ] 1.1 Tokens, tipografías y primitivas UI
+- [x] 1.1 Tokens, tipografías y primitivas UI: catálogo en `/dev/ui` (solo desarrollo). **Pendiente de aprobación visual.** Falta el componente Toast (se suma con los formularios reales).
 - [ ] 1.2 Página pública del artista (contenido demo marcado como tal)
 - [ ] 1.3 Portfolio con filtros y ficha
 - [ ] 1.4 Shell del panel (desktop, tablet y móvil) con estados vacíos
