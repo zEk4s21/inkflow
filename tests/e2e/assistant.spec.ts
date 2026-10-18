@@ -16,6 +16,9 @@ test.describe("Ink Assistant sin configurar", () => {
   });
 
   test("la página pública lo indica y manda al formulario", async ({ page }) => {
+    await page.goto(`/artist/${studio.slug}`);
+    await expect(page.getByRole("heading", { name: "¿Tenés referencias?" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Armar mi idea con el asistente" })).toHaveCount(0);
     await page.goto(`/artist/${studio.slug}/assistant`);
     await expect(page.getByRole("status")).toContainText("El asistente no está disponible por ahora");
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
