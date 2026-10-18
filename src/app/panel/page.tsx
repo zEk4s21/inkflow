@@ -3,14 +3,20 @@ import Link from "next/link";
 import { CopyLinkButton } from "@/components/panel/copy-link-button";
 import { PanelPageHeader, PendingBadge } from "@/components/panel/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
+import { RequestList } from "@/components/panel/request-list";
 import { requireWorkspace } from "@/server/auth/panel-context";
+import { getWorkspaceRegional, listRequests } from "@/server/requests/queries";
 import { getPublishedWorks } from "@/server/artists/public-artist";
 
 export const metadata: Metadata = { title: "Inicio" };
 
 export default async function PanelHome() {
   const { workspace } = await requireWorkspace();
-  const works = await getPublishedWorks(workspace.slug);
+  const [works, newRequests, regional] = await Promise.all([
+    getPublishedWorks(workspace.slug),
+    listRequests(workspace.id, { status: "new", limit: 5 }),
+    getWorkspaceRegional(workspace.id),
+  ]);
 
   return (
     <>
@@ -22,13 +28,21 @@ export default async function PanelHome() {
             <h2 id="nuevas" className="text-sm font-medium text-fg-muted">
               Solicitudes nuevas
             </h2>
-            <PendingBadge phase="la Fase 2" />
+            {newRequests.length > 0 && (
+              <Link href="/panel/solicitudes" className="text-sm text-fg-muted hover:text-fg">
+                Ver todas
+              </Link>
+            )}
           </div>
-          <EmptyState
-            title="Todavía no hay solicitudes"
-            description="Cuando alguien te consulte desde tu página, la vas a ver acá. Compartí tu link en la bio de Instagram."
-            action={<CopyLinkButton path={`/artist/${workspace.slug}`} />}
-          />
+          {newRequests.length === 0 ? (
+            <EmptyState
+              title="No hay solicitudes nuevas"
+              description="Cuando alguien te consulte desde tu página, la vas a ver acá. Compartí tu link en la bio de Instagram."
+              action={<CopyLinkButton path={`/artist/${workspace.slug}`} />}
+            />
+          ) : (
+            <RequestList requests={newRequests} regional={regional} />
+          )}
         </section>
 
         <section aria-labelledby="turnos" className="flex flex-col gap-4">

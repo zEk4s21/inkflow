@@ -1,28 +1,32 @@
 import type { Metadata } from "next";
-import { PanelPageHeader, PendingBadge } from "@/components/panel/page-header";
-import { RequestStatusBadge } from "@/components/ui/badge";
+import { CopyLinkButton } from "@/components/panel/copy-link-button";
+import { PanelPageHeader } from "@/components/panel/page-header";
+import { RequestList } from "@/components/panel/request-list";
 import { EmptyState } from "@/components/ui/empty-state";
-import { REQUEST_STATUSES } from "@/config/request-status";
+import { requireWorkspace } from "@/server/auth/panel-context";
+import { getWorkspaceRegional, listRequests } from "@/server/requests/queries";
 
 export const metadata: Metadata = { title: "Solicitudes" };
 
-export default function RequestsPage() {
+export default async function RequestsPage() {
+  const { workspace } = await requireWorkspace();
+  const [requests, regional] = await Promise.all([listRequests(workspace.id), getWorkspaceRegional(workspace.id)]);
+
   return (
     <>
       <PanelPageHeader
         title="Solicitudes"
-        description="Cada consulta se convierte en un proyecto que avanza por estos estados."
-        actions={<PendingBadge phase="la Fase 2" />}
+        description="Las consultas que llegan desde el formulario de tu página. Cambiar estados y agregar notas llega en la Fase 2.6."
       />
-      <div className="flex flex-wrap gap-2" aria-label="Estados posibles">
-        {REQUEST_STATUSES.map((status) => (
-          <RequestStatusBadge key={status} status={status} />
-        ))}
-      </div>
-      <EmptyState
-        title="Sin solicitudes por ahora"
-        description="Cuando el formulario de tu página esté activo, cada consulta va a aparecer acá con sus datos, referencias, notas privadas e historial."
-      />
+      {requests.length === 0 ? (
+        <EmptyState
+          title="Sin solicitudes por ahora"
+          description="Cuando alguien complete el formulario de tu página, la consulta aparece acá."
+          action={<CopyLinkButton path={`/artist/${workspace.slug}`} />}
+        />
+      ) : (
+        <RequestList requests={requests} regional={regional} />
+      )}
     </>
   );
 }

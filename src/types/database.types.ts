@@ -43,6 +43,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"clients": {
+                  Row: {
+                    "created_at": string,"deleted_at": string | null,"email": string | null,"id": string,"instagram_handle": string | null,"name": string,"phone": string | null,"updated_at": string,"workspace_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"deleted_at"?: string | null,"email"?: string | null,"id"?: string,"instagram_handle"?: string | null,"name": string,"phone"?: string | null,"updated_at"?: string,"workspace_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"deleted_at"?: string | null,"email"?: string | null,"id"?: string,"instagram_handle"?: string | null,"name"?: string,"phone"?: string | null,"updated_at"?: string,"workspace_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "clients_workspace_id_fkey"
+      columns: ["workspace_id"]
+isOneToOne: false
+      referencedRelation: "workspaces"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"portfolio_items": {
                   Row: {
                     "alt_text": string,"body_zone": string | null,"category": string,"created_at": string,"deleted_at": string | null,"description": string | null,"id": string,"image_height": number,"image_path": string,"image_width": number,"position": number,"status": string,"title": string,"updated_at": string,"workspace_id": string
@@ -57,6 +77,32 @@ isOneToOne: false
                   Relationships: [
                     {
       foreignKeyName: "portfolio_items_workspace_id_fkey"
+      columns: ["workspace_id"]
+isOneToOne: false
+      referencedRelation: "workspaces"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"tattoo_requests": {
+                  Row: {
+                    "body_zone": string | null,"client_id": string,"created_at": string,"deleted_at": string | null,"id": string,"idea": string,"size_label": string | null,"source": string,"status": string,"submitter_hash": string | null,"updated_at": string,"workspace_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "body_zone"?: string | null,"client_id": string,"created_at"?: string,"deleted_at"?: string | null,"id"?: string,"idea": string,"size_label"?: string | null,"source"?: string,"status"?: string,"submitter_hash"?: string | null,"updated_at"?: string,"workspace_id": string
+                  }
+                  Update: {
+                    "body_zone"?: string | null,"client_id"?: string,"created_at"?: string,"deleted_at"?: string | null,"id"?: string,"idea"?: string,"size_label"?: string | null,"source"?: string,"status"?: string,"submitter_hash"?: string | null,"updated_at"?: string,"workspace_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "tattoo_requests_client_id_fkey"
+      columns: ["client_id"]
+isOneToOne: false
+      referencedRelation: "clients"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "tattoo_requests_workspace_id_fkey"
       columns: ["workspace_id"]
 isOneToOne: false
       referencedRelation: "workspaces"
