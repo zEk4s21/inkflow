@@ -24,7 +24,7 @@ Alcance: microapp para un tatuador, con base preparada para venderse como SaaS.
 - [x] 2.3 Perfil y página pública editables desde Ajustes (nombre, bio, estilos, estudio, Instagram, publicar/ocultar, proceso y FAQ). La página pública lee de Supabase; los trabajos siguen siendo demo hasta 2.4
 - [x] 2.4 Portfolio administrable: subir foto (se achica en el navegador), título, categoría, zona, descripción, texto alternativo, publicar/ocultar, reordenar y borrar. La página pública lee solo trabajos publicados
 - [x] 2.5 Formulario de consulta en la página pública con Cloudflare Turnstile, campo trampa y límite de envíos (3 por hora por conexión, 30 por hora por estudio). Cada consulta crea o reutiliza el cliente por email o WhatsApp. En el panel: lista y detalle de solicitudes, lista de clientes y solicitudes nuevas en Inicio (solo lectura)
-- [ ] 2.6 Solicitudes: estados, historial, notas
+- [x] 2.6 Solicitudes: cambiar estado desde el detalle (owner o artista, cualquier estado a cualquier otro), historial automático con quién y cuándo, notas internas (cada uno borra las suyas) y filtro por estado en el listado
 - [ ] 2.7 Clientes: editar, unir duplicados que no comparten email ni teléfono
 
 ## Fase 3 · Turnos
