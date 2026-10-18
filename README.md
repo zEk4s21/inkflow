@@ -34,6 +34,21 @@ pnpm dev             # http://localhost:3000
 
 Para frenar la base: `pnpm db:stop`.
 
+### Atajo: todo con un comando
+
+Con Docker abierto:
+
+```bash
+pnpm install
+pnpm local:setup vos@example.com   # el email es opcional: te da acceso al panel de "esti"
+pnpm dev
+```
+
+`local:setup` levanta Supabase local, escribe en `.env.local` la URL y las claves locales (respeta el resto
+de las variables que ya tengas, como `AI_API_KEY`), habilita el formulario sin captcha (solo local), da acceso
+al panel si pasás un email y carga el portfolio de ejemplo si hay fotos en `public/demo/` (no se versionan).
+Se puede correr de nuevo sin romper nada. El link para entrar al panel llega a Mailpit: http://127.0.0.1:54324.
+
 ## Configuración
 
 Todas las variables están documentadas en [.env.example](.env.example). La app valida las variables al usarlas y falla con un mensaje que indica cuál falta.
