@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { BlockForm } from "@/components/panel/agenda/block-form";
 import { DeleteBlockButton } from "@/components/panel/agenda/delete-block-button";
@@ -7,6 +8,7 @@ import { PanelPageHeader } from "@/components/panel/page-header";
 import type { RegionalSettings } from "@/config/regional";
 import { computeSlots, localDateOf, WEEKDAY_LABELS, type TimeRange } from "@/lib/availability";
 import { formatDateTime } from "@/lib/format";
+import { listUpcomingRequestedAppointments } from "@/server/appointments/queries";
 import { requireWorkspace } from "@/server/auth/panel-context";
 import { getAvailability } from "@/server/availability/queries";
 import { MIN_NOTICE_MINUTES } from "@/server/availability/schemas";
@@ -31,7 +33,11 @@ export default async function AgendaPage() {
     );
   }
 
-  const [{ rules, blocks }, regional] = await Promise.all([getAvailability(profile.id), getWorkspaceRegional(workspace.id)]);
+  const [{ rules, blocks }, regional, requested] = await Promise.all([
+    getAvailability(profile.id),
+    getWorkspaceRegional(workspace.id),
+    listUpcomingRequestedAppointments(workspace.id, profile.id),
+  ]);
   const now = new Date();
   const slots = computeSlots({
     rules,
@@ -47,7 +53,7 @@ export default async function AgendaPage() {
     <>
       <PanelPageHeader
         title="Agenda"
-        description="Tus días y horarios de trabajo y las fechas que no atendés. Con esto se calculan los turnos que vas a ofrecer; el pedido de turno desde tu página llega en la Fase 3.2."
+        description="Tus días y horarios de trabajo y las fechas que no atendés. Con esto se calculan los turnos que ofrece tu página."
       />
 
       <div className="grid gap-6 xl:grid-cols-[1.3fr_1fr]">
@@ -91,6 +97,34 @@ export default async function AgendaPage() {
           </Card>
         </div>
       </div>
+
+      <Card
+        title="Turnos pedidos"
+        description="Pedidos desde tu página que todavía no confirmaste. No ocupan el horario hasta que se confirman (Fase 3.3)."
+      >
+        {requested.length === 0 ? (
+          <p className="text-sm text-fg-muted">No hay pedidos de turno pendientes.</p>
+        ) : (
+          <ul className="flex flex-col divide-y divide-line rounded-lg border border-line text-sm">
+            {requested.map((appointment) => (
+              <li key={appointment.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+                <span className="flex flex-col gap-0.5">
+                  <span className="first-letter:uppercase">
+                    {formatDateTime(appointment.start, regional, { weekday: "long", day: "numeric", month: "long" })},{" "}
+                    {formatDateTime(appointment.start, regional, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
+                  </span>
+                  <span className="text-xs text-fg-subtle">{appointment.clientName}</span>
+                </span>
+                {appointment.requestId && (
+                  <Link href={`/panel/solicitudes/${appointment.requestId}`} className="text-fg-muted underline-offset-4 hover:text-fg hover:underline">
+                    Ver solicitud
+                  </Link>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
 
       <Card
         title="Turnos libres en las próximas dos semanas"

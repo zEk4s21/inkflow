@@ -30,7 +30,7 @@ Alcance: microapp para un tatuador, con base preparada para venderse como SaaS.
 ## Fase 3 · Turnos (en curso)
 
 - [x] 3.1 Disponibilidad y bloqueos: horario semanal (una franja por día, duración del turno y margen entre turnos), bloqueos por días completos u horas, y vista previa de los turnos libres de las próximas dos semanas en `/panel/agenda`. El cálculo usa la zona horaria del estudio y 24 horas de anticipación mínima
-- [ ] 3.2 Pedido de turno público
+- [x] 3.2 Pedido de turno público: el formulario de consulta ofrece elegir día y hora entre los turnos libres de las próximas tres semanas (opcional). El turno queda "a confirmar" y no ocupa el horario; el servidor vuelve a verificar que siga libre antes de guardarlo. Se ve en la solicitud y en "Turnos pedidos" de `/panel/agenda`
 - [ ] 3.3 Aprobar, reprogramar y cancelar (test de concurrencia)
 
 ## Fase 4 · Ink Assistant

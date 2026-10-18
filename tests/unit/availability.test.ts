@@ -31,6 +31,7 @@ describe("computeSlots", () => {
     // 10:00-13:00 y 13:30-16:30; 17:00-20:00 no entra antes de las 18:00.
     expect(iso(slots)).toEqual(["2026-10-19T13:00:00.000Z", "2026-10-19T16:30:00.000Z"]);
     expect(slots[0].end.toISOString()).toBe("2026-10-19T16:00:00.000Z");
+    expect(slots.every((slot) => slot.bufferMinutes === monday.bufferMinutes)).toBe(true);
   });
 
   it("solo usa los días de la semana configurados y repite cada semana", () => {

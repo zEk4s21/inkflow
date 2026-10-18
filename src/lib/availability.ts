@@ -1,6 +1,6 @@
 /**
- * Cálculo de turnos libres a partir del horario semanal, los bloqueos y (desde la 3.3) los
- * turnos ya confirmados. Es puro y no depende de la zona horaria del servidor: todo se
+ * Cálculo de turnos libres a partir del horario semanal, los bloqueos y los turnos ya
+ * confirmados. Es puro y no depende de la zona horaria del servidor: todo se
  * interpreta en la zona del workspace.
  */
 
@@ -16,6 +16,12 @@ export type WeeklyRule = {
 };
 
 export type TimeRange = { start: Date; end: Date };
+
+/** Turno libre, con el margen que pide la franja que lo generó. */
+export type Slot = TimeRange & { bufferMinutes: number };
+
+/** Turnos de un día listos para mostrar: `value` es el inicio en ISO, `label` la hora local. */
+export type SlotDay = { date: string; label: string; longLabel: string; times: { value: string; label: string }[] };
 
 export const WEEKDAY_LABELS: Record<Weekday, string> = {
   1: "Lunes",
@@ -88,11 +94,11 @@ export function computeSlots(options: {
   from: Date;
   days: number;
   minNoticeMinutes?: number;
-}): TimeRange[] {
+}): Slot[] {
   const { rules, busy, timeZone, from, days, minNoticeMinutes = 0 } = options;
   const earliest = from.getTime() + minNoticeMinutes * MINUTE;
   const firstDate = localDateOf(from, timeZone);
-  const slots: TimeRange[] = [];
+  const slots: Slot[] = [];
 
   for (let offset = 0; offset < days; offset++) {
     const date = addDays(firstDate, offset);
@@ -102,7 +108,7 @@ export function computeSlots(options: {
       const ruleEnd = zonedTimeToUtc(date, rule.end, timeZone).getTime();
       const step = (rule.slotMinutes + rule.bufferMinutes) * MINUTE;
       for (let start = zonedTimeToUtc(date, rule.start, timeZone).getTime(); start + rule.slotMinutes * MINUTE <= ruleEnd; start += step) {
-        const slot = { start: new Date(start), end: new Date(start + rule.slotMinutes * MINUTE) };
+        const slot = { start: new Date(start), end: new Date(start + rule.slotMinutes * MINUTE), bufferMinutes: rule.bufferMinutes };
         if (start < earliest || busy.some((range) => overlaps(slot, range))) continue;
         slots.push(slot);
       }

@@ -40,6 +40,12 @@ export const requestFormSchema = z
     idea: z.string().trim().min(10, "Contá un poco más de tu idea (mínimo 10 caracteres).").max(3000, "Máximo 3000 caracteres."),
     bodyZone: optionalText(60),
     sizeLabel: optionalText(60),
+    // Inicio del turno elegido (ISO en UTC) o vacío. Que siga libre lo verifica la Server Action.
+    slot: z
+      .string()
+      .default("")
+      .transform((value) => (value === "" ? null : value))
+      .pipe(z.iso.datetime({ error: "Turno inválido." }).nullable()),
   })
   .refine(hasContact, { message: "Dejá un email o un teléfono para responderte.", path: ["email"] });
 

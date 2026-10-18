@@ -23,7 +23,45 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "artist_profiles": {
+            "appointments": {
+                  Row: {
+                    "artist_id": string,"blocked_period": unknown,"buffer_minutes": number,"client_id": string,"created_at": string,"id": string,"period": unknown,"request_id": string | null,"source": string,"status": string,"updated_at": string,"workspace_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "artist_id": string,"blocked_period"?: unknown,"buffer_minutes"?: number,"client_id": string,"created_at"?: string,"id"?: string,"period": unknown,"request_id"?: string | null,"source"?: string,"status"?: string,"updated_at"?: string,"workspace_id": string
+                  }
+                  Update: {
+                    "artist_id"?: string,"blocked_period"?: unknown,"buffer_minutes"?: number,"client_id"?: string,"created_at"?: string,"id"?: string,"period"?: unknown,"request_id"?: string | null,"source"?: string,"status"?: string,"updated_at"?: string,"workspace_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "appointments_artist_id_fkey"
+      columns: ["artist_id"]
+isOneToOne: false
+      referencedRelation: "artist_profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "appointments_client_id_fkey"
+      columns: ["client_id"]
+isOneToOne: false
+      referencedRelation: "clients"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "appointments_request_id_fkey"
+      columns: ["request_id"]
+isOneToOne: false
+      referencedRelation: "tattoo_requests"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "appointments_workspace_id_fkey"
+      columns: ["workspace_id"]
+isOneToOne: false
+      referencedRelation: "workspaces"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"artist_profiles": {
                   Row: {
                     "bio": string | null,"created_at": string,"deleted_at": string | null,"display_name": string,"full_name": string | null,"id": string,"is_public": boolean,"styles": (string)[],"updated_at": string,"user_id": string | null,"workspace_id": string
                   }
