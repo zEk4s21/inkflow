@@ -12,12 +12,15 @@ export function ConfirmDialog({
   title,
   description,
   confirmLabel,
+  cancelLabel = "Cancelar",
   onConfirm,
 }: {
   trigger: ReactNode;
   title: string;
   description: string;
   confirmLabel: string;
+  /** Para cuando "Cancelar" se confunde con la acción (por ejemplo, cancelar un turno). */
+  cancelLabel?: string;
   onConfirm: () => void;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -37,7 +40,7 @@ export function ConfirmDialog({
         <p className="mt-2 text-sm leading-relaxed text-fg-muted">{description}</p>
         <div className="mt-6 flex justify-end gap-3">
           <Button variant="ghost" onClick={() => ref.current?.close()}>
-            Cancelar
+            {cancelLabel}
           </Button>
           <Button
             variant="danger"
