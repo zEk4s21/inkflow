@@ -19,6 +19,14 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+      # Valores de ejemplo para compilar y probar sin base: el panel redirige al login sin consultarla.
+      - name: Variables de ejemplo
+        run: |
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321"
+            echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_ci"
+            echo "NEXT_PUBLIC_SITE_URL=http://localhost:3100"
+          } >> "$GITHUB_ENV"
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm e2e
@@ -35,10 +43,19 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Levantar Supabase local
         run: pnpm exec supabase start -x studio,imgproxy,realtime,edge-runtime,logflare,vector,supavisor,mailpit
-      - name: Tests de integración contra la base
+      - name: Variables de la base local
         run: |
           eval "$(pnpm exec supabase status -o env | sed 's/^/export /')"
-          NEXT_PUBLIC_SUPABASE_URL="$API_URL" \
-          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="$PUBLISHABLE_KEY" \
-          SUPABASE_SECRET_KEY="$SECRET_KEY" \
-          pnpm test
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$PUBLISHABLE_KEY"
+            echo "SUPABASE_SECRET_KEY=$SECRET_KEY"
+            echo "NEXT_PUBLIC_SITE_URL=http://localhost:3100"
+          } >> "$GITHUB_ENV"
+      - name: Tests de integración contra la base
+        run: pnpm test
+      - name: Login de punta a punta
+        run: |
+          pnpm build
+          pnpm exec playwright install --with-deps chromium
+          pnpm e2e tests/e2e/auth.spec.ts
