@@ -19,8 +19,11 @@
 
 ## Aislamiento entre tatuadores
 
-- RLS en todas las tablas privadas mediante `is_workspace_member(workspace_id)`.
-- Tests obligatorios (Fase 2): un usuario del workspace A no puede leer ni escribir datos de B, ni por API ni cambiando IDs en la URL.
+- RLS en todas las tablas con `private.is_member(workspace_id)` y `private.has_role(workspace_id, roles)`. Son funciones `security definer` en el esquema `private`, que la API no expone.
+- Además de RLS, privilegios por columna: `anon` solo lee columnas públicas (por ejemplo, no ve `artist_profiles.user_id`) y nadie puede escribir `id`, `workspace_id`, `user_id` ni timestamps desde la API.
+- Altas de workspaces y miembros: solo con la clave secreta. No hay política de insert para usuarios, así que nadie puede sumarse a un workspace ni cambiar su rol.
+- Lo público (workspace, configuración y perfil) se ve solo si el workspace tiene un perfil con `is_public = true`.
+- Tests de aislamiento en `tests/integration/rls-workspaces.test.ts`, en CI contra Supabase local.
 
 ## Archivos
 
@@ -50,7 +53,7 @@ Las referencias que manda un cliente **nunca** pasan al portfolio automáticamen
 
 | Riesgo | Mitigación prevista |
 |---|---|
-| RLS mal escrita | Tests de aislamiento en CI (Fase 2) |
+| RLS mal escrita | Tests de aislamiento en CI (`tests/integration/rls-workspaces.test.ts`) |
 | Uso indebido de la secret key | Solo importable desde un módulo de servidor dedicado |
 | Prompt injection en el asistente | El modelo no tiene herramientas de escritura; la salida se valida y la confirmación es del usuario |
 | Abuso de formularios o costo de IA | Turnstile, rate limit, tope de mensajes y presupuesto por workspace |
