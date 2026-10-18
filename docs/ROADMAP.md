@@ -27,9 +27,9 @@ Alcance: microapp para un tatuador, con base preparada para venderse como SaaS.
 - [x] 2.6 Solicitudes: cambiar estado desde el detalle (owner o artista, cualquier estado a cualquier otro), historial automático con quién y cuándo, notas internas (cada uno borra las suyas) y filtro por estado en el listado
 - [x] 2.7 Clientes: ficha con sus solicitudes, edición de datos de contacto (avisa si el email o WhatsApp ya es de otro cliente) y unión de duplicados que no comparten email ni teléfono
 
-## Fase 3 · Turnos
+## Fase 3 · Turnos (en curso)
 
-- [ ] 3.1 Disponibilidad y bloqueos
+- [x] 3.1 Disponibilidad y bloqueos: horario semanal (una franja por día, duración del turno y margen entre turnos), bloqueos por días completos u horas, y vista previa de los turnos libres de las próximas dos semanas en `/panel/agenda`. El cálculo usa la zona horaria del estudio y 24 horas de anticipación mínima
 - [ ] 3.2 Pedido de turno público
 - [ ] 3.3 Aprobar, reprogramar y cancelar (test de concurrencia)
 

@@ -60,6 +60,8 @@ Las referencias que manda un cliente **nunca** pasan al portfolio automáticamen
 - Sin claves de Turnstile el formulario se muestra como no disponible en vez de aceptar envíos sin captcha.
 - Solicitudes en el panel (`src/server/requests/panel-actions.ts`): owner o artista cambian el estado (única columna editable) y escriben notas; staff solo lee. El historial lo escribe un trigger `security definer` con `auth.uid()`, así que no se puede falsificar quién hizo un cambio. Las notas se firman con el usuario de la sesión (la RLS rechaza otro `author_id`) y solo su autor puede borrarlas. Owner o artista editan nombre y datos de contacto de los clientes (no `workspace_id`). Unir clientes pasa por `public.merge_clients`, una función `security definer` que valida el rol del usuario y que ambos clientes sean del mismo workspace antes de mover solicitudes; anon no puede ejecutarla. Cubierto por `tests/integration/rls-requests.test.ts` y `tests/e2e/requests.spec.ts`.
 
+- Agenda (`src/server/availability`): miembros leen horarios y bloqueos; owner o artista los cambian. `set_weekly_availability` y `add_availability_block` corren con los permisos de quien llama (la RLS se aplica) y además validan el rol. Anon no ve nada todavía: la disponibilidad pública llega con el pedido de turno (3.2). Cubierto por `tests/integration/rls-availability.test.ts`.
+
 - Registro público desactivado (`supabase/config.toml` → `[auth] enable_signup = false`). Cubierto por un test de integración.
 - Redirects de auth limitados a `/auth/callback` local.
 

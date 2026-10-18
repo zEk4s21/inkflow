@@ -55,7 +55,8 @@ erDiagram
 | `request_attachments` | bucket **privado**, URLs firmadas |
 | `request_status_history` | lo escribe un trigger al cambiar `tattoo_requests.status` (`from_status`, `to_status`, `changed_by`); nadie lo inserta ni edita desde la API |
 | `request_notes` | notas internas: `author_id` = usuario de la sesión, `body` 1-2000; borrado lógico solo por su autor; un trigger exige que la solicitud sea del mismo workspace; nunca expuestas por rutas públicas |
-| `availability_rules` / `availability_blocks` | horario en hora local + zona del workspace; bloqueos como `tstzrange` |
+| `availability_rules` | `weekday` 1-7 (lunes a domingo), `start_time`/`end_time` en hora local del workspace, `slot_minutes` 30-720, `buffer_minutes` 0-240; se reemplaza entero con `set_weekly_availability(artist, rules)`, que rechaza franjas superpuestas |
+| `availability_blocks` | `period tstzrange` finito y no vacío, `reason` ≤120; `add_availability_block` convierte fechas y horas locales con la zona del workspace (sin horas = días completos) |
 | `appointments` | `EXCLUDE USING gist (artist_id WITH =, blocked_range WITH &&) WHERE (status = 'confirmed')` |
 
 Postergadas hasta después de la v1: `quotes`, `payments`, `care_instructions`, `follow_ups`, `audit_events`.

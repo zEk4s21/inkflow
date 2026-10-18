@@ -43,6 +43,58 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"availability_blocks": {
+                  Row: {
+                    "artist_id": string,"created_at": string,"id": string,"period": unknown,"reason": string | null,"workspace_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "artist_id": string,"created_at"?: string,"id"?: string,"period": unknown,"reason"?: string | null,"workspace_id": string
+                  }
+                  Update: {
+                    "artist_id"?: string,"created_at"?: string,"id"?: string,"period"?: unknown,"reason"?: string | null,"workspace_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "availability_blocks_artist_id_fkey"
+      columns: ["artist_id"]
+isOneToOne: false
+      referencedRelation: "artist_profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "availability_blocks_workspace_id_fkey"
+      columns: ["workspace_id"]
+isOneToOne: false
+      referencedRelation: "workspaces"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"availability_rules": {
+                  Row: {
+                    "artist_id": string,"buffer_minutes": number,"created_at": string,"end_time": string,"id": string,"slot_minutes": number,"start_time": string,"updated_at": string,"weekday": number,"workspace_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "artist_id": string,"buffer_minutes"?: number,"created_at"?: string,"end_time": string,"id"?: string,"slot_minutes"?: number,"start_time": string,"updated_at"?: string,"weekday": number,"workspace_id": string
+                  }
+                  Update: {
+                    "artist_id"?: string,"buffer_minutes"?: number,"created_at"?: string,"end_time"?: string,"id"?: string,"slot_minutes"?: number,"start_time"?: string,"updated_at"?: string,"weekday"?: number,"workspace_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "availability_rules_artist_id_fkey"
+      columns: ["artist_id"]
+isOneToOne: false
+      referencedRelation: "artist_profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "availability_rules_workspace_id_fkey"
+      columns: ["workspace_id"]
+isOneToOne: false
+      referencedRelation: "workspaces"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"clients": {
                   Row: {
                     "created_at": string,"deleted_at": string | null,"email": string | null,"id": string,"instagram_handle": string | null,"name": string,"phone": string | null,"updated_at": string,"workspace_id": string
@@ -221,8 +273,14 @@ isOneToOne: true
             [_ in never]: never
           }
           Functions: {
-            "merge_clients":
+            "add_availability_block":
+{ Args: { "end_date": string,"end_time"?: string,"reason"?: string,"start_date": string,"start_time"?: string,"target_artist": string }; Returns: string
+                           },
+"merge_clients":
 { Args: { "source": string,"target": string }; Returns: undefined
+                           },
+"set_weekly_availability":
+{ Args: { "rules": Json,"target_artist": string }; Returns: undefined
                            }
           }
           Enums: {
