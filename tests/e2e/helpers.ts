@@ -5,6 +5,8 @@ import type { Database } from "../../src/types/database.types";
 export const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 export const secretKey = process.env.SUPABASE_SECRET_KEY;
 export const hasDatabase = Boolean(supabaseUrl && secretKey);
+/** Servidor de e2e con AI_PROVIDER=simulated (ver playwright.config.ts). */
+export const SIMULATED_AI_PORT = 3101;
 
 export function adminClient() {
   return createClient<Database>(supabaseUrl!, secretKey!, { auth: { persistSession: false } });

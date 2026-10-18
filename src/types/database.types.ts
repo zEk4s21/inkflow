@@ -153,6 +153,46 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"conversation_messages": {
+                  Row: {
+                    "content": string,"conversation_id": string,"created_at": string,"id": string,"role": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "content": string,"conversation_id": string,"created_at"?: string,"id"?: string,"role": string
+                  }
+                  Update: {
+                    "content"?: string,"conversation_id"?: string,"created_at"?: string,"id"?: string,"role"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "conversation_messages_conversation_id_fkey"
+      columns: ["conversation_id"]
+isOneToOne: false
+      referencedRelation: "conversations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"conversations": {
+                  Row: {
+                    "brief": NonNullable<Json>,"created_at": string,"expires_at": string,"id": string,"input_tokens": number,"message_count": number,"output_tokens": number,"status": string,"submitter_hash": string | null,"token_hash": string,"updated_at": string,"workspace_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "brief"?: NonNullable<Json>,"created_at"?: string,"expires_at"?: string,"id"?: string,"input_tokens"?: number,"message_count"?: number,"output_tokens"?: number,"status"?: string,"submitter_hash"?: string | null,"token_hash": string,"updated_at"?: string,"workspace_id": string
+                  }
+                  Update: {
+                    "brief"?: NonNullable<Json>,"created_at"?: string,"expires_at"?: string,"id"?: string,"input_tokens"?: number,"message_count"?: number,"output_tokens"?: number,"status"?: string,"submitter_hash"?: string | null,"token_hash"?: string,"updated_at"?: string,"workspace_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "conversations_workspace_id_fkey"
+      columns: ["workspace_id"]
+isOneToOne: false
+      referencedRelation: "workspaces"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"portfolio_items": {
                   Row: {
                     "alt_text": string,"body_zone": string | null,"category": string,"created_at": string,"deleted_at": string | null,"description": string | null,"id": string,"image_height": number,"image_path": string,"image_width": number,"position": number,"status": string,"title": string,"updated_at": string,"workspace_id": string
@@ -317,8 +357,14 @@ isOneToOne: true
 "merge_clients":
 { Args: { "source": string,"target": string }; Returns: undefined
                            },
+"record_conversation_turn":
+{ Args: { "p_assistant_message"?: string,"p_brief"?: Json,"p_conversation": string,"p_input_tokens": number,"p_max_messages": number,"p_output_tokens": number,"p_user_message"?: string }; Returns: boolean
+                           },
 "set_weekly_availability":
 { Args: { "rules": Json,"target_artist": string }; Returns: undefined
+                           },
+"workspace_ai_tokens_since":
+{ Args: { "p_since": string,"p_workspace": string }; Returns: number
                            }
           }
           Enums: {
