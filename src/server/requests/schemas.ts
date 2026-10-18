@@ -49,6 +49,23 @@ export const requestFormSchema = z
   })
   .refine(hasContact, { message: "Dejá un email o un teléfono para responderte.", path: ["email"] });
 
+/** Confirmación del Ink Assistant: el resumen (ya revisado y editable) más los datos de contacto. */
+export const assistantRequestSchema = z
+  .object({
+    ...contactFields,
+    name: z.string().trim().min(1, "Decinos tu nombre.").max(120, "Máximo 120 caracteres."),
+    idea: z.string().trim().min(10, "Contá un poco más de tu idea (mínimo 10 caracteres).").max(3000, "Máximo 3000 caracteres."),
+    bodyZone: optionalText(60),
+    sizeLabel: optionalText(60),
+    style: optionalText(60),
+    colorMode: z.enum(["", "black_grey", "color"], { error: "Opción inválida." }).transform((value) => (value === "" ? null : value)),
+    isCoverUp: z.enum(["", "yes", "no"], { error: "Opción inválida." }).transform((value) => (value === "" ? null : value === "yes")),
+    details: optionalText(500),
+    // Sin la confirmación explícita de la persona no se crea nada.
+    confirmed: z.literal("on", { error: "Tildá la confirmación para enviar." }),
+  })
+  .refine(hasContact, { message: "Dejá un email o un teléfono para responderte.", path: ["email"] });
+
 export const clientFormSchema = z
   .object(contactFields)
   .refine(hasContact, { message: "Tiene que quedar un email o un WhatsApp.", path: ["email"] });

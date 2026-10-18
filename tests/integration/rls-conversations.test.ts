@@ -125,4 +125,19 @@ describe.skipIf(!url || !publishableKey || !secretKey)("Conversaciones del asist
     const { data: future } = await admin.rpc("workspace_ai_tokens_since", { p_workspace: ws.b, p_since: "2100-01-01" }).throwOnError();
     expect(future).toBe(0);
   });
+
+  it("cada conversación genera como mucho una consulta, y solo del mismo estudio", async () => {
+    const id = await conversation();
+    const { data: client } = await admin.from("clients").insert({ workspace_id: ws.a, name: "Ana", email: `ana-conv-${run}@example.com` }).select("id").single().throwOnError();
+    const request = { workspace_id: ws.a, client_id: client.id, source: "assistant", idea: "Una golondrina con una rosa", conversation_id: id, style: "Tradicional", color_mode: "color", is_cover_up: false };
+    await admin.from("tattoo_requests").insert(request).throwOnError();
+    expect((await admin.from("tattoo_requests").insert(request)).error?.code).toBe("23505");
+    expect((await admin.from("tattoo_requests").insert({ ...request, conversation_id: await conversation(), color_mode: "fucsia" })).error?.code).toBe("23514");
+
+    const otherWorkspace = await conversation(ws.b);
+    expect((await admin.from("tattoo_requests").insert({ ...request, conversation_id: otherWorkspace })).error?.code).toBe("23514");
+
+    const { data } = await member.from("tattoo_requests").select("style, color_mode, is_cover_up, conversation_id").eq("conversation_id", id).single().throwOnError();
+    expect(data).toEqual({ style: "Tradicional", color_mode: "color", is_cover_up: false, conversation_id: id });
+  });
 });

@@ -14,11 +14,13 @@ import {
   type RequestStatus,
 } from "@/config/request-status";
 import { localDateOf } from "@/lib/availability";
+import { COLOR_LABELS } from "@/server/assistant/brief";
 import { formatDateTime } from "@/lib/format";
 import { getRequestAppointments, getSlotMinutes } from "@/server/appointments/queries";
 import { appointmentView } from "@/server/appointments/view";
 import { requireWorkspace } from "@/server/auth/panel-context";
 import {
+  getConversationMessages,
   getMemberNames,
   getRequest,
   getRequestActivity,
@@ -43,12 +45,19 @@ export default async function RequestDetailPage({
     getWorkspaceRegional(workspace.id),
   ]);
   if (!request) notFound();
-  const [activity, names, appointments, slotMinutes] = await Promise.all([
+  const [activity, names, appointments, slotMinutes, conversation] = await Promise.all([
     getRequestActivity(workspace.id, request.id),
     getMemberNames(workspace.id),
     getRequestAppointments(workspace.id, request.id),
     profile ? getSlotMinutes(profile.id) : null,
+    request.conversation_id ? getConversationMessages(request.conversation_id) : null,
   ]);
+  // Datos que suma el asistente: solo se muestran los que vinieron.
+  const extras = [
+    ["Estilo", request.style],
+    ["Color", request.color_mode ? COLOR_LABELS[request.color_mode as keyof typeof COLOR_LABELS] : null],
+    ["Cubre otro tatuaje", request.is_cover_up === null ? null : request.is_cover_up ? "Sí" : "No"],
+  ].filter((entry): entry is [string, string] => entry[1] !== null);
   const canEdit = role === "owner" || role === "artist";
   const now = new Date();
   const today = localDateOf(now, regional.timeZone);
@@ -93,8 +102,46 @@ export default async function RequestDetailPage({
                 <dt className="text-fg-subtle">Tamaño</dt>
                 <dd>{request.size_label ?? "Sin indicar"}</dd>
               </div>
+              {extras.map(([label, value]) => (
+                <div key={label} className="flex flex-col gap-1">
+                  <dt className="text-fg-subtle">{label}</dt>
+                  <dd>{value}</dd>
+                </div>
+              ))}
+              {request.details && (
+                <div className="flex flex-col gap-1 sm:col-span-2">
+                  <dt className="text-fg-subtle">Otros detalles</dt>
+                  <dd className="whitespace-pre-line">{request.details}</dd>
+                </div>
+              )}
             </dl>
           </section>
+
+          {conversation && conversation.length > 0 && (
+            <section aria-label="Conversación con el asistente" className="rounded-lg border border-line bg-surface-1/40 p-6">
+              <details className="group">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-medium">
+                  Conversación con el asistente
+                  <span className="text-sm font-normal text-fg-subtle group-open:hidden">Ver ({conversation.length} mensajes)</span>
+                </summary>
+                <ol className="mt-4 flex flex-col gap-3 text-sm">
+                  {conversation.map((message) => (
+                    <li
+                      key={message.id}
+                      className={
+                        message.role === "user"
+                          ? "max-w-[85%] self-end rounded-2xl bg-accent/15 px-4 py-3 whitespace-pre-wrap"
+                          : "max-w-[85%] self-start rounded-2xl bg-surface-2 px-4 py-3 whitespace-pre-wrap text-fg-muted"
+                      }
+                    >
+                      <span className="sr-only">{message.role === "user" ? "Cliente: " : "Asistente: "}</span>
+                      {message.content}
+                    </li>
+                  ))}
+                </ol>
+              </details>
+            </section>
+          )}
 
           <section className="flex flex-col gap-5 rounded-lg border border-line bg-surface-1/40 p-6">
             <h2 className="font-medium">Seguimiento</h2>

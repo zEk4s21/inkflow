@@ -127,3 +127,34 @@ describe("proveedor simulado (solo pruebas)", () => {
     expect(isBriefReady(brief)).toBe(true);
   });
 });
+
+describe("confirmación de la consulta", async () => {
+  const { assistantRequestSchema } = await import("@/server/requests/schemas");
+  const base = {
+    name: "Ana",
+    email: "ana@example.com",
+    phone: "",
+    instagramHandle: "",
+    idea: "Una golondrina con una rosa",
+    bodyZone: "Antebrazo",
+    sizeLabel: "10 cm",
+    style: "",
+    colorMode: "color",
+    isCoverUp: "no",
+    details: "",
+    confirmed: "on",
+  };
+
+  it("sin la confirmación tildada no pasa", () => {
+    const result = assistantRequestSchema.safeParse({ ...base, confirmed: "" });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].path).toEqual(["confirmed"]);
+  });
+
+  it("normaliza los campos opcionales y exige un contacto", () => {
+    expect(assistantRequestSchema.parse(base)).toMatchObject({ style: null, colorMode: "color", isCoverUp: false, details: null, phone: null });
+    expect(assistantRequestSchema.parse({ ...base, colorMode: "", isCoverUp: "yes" })).toMatchObject({ colorMode: null, isCoverUp: true });
+    expect(assistantRequestSchema.safeParse({ ...base, colorMode: "fucsia" }).success).toBe(false);
+    expect(assistantRequestSchema.safeParse({ ...base, email: "" }).success).toBe(false);
+  });
+});
