@@ -10,6 +10,7 @@ import {
   getPublishedWork,
   getPublishedWorks,
   listPublicArtistSlugs,
+  PLACEHOLDER_SLUG,
 } from "@/server/artists/public-artist";
 
 export async function generateStaticParams() {
@@ -17,7 +18,8 @@ export async function generateStaticParams() {
   for (const slug of await listPublicArtistSlugs()) {
     for (const work of await getPublishedWorks(slug)) params.push({ slug, workId: work.id });
   }
-  return params;
+  // No puede quedar vacía con Cache Components; el placeholder responde 404.
+  return params.length > 0 ? params : [{ slug: PLACEHOLDER_SLUG, workId: PLACEHOLDER_SLUG }];
 }
 
 export async function generateMetadata({ params }: PageProps<"/artist/[slug]/work/[workId]">): Promise<Metadata> {

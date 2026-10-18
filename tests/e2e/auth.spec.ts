@@ -1,21 +1,11 @@
-import { createClient } from "@supabase/supabase-js";
 import { expect, test } from "@playwright/test";
-
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const secretKey = process.env.SUPABASE_SECRET_KEY;
+import { adminClient as admin, hasDatabase, magicLinkFor } from "./helpers";
 
 // Requiere Supabase local con el seed (workspace "esti"). En CI corre en el job "database".
 test.describe("login por magic link", () => {
-  test.skip(!url || !secretKey, "Necesita Supabase local");
+  test.skip(!hasDatabase, "Necesita Supabase local");
 
-  const admin = () => createClient(url!, secretKey!, { auth: { persistSession: false } });
   const WORKSPACE_ESTI = "00000000-0000-4000-8000-000000000001";
-
-  async function magicLinkFor(email: string) {
-    const { data, error } = await admin().auth.admin.generateLink({ type: "magiclink", email });
-    if (error) throw error;
-    return `/auth/confirm?token_hash=${data.properties.hashed_token}&type=magiclink`;
-  }
 
   test("un miembro entra al panel de su estudio y sale", async ({ page }, testInfo) => {
     const email = `owner-${testInfo.project.name}-${Date.now()}@example.com`;
@@ -29,7 +19,7 @@ test.describe("login por magic link", () => {
       await expect(page.getByRole("heading", { name: "Inicio" })).toBeVisible();
 
       await page.goto("/panel/ajustes");
-      await expect(page.getByRole("main").getByText("Esteban Fernández")).toBeVisible();
+      await expect(page.getByLabel("Nombre completo")).toHaveValue("Esteban Fernández");
 
       // El link es de un solo uso.
       const link = await magicLinkFor(email);

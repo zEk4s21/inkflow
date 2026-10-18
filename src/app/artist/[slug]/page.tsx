@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: PageProps<"/artist/[slug]">):
   const { slug } = await params;
   const artist = await getPublicArtist(slug);
   if (!artist) return {};
-  const description = `${artist.styles.join(" · ")}. ${artist.locationLabel}.`;
+  const description = [artist.styles.join(" · "), artist.locationLabel].filter(Boolean).join(". ") + ".";
   return {
     title: `${artist.artistName} · Tatuajes`,
     description,
@@ -41,9 +41,11 @@ export default async function ArtistPage({ params }: PageProps<"/artist/[slug]">
         {/* Hero */}
         <section className="mx-auto grid max-w-6xl gap-12 px-4 pt-12 pb-20 sm:px-8 lg:grid-cols-[1.1fr_1fr] lg:items-center lg:pt-20">
           <div className="flex flex-col gap-8">
-            <p className="animate-rise text-xs font-medium tracking-[0.2em] text-fg-subtle uppercase">
-              {artist.locationLabel}
-            </p>
+            {artist.locationLabel && (
+              <p className="animate-rise text-xs font-medium tracking-[0.2em] text-fg-subtle uppercase">
+                {artist.locationLabel}
+              </p>
+            )}
             <h1
               className="animate-rise font-display text-[clamp(4.5rem,18vw,11rem)] leading-[0.85] uppercase"
               style={{ animationDelay: "60ms" }}
@@ -101,14 +103,18 @@ export default async function ArtistPage({ params }: PageProps<"/artist/[slug]">
               {artist.bio ?? "La biografía todavía no está cargada."}
             </p>
             <dl className="grid gap-6 text-sm">
-              <div className="flex flex-col gap-1 border-b border-line pb-4">
-                <dt className="text-fg-subtle">Especialidad</dt>
-                <dd className="text-fg">{artist.styles.join(", ")}</dd>
-              </div>
-              <div className="flex flex-col gap-1 border-b border-line pb-4">
-                <dt className="text-fg-subtle">Estudio</dt>
-                <dd className="text-fg">{artist.locationLabel}</dd>
-              </div>
+              {artist.styles.length > 0 && (
+                <div className="flex flex-col gap-1 border-b border-line pb-4">
+                  <dt className="text-fg-subtle">Especialidad</dt>
+                  <dd className="text-fg">{artist.styles.join(", ")}</dd>
+                </div>
+              )}
+              {artist.locationLabel && (
+                <div className="flex flex-col gap-1 border-b border-line pb-4">
+                  <dt className="text-fg-subtle">Estudio</dt>
+                  <dd className="text-fg">{artist.locationLabel}</dd>
+                </div>
+              )}
               {artist.instagram && (
                 <div className="flex flex-col gap-1 border-b border-line pb-4">
                   <dt className="text-fg-subtle">Instagram</dt>
@@ -123,36 +129,40 @@ export default async function ArtistPage({ params }: PageProps<"/artist/[slug]">
           </div>
         </PublicSection>
 
-        <PublicSection id="proceso" eyebrow="Cómo trabajo" title="El proceso">
-          <ol className="grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
-            {artist.process.map((step, index) => (
-              <li key={step.title} className="flex flex-col gap-3 bg-ink p-6">
-                <span className="font-display text-4xl text-accent-text">{String(index + 1).padStart(2, "0")}</span>
-                <h3 className="text-lg font-medium">{step.title}</h3>
-                <p className="text-sm leading-relaxed text-fg-muted">{step.description}</p>
-              </li>
-            ))}
-          </ol>
-        </PublicSection>
+        {artist.process.length > 0 && (
+          <PublicSection id="proceso" eyebrow="Cómo trabajo" title="El proceso">
+            <ol className="grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
+              {artist.process.map((step, index) => (
+                <li key={index} className="flex flex-col gap-3 bg-ink p-6">
+                  <span className="font-display text-4xl text-accent-text">{String(index + 1).padStart(2, "0")}</span>
+                  <h3 className="text-lg font-medium">{step.title}</h3>
+                  <p className="text-sm leading-relaxed text-fg-muted">{step.description}</p>
+                </li>
+              ))}
+            </ol>
+          </PublicSection>
+        )}
 
-        <PublicSection id="preguntas" eyebrow="FAQ" title="Preguntas frecuentes">
-          <div className="divide-y divide-line border-y border-line">
-            {artist.faq.map((item) => (
-              <details key={item.question} className="group py-5">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-lg font-medium marker:hidden">
-                  {item.question}
-                  <span
-                    aria-hidden
-                    className="text-2xl leading-none text-fg-subtle transition-transform duration-300 group-open:rotate-45"
-                  >
-                    +
-                  </span>
-                </summary>
-                <p className="mt-3 max-w-prose leading-relaxed text-fg-muted">{item.answer}</p>
-              </details>
-            ))}
-          </div>
-        </PublicSection>
+        {artist.faq.length > 0 && (
+          <PublicSection id="preguntas" eyebrow="FAQ" title="Preguntas frecuentes">
+            <div className="divide-y divide-line border-y border-line">
+              {artist.faq.map((item, index) => (
+                <details key={index} className="group py-5">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-lg font-medium marker:hidden">
+                    {item.question}
+                    <span
+                      aria-hidden
+                      className="text-2xl leading-none text-fg-subtle transition-transform duration-300 group-open:rotate-45"
+                    >
+                      +
+                    </span>
+                  </summary>
+                  <p className="mt-3 max-w-prose leading-relaxed text-fg-muted">{item.answer}</p>
+                </details>
+              ))}
+            </div>
+          </PublicSection>
+        )}
 
         <PublicSection id="contacto" eyebrow="Contacto" title="Contame tu idea">
           <div className="grid gap-6 md:grid-cols-2">

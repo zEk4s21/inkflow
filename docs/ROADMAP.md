@@ -21,7 +21,7 @@ Alcance: microapp para un tatuador, con base preparada para venderse como SaaS.
 
 - [x] 2.1 Migraciones de workspaces, miembros, settings y perfiles + RLS, con tests de aislamiento entre workspaces
 - [x] 2.2 Login por magic link + protección de `/panel`. El panel muestra el estudio y el perfil reales; solicitudes y portfolio siguen con datos demo hasta 2.4-2.6
-- [ ] 2.3 Perfil y página pública editables
+- [x] 2.3 Perfil y página pública editables desde Ajustes (nombre, bio, estilos, estudio, Instagram, publicar/ocultar, proceso y FAQ). La página pública lee de Supabase; los trabajos siguen siendo demo hasta 2.4
 - [ ] 2.4 Portfolio administrable
 - [ ] 2.5 Formulario de consulta (captcha + rate limit)
 - [ ] 2.6 Solicitudes: estados, historial, notas
@@ -47,4 +47,5 @@ Presupuestos y pagos manuales, cuidados y seguimiento, auditoría, onboarding de
 ## Problemas conocidos
 
 - Las fotos demo son recortes de capturas de Instagram (baja calidad) y no se versionan (`public/demo/` en `.gitignore`). En un clon limpio se ve el reemplazo "Imagen no disponible". Se reemplazan por originales en la Fase 2.
-- La biografía de Esteban no está cargada; textos de proceso y FAQ son provisorios.
+- La biografía de Esteban no está cargada; los textos de proceso y FAQ del seed son provisorios.
+- Con Cache Components, `generateStaticParams` no puede devolver una lista vacía: si la base no tiene slugs (o no responde en el build) se prerenderiza un slug placeholder `_` que responde 404.

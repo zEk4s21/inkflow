@@ -48,6 +48,8 @@ Las referencias que manda un cliente **nunca** pasan al portfolio automáticamen
 - El link del email apunta a `/auth/confirm`, que valida el `token_hash` en el servidor (sirve aunque se abra en otro dispositivo) y solo redirige a rutas internas. Es de un solo uso y vence en una hora.
 - `/panel` tiene tres barreras: `src/proxy.ts` redirige sin sesión, `getPanelContext()` valida el JWT con `getClaims()` y exige membresía de un workspace, y la RLS filtra cada consulta.
 - Producción: copiar `supabase/templates/magic-link.html` en Dashboard > Authentication > Email Templates > Magic Link, y configurar la Site URL con el dominio real.
+- Las Server Actions de Ajustes (`src/server/settings/actions.ts`) vuelven a validar sesión y rol (solo owner) y validan con zod antes de escribir; la RLS es la segunda barrera.
+- La página pública se lee con un cliente anon sin cookies (`src/server/supabase/public.ts`), cacheado con `use cache` y refrescado con `updateTag` al guardar.
 - Cubierto por `tests/e2e/auth.spec.ts` (entra un miembro, una cuenta sin estudio no ve el panel, el link no se reutiliza).
 
 - Registro público desactivado (`supabase/config.toml` → `[auth] enable_signup = false`). Cubierto por un test de integración.
