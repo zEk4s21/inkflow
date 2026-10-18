@@ -2,13 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { BlockForm } from "@/components/panel/agenda/block-form";
+import { AppointmentActions } from "@/components/panel/appointments/appointment-actions";
 import { DeleteBlockButton } from "@/components/panel/agenda/delete-block-button";
 import { WeeklyEditor } from "@/components/panel/agenda/weekly-editor";
 import { PanelPageHeader } from "@/components/panel/page-header";
 import type { RegionalSettings } from "@/config/regional";
 import { computeSlots, localDateOf, WEEKDAY_LABELS, type TimeRange } from "@/lib/availability";
 import { formatDateTime } from "@/lib/format";
-import { listUpcomingRequestedAppointments } from "@/server/appointments/queries";
+import { getConfirmedBusy, listOpenAppointments, type AppointmentSummary } from "@/server/appointments/queries";
+import { appointmentView } from "@/server/appointments/view";
 import { requireWorkspace } from "@/server/auth/panel-context";
 import { getAvailability } from "@/server/availability/queries";
 import { MIN_NOTICE_MINUTES } from "@/server/availability/schemas";
@@ -33,15 +35,19 @@ export default async function AgendaPage() {
     );
   }
 
-  const [{ rules, blocks }, regional, requested] = await Promise.all([
+  const [{ rules, blocks }, regional, open, confirmedBusy] = await Promise.all([
     getAvailability(profile.id),
     getWorkspaceRegional(workspace.id),
-    listUpcomingRequestedAppointments(workspace.id, profile.id),
+    listOpenAppointments(workspace.id, profile.id),
+    getConfirmedBusy(profile.id),
   ]);
   const now = new Date();
+  const today = localDateOf(now, regional.timeZone);
+  const requested = open.filter((appointment) => appointment.status === "requested");
+  const confirmed = open.filter((appointment) => appointment.status === "confirmed");
   const slots = computeSlots({
     rules,
-    busy: blocks,
+    busy: [...blocks, ...confirmedBusy],
     timeZone: regional.timeZone,
     from: now,
     days: PREVIEW_DAYS,
@@ -93,42 +99,23 @@ export default async function AgendaPage() {
                 })}
               </ul>
             )}
-            {canEdit && <BlockForm today={localDateOf(now, regional.timeZone)} />}
+            {canEdit && <BlockForm today={today} />}
           </Card>
         </div>
       </div>
 
-      <Card
-        title="Turnos pedidos"
-        description="Pedidos desde tu página que todavía no confirmaste. No ocupan el horario hasta que se confirman (Fase 3.3)."
-      >
-        {requested.length === 0 ? (
-          <p className="text-sm text-fg-muted">No hay pedidos de turno pendientes.</p>
-        ) : (
-          <ul className="flex flex-col divide-y divide-line rounded-lg border border-line text-sm">
-            {requested.map((appointment) => (
-              <li key={appointment.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-                <span className="flex flex-col gap-0.5">
-                  <span className="first-letter:uppercase">
-                    {formatDateTime(appointment.start, regional, { weekday: "long", day: "numeric", month: "long" })},{" "}
-                    {formatDateTime(appointment.start, regional, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
-                  </span>
-                  <span className="text-xs text-fg-subtle">{appointment.clientName}</span>
-                </span>
-                {appointment.requestId && (
-                  <Link href={`/panel/solicitudes/${appointment.requestId}`} className="text-fg-muted underline-offset-4 hover:text-fg hover:underline">
-                    Ver solicitud
-                  </Link>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
+      <div className="grid gap-6 xl:grid-cols-2">
+        <Card title="Turnos pedidos" description="Pedidos desde tu página. No ocupan el horario hasta que los confirmás.">
+          <AppointmentList appointments={requested} empty="No hay pedidos de turno pendientes." canEdit={canEdit} regional={regional} today={today} now={now} />
+        </Card>
+        <Card title="Turnos confirmados" description="Los próximos, y los que ya pasaron y falta marcar como realizados.">
+          <AppointmentList appointments={confirmed} empty="No hay turnos confirmados." canEdit={canEdit} regional={regional} today={today} now={now} />
+        </Card>
+      </div>
 
       <Card
         title="Turnos libres en las próximas dos semanas"
-        description={`Así quedan con tu horario y tus bloqueos. Se ofrecen con al menos ${MIN_NOTICE_MINUTES / 60} horas de anticipación.`}
+        description={`Así quedan con tu horario, tus bloqueos y los turnos confirmados. Se ofrecen con al menos ${MIN_NOTICE_MINUTES / 60} horas de anticipación.`}
       >
         {slots.length === 0 ? (
           <p className="text-sm text-fg-muted">
@@ -154,6 +141,58 @@ export default async function AgendaPage() {
         )}
       </Card>
     </>
+  );
+}
+
+function AppointmentList({
+  appointments,
+  empty,
+  canEdit,
+  regional,
+  today,
+  now,
+}: {
+  appointments: AppointmentSummary[];
+  empty: string;
+  canEdit: boolean;
+  regional: RegionalSettings;
+  today: string;
+  now: Date;
+}) {
+  if (appointments.length === 0) return <p className="text-sm text-fg-muted">{empty}</p>;
+  return (
+    <ul className="flex flex-col divide-y divide-line rounded-lg border border-line text-sm">
+      {appointments.map((appointment) => {
+        const view = appointmentView(appointment, regional, now);
+        return (
+          <li key={appointment.id} className="flex flex-col gap-3 px-4 py-3">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <span className="flex flex-col gap-0.5">
+                <span className="first-letter:uppercase">
+                  {view.day}, {view.range}
+                </span>
+                <span className="text-xs text-fg-subtle">{appointment.clientName}</span>
+              </span>
+              {appointment.requestId && (
+                <Link href={`/panel/solicitudes/${appointment.requestId}`} className="text-fg-muted underline-offset-4 hover:text-fg hover:underline">
+                  Ver solicitud
+                </Link>
+              )}
+            </div>
+            {canEdit && (
+              <AppointmentActions
+                appointmentId={appointment.id}
+                status={appointment.status}
+                started={view.started}
+                label={view.label}
+                current={view.current}
+                today={today}
+              />
+            )}
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 

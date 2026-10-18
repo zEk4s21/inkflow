@@ -10,7 +10,7 @@ async function fillRequest(page: Page, name: string) {
   await page.goto(`/artist/${studio.slug}#contacto`);
   await page.getByRole("textbox", { name: "Tu idea", exact: true }).fill("Una serpiente en el gemelo, línea fina");
   await page.getByRole("textbox", { name: "Nombre", exact: true }).fill(name);
-  await page.getByRole("textbox", { name: "Email", exact: true }).fill(`${name.split(" ")[0].toLowerCase()}-${Date.now()}@example.com`);
+  await page.getByRole("textbox", { name: "Email", exact: true }).fill(`${name.split(" ")[0].toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "")}-${Date.now()}@example.com`);
 }
 
 /** Elige el segundo día con turnos (el primero puede quedar recortado por la anticipación) y su primer horario. */
@@ -73,7 +73,7 @@ test.describe("pedido de turno desde la página pública", () => {
     await signIn(page, studio.email);
     await page.goto("/panel/solicitudes");
     await page.getByRole("link", { name: /Martina Ruiz/ }).click();
-    const card = page.getByRole("region", { name: "Turno pedido" });
+    const card = page.getByRole("region", { name: "Turnos", exact: true });
     await expect(card.getByText(/10:00 a 13:00/)).toBeVisible();
     await expect(card.getByText("A confirmar")).toBeVisible();
 
@@ -121,5 +121,62 @@ test.describe("pedido de turno desde la página pública", () => {
 
     const { data } = await admin.from("clients").select("id").eq("workspace_id", studio.workspaceId).like("name", "Pedro%").throwOnError();
     expect(data).toEqual([]);
+  });
+
+  test("confirma, reprograma, cancela y da turnos a mano sin pisar otro confirmado", async ({ browser, page }) => {
+    const visitor = await browser.newContext({ extraHTTPHeaders: { "x-forwarded-for": randomIp() } });
+    const form = await visitor.newPage();
+    await fillRequest(form, "Sofía Lagos");
+    await pickSlot(form);
+    await form.getByRole("button", { name: "Enviar consulta y pedir turno" }).click();
+    await expect(form.getByText("¡Gracias!")).toBeVisible();
+    await visitor.close();
+
+    await signIn(page, studio.email);
+    await page.goto("/panel/agenda");
+    const requested = page.getByRole("region", { name: "Turnos pedidos" });
+    const row = requested.getByRole("listitem").filter({ hasText: "Sofía Lagos" });
+    await row.getByRole("button", { name: /^Confirmar turno del / }).click();
+    const confirmed = page.getByRole("region", { name: "Turnos confirmados" });
+    const confirmedRow = confirmed.getByRole("listitem").filter({ hasText: "Sofía Lagos" });
+    await expect(confirmedRow.getByText(/10:00 a 13:00/)).toBeVisible();
+
+    // Reprogramar a las 14:00 del mismo día.
+    await confirmedRow.getByRole("button", { name: "Reprogramar" }).click();
+    await confirmedRow.getByLabel("Hora").fill("14:00");
+    await confirmedRow.getByRole("button", { name: "Guardar nuevo horario" }).click();
+    await expect(confirmedRow.getByText(/14:00 a 17:00/)).toBeVisible();
+
+    // Dar turno a mano desde la solicitud, encima del confirmado: lo rechaza la base.
+    await confirmedRow.getByRole("link", { name: "Ver solicitud" }).click();
+    await page.waitForURL(/\/panel\/solicitudes\//);
+    const card = page.getByRole("region", { name: "Turnos", exact: true });
+    await expect(card.getByText("Confirmado", { exact: true })).toBeVisible();
+    await card.getByRole("button", { name: "Dar turno" }).click();
+    // Mismo día que el confirmado, a las 15:00: se pisa.
+    const confirmedDate = await adminClient()
+      .from("appointments")
+      .select("period")
+      .eq("workspace_id", studio.workspaceId)
+      .eq("status", "confirmed")
+      .single()
+      .throwOnError();
+    const startIso = /^[[(]"?([^",]+)/.exec(confirmedDate.data.period as string)![1].replace(" ", "T").replace(/\+00$/, "Z");
+    const localDay = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Argentina/Buenos_Aires" }).format(new Date(startIso));
+    await card.getByLabel("Día").fill(localDay);
+    await card.getByLabel("Hora").fill("15:00");
+    await card.getByRole("button", { name: "Confirmar turno", exact: true }).click();
+    await expect(card.getByRole("alert").filter({ hasText: "Se pisa con otro turno confirmado" })).toBeVisible();
+    // Al día siguiente sí entra.
+    const nextDay = new Date(Date.parse(`${localDay}T12:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
+    await card.getByLabel("Día").fill(nextDay);
+    await card.getByRole("button", { name: "Confirmar turno", exact: true }).click();
+    await expect(card.getByText("Confirmado", { exact: true })).toHaveCount(2);
+
+    // Cancelar el primero.
+    const first = card.getByRole("listitem").filter({ hasText: /14:00 a 17:00/ });
+    await first.getByRole("button", { name: "Cancelar turno" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "Cancelar turno" }).click();
+    await expect(first.getByText("Cancelado")).toBeVisible();
   });
 });

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PanelPageHeader } from "@/components/panel/page-header";
+import { AppointmentActions } from "@/components/panel/appointments/appointment-actions";
+import { NewAppointment } from "@/components/panel/appointments/new-appointment";
 import { DeleteNoteButton } from "@/components/panel/requests/delete-note-button";
 import { NoteForm } from "@/components/panel/requests/note-form";
 import { StatusControl } from "@/components/panel/requests/status-control";
@@ -11,8 +13,10 @@ import {
   REQUEST_STATUS_META,
   type RequestStatus,
 } from "@/config/request-status";
+import { localDateOf } from "@/lib/availability";
 import { formatDateTime } from "@/lib/format";
-import { getRequestAppointments } from "@/server/appointments/queries";
+import { getRequestAppointments, getSlotMinutes } from "@/server/appointments/queries";
+import { appointmentView } from "@/server/appointments/view";
 import { requireWorkspace } from "@/server/auth/panel-context";
 import {
   getMemberNames,
@@ -33,18 +37,27 @@ export default async function RequestDetailPage({
   params,
 }: PageProps<"/panel/solicitudes/[id]">) {
   const { id } = await params;
-  const { workspace, role, userId } = await requireWorkspace();
+  const { workspace, role, userId, profile } = await requireWorkspace();
   const [request, regional] = await Promise.all([
     getRequest(workspace.id, id),
     getWorkspaceRegional(workspace.id),
   ]);
   if (!request) notFound();
-  const [activity, names, appointments] = await Promise.all([
+  const [activity, names, appointments, slotMinutes] = await Promise.all([
     getRequestActivity(workspace.id, request.id),
     getMemberNames(workspace.id),
     getRequestAppointments(workspace.id, request.id),
+    profile ? getSlotMinutes(profile.id) : null,
   ]);
   const canEdit = role === "owner" || role === "artist";
+  const now = new Date();
+  const today = localDateOf(now, regional.timeZone);
+  // Propuesta para "Dar turno": pasado mañana a las 11, con la duración de turno del horario semanal.
+  const newAppointmentDefaults = {
+    date: localDateOf(new Date(now.getTime() + 2 * 86_400_000), regional.timeZone),
+    time: "11:00",
+    durationMinutes: slotMinutes ?? 180,
+  };
   const status = request.status as RequestStatus;
   const who = (id: string | null) =>
     id === userId ? "Vos" : (id && names.get(id)) || "Alguien del estudio";
@@ -152,28 +165,46 @@ export default async function RequestDetailPage({
               />
             </section>
           )}
-          {appointments.length > 0 && (
-            <section aria-label="Turno pedido" className="flex flex-col gap-4 rounded-lg border border-line bg-surface-1/40 p-6">
-              <h2 className="font-medium">Turno pedido</h2>
-              <ul className="flex flex-col gap-3 text-sm">
+          {(appointments.length > 0 || canEdit) && (
+            <section aria-label="Turnos" className="flex flex-col gap-4 rounded-lg border border-line bg-surface-1/40 p-6">
+              <h2 className="font-medium">Turnos</h2>
+              {appointments.length === 0 && <p className="text-sm text-fg-muted">Todavía no tiene turno.</p>}
+              <ul className="flex flex-col gap-5 text-sm">
                 {appointments.map((appointment) => {
                   const meta = APPOINTMENT_STATUS_META[appointment.status];
+                  const view = appointmentView(appointment, regional, now);
                   return (
-                    <li key={appointment.id} className="flex flex-wrap items-center justify-between gap-3">
-                      <span className="first-letter:uppercase">
-                        {formatDateTime(appointment.start, regional, { weekday: "long", day: "numeric", month: "long" })},{" "}
-                        {formatDateTime(appointment.start, regional, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })} a{" "}
-                        {formatDateTime(appointment.end, regional, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
-                      </span>
-                      <Badge tone={meta.tone}>{meta.label}</Badge>
+                    <li key={appointment.id} className="flex flex-col gap-3">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <span className="first-letter:uppercase">
+                          {view.day}, {view.range}
+                        </span>
+                        <Badge tone={meta.tone}>{meta.label}</Badge>
+                      </div>
+                      {appointment.status === "requested" && (
+                        <p className="text-fg-muted">Lo pidió desde tu página y todavía no está reservado.</p>
+                      )}
+                      {canEdit && (
+                        <AppointmentActions
+                          appointmentId={appointment.id}
+                          status={appointment.status}
+                          started={view.started}
+                          label={view.label}
+                          current={view.current}
+                          today={today}
+                        />
+                      )}
                     </li>
                   );
                 })}
               </ul>
-              {appointments.some((appointment) => appointment.status === "requested") && (
-                <p className="text-sm text-fg-muted">
-                  El cliente lo pidió desde tu página y todavía no está reservado. Confirmarlo, reprogramarlo o rechazarlo desde acá llega en la Fase 3.3; mientras tanto, coordinalo por mensaje.
-                </p>
+              {canEdit && (
+                <>
+                  <NewAppointment requestId={request.id} initial={newAppointmentDefaults} today={today} />
+                  <p className="text-xs text-fg-subtle">
+                    Los cambios no le llegan al cliente: avisale por mensaje. Los avisos automáticos llegan más adelante.
+                  </p>
+                </>
               )}
             </section>
           )}
