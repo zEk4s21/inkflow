@@ -1,9 +1,10 @@
 import "server-only";
 import { createAnthropicProvider } from "./anthropic";
 import { getAiConfig } from "./config";
+import { createSimulatedProvider } from "./simulated";
 import type { AIProvider } from "./types";
 
-export { getAiStatus, type AIStatus } from "./config";
+export { getAiConfig, getAiStatus, type AIConfig, type AIStatus } from "./config";
 export { AIProviderError, type AIMessage, type AIProvider } from "./types";
 
 /** El proveedor configurado, o null si falta o está mal la configuración. */
@@ -13,5 +14,7 @@ export function getAiProvider(env?: Record<string, string | undefined>): AIProvi
   switch (config.provider) {
     case "anthropic":
       return createAnthropicProvider({ apiKey: config.apiKey, model: config.model });
+    case "simulated":
+      return createSimulatedProvider();
   }
 }

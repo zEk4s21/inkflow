@@ -1,22 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import Script from "next/script";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { TextAreaField, TextField } from "@/components/ui/field";
 import type { SlotDay } from "@/lib/availability";
 import { cn } from "@/lib/cn";
 import { submitRequest, type RequestFormState } from "@/server/requests/actions";
-
-declare global {
-  interface Window {
-    turnstile?: {
-      render: (element: HTMLElement, options: { sitekey: string; callback: (token: string) => void; "expired-callback": () => void; theme: string; language: string }) => string;
-      reset: (widgetId: string) => void;
-    };
-  }
-}
+import { useTurnstile } from "./turnstile";
 
 const EMPTY = { name: "", email: "", phone: "", instagramHandle: "", idea: "", bodyZone: "", sizeLabel: "" };
 const initialState: RequestFormState = { status: "idle" };
@@ -37,34 +28,15 @@ export function RequestForm({
   // Si la lista nueva ya no lo trae, el turno elegido se descarta solo.
   const slot = slotDays.some((day) => day.times.some((time) => time.value === chosenSlot)) ? chosenSlot : "";
   const router = useRouter();
-  const [token, setToken] = useState("");
-  const widget = useRef<HTMLDivElement>(null);
-  const widgetId = useRef<string | null>(null);
+  const captcha = useTurnstile(turnstileSiteKey);
+  const resetCaptcha = captcha.reset;
   const errors = state.status === "error" ? (state.fieldErrors ?? {}) : {};
 
-  function renderWidget() {
-    if (!turnstileSiteKey || !widget.current || !window.turnstile || widgetId.current) return;
-    widgetId.current = window.turnstile.render(widget.current, {
-      sitekey: turnstileSiteKey,
-      callback: setToken,
-      "expired-callback": () => setToken(""),
-      theme: "dark",
-      language: "es",
-    });
-  }
-
-  // Si el script ya estaba cargado (navegación del lado del cliente), se dibuja al montar.
-  useEffect(renderWidget);
-
-  // Cada token sirve una sola vez: después de un error se pide uno nuevo.
   useEffect(() => {
-    if (state.status === "error" && widgetId.current && window.turnstile) {
-      window.turnstile.reset(widgetId.current);
-      setToken("");
-    }
+    if (state.status === "error") resetCaptcha();
     // Si el turno dejó de estar libre mientras completaba el formulario, se vuelve a pedir la lista.
     if (state.status === "error" && state.fieldErrors?.slot) router.refresh();
-  }, [state, router]);
+  }, [state, router, resetCaptcha]);
 
   if (state.status === "sent") {
     return (
@@ -127,16 +99,10 @@ export function RequestForm({
         </label>
       </div>
 
-      {turnstileSiteKey && (
-        <>
-          <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" onReady={renderWidget} />
-          <div ref={widget} />
-          <input type="hidden" name="cf-turnstile-response" value={token} />
-        </>
-      )}
+      {captcha.widget}
 
       <div className="flex flex-col gap-3">
-        <Button type="submit" size="lg" loading={pending} disabled={Boolean(turnstileSiteKey) && !token} className="self-start">
+        <Button type="submit" size="lg" loading={pending} disabled={captcha.required && !captcha.token} className="self-start">
           {slot ? "Enviar consulta y pedir turno" : "Enviar consulta"}
         </Button>
         {state.status === "error" && (

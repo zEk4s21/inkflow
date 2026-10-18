@@ -113,7 +113,7 @@ function AssistantStatus({ status, regional }: { status: AIStatus; regional: Reg
     return (
       <div className="flex flex-col gap-4 text-sm">
         <span className="self-start">
-          <Badge tone="success">Configurado</Badge>
+          {status.simulated ? <Badge tone="warning">Simulado (sin IA)</Badge> : <Badge tone="success">Configurado</Badge>}
         </span>
         <dl className="flex flex-col divide-y divide-line">
           {[
@@ -128,7 +128,12 @@ function AssistantStatus({ status, regional }: { status: AIStatus; regional: Reg
             </div>
           ))}
         </dl>
-        <p className="text-fg-muted">La conversación con clientes todavía no está habilitada: llega en la Fase 4.2.</p>
+        <p className="text-fg-muted">
+          {status.simulated
+            ? "Las respuestas son fijas y la página lo avisa: sirve solo para probar la pantalla, nunca en producción."
+            : "Los clientes ya pueden conversar con el asistente en tu página."}{" "}
+          Mandar la consulta desde el chat todavía no está habilitado (llega en la Fase 4.3).
+        </p>
       </div>
     );
   }

@@ -3,9 +3,16 @@ import { z } from "zod";
 
 /** Proveedores con adaptador. Sumar uno es escribir su adaptador y agregarlo acá. */
 export const AI_PROVIDERS = ["anthropic"] as const;
-export type AIProviderName = (typeof AI_PROVIDERS)[number];
+/**
+ * "simulated" no es una IA: respuestas fijas para ver y probar la conversación sin clave.
+ * Solo se acepta con INKFLOW_ALLOW_SIMULATED_AI=1, que nunca va en producción.
+ */
+export type AIProviderName = (typeof AI_PROVIDERS)[number] | "simulated";
 
-export const AI_PROVIDER_LABELS: Record<AIProviderName, string> = { anthropic: "Anthropic (Claude)" };
+export const AI_PROVIDER_LABELS: Record<AIProviderName, string> = {
+  anthropic: "Anthropic (Claude)",
+  simulated: "Simulado (solo pruebas, no es una IA)",
+};
 
 const positiveInt = (fallback: number | null) =>
   z
@@ -37,6 +44,7 @@ export type AIConfig =
 /** Lee la configuración de IA de las variables de entorno. Solo servidor: la clave nunca sale de acá. */
 export function getAiConfig(env: Record<string, string | undefined> = process.env): AIConfig {
   const provider = env.AI_PROVIDER?.trim() || "anthropic";
+  if (provider === "simulated") return simulatedConfig(env);
   const apiKey = env.AI_API_KEY?.trim();
   const model = env.AI_MODEL?.trim();
 
@@ -63,9 +71,25 @@ export function getAiConfig(env: Record<string, string | undefined> = process.en
   };
 }
 
+function simulatedConfig(env: Record<string, string | undefined>): AIConfig {
+  if (env.INKFLOW_ALLOW_SIMULATED_AI !== "1") {
+    return { status: "invalid", problems: ['AI_PROVIDER="simulated" solo funciona con INKFLOW_ALLOW_SIMULATED_AI=1 (nunca en producción).'] };
+  }
+  const limits = limitsSchema.safeParse(env);
+  if (!limits.success) return { status: "invalid", problems: ["Los límites de IA tienen que ser números enteros positivos."] };
+  return {
+    status: "configured",
+    provider: "simulated",
+    model: "respuestas fijas",
+    apiKey: "",
+    maxMessagesPerConversation: limits.data.AI_MAX_MESSAGES_PER_CONVERSATION!,
+    monthlyTokenBudget: limits.data.AI_MONTHLY_TOKEN_BUDGET_PER_WORKSPACE,
+  };
+}
+
 /** Lo que se puede mostrar en el panel: nunca la clave. */
 export type AIStatus =
-  | { status: "configured"; providerLabel: string; model: string; maxMessagesPerConversation: number; monthlyTokenBudget: number | null }
+  | { status: "configured"; providerLabel: string; simulated: boolean; model: string; maxMessagesPerConversation: number; monthlyTokenBudget: number | null }
   | { status: "missing"; missing: string[] }
   | { status: "invalid"; problems: string[] };
 
@@ -75,6 +99,7 @@ export function getAiStatus(env?: Record<string, string | undefined>): AIStatus 
   return {
     status: "configured",
     providerLabel: AI_PROVIDER_LABELS[config.provider],
+    simulated: config.provider === "simulated",
     model: config.model,
     maxMessagesPerConversation: config.maxMessagesPerConversation,
     monthlyTokenBudget: config.monthlyTokenBudget,
