@@ -3,11 +3,14 @@ import type { ReactNode } from "react";
 import { PanelPageHeader } from "@/components/panel/page-header";
 import { PageContentForm } from "@/components/panel/settings/page-content-form";
 import { ProfileForm } from "@/components/panel/settings/profile-form";
+import { Badge } from "@/components/ui/badge";
 import { Button, buttonClasses } from "@/components/ui/button";
-import { resolveRegional } from "@/config/regional";
+import { resolveRegional, type RegionalSettings } from "@/config/regional";
+import { formatNumber } from "@/lib/format";
 import { parseFaq, parseProcess } from "@/server/artists/page-content";
 import { signOut } from "@/server/auth/actions";
 import { requireWorkspace } from "@/server/auth/panel-context";
+import { getAiStatus, type AIStatus } from "@/server/integrations/ai";
 import { createSupabaseServerClient } from "@/server/supabase/server";
 
 export const metadata: Metadata = { title: "Ajustes" };
@@ -80,12 +83,9 @@ export default async function SettingsPage() {
             ))}
           </dl>
         </Card>
-        <section className="rounded-lg border border-dashed border-line p-6">
-          <h2 className="mb-2 font-medium">Horarios y asistente</h2>
-          <p className="text-sm text-fg-muted">
-            Días de trabajo, duración de sesiones y reglas del asistente de IA. Se configuran en las Fases 3 y 4.
-          </p>
-        </section>
+        <Card title="Ink Assistant">
+          <AssistantStatus status={getAiStatus()} regional={regional} />
+        </Card>
       </div>
 
       {/* En celu y tablet no hay sidebar: la salida está acá. */}
@@ -100,9 +100,55 @@ export default async function SettingsPage() {
 
 function Card({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="flex flex-col gap-6 rounded-lg border border-line bg-surface-1/40 p-6">
+    <section aria-label={title} className="flex flex-col gap-6 rounded-lg border border-line bg-surface-1/40 p-6">
       <h2 className="font-medium">{title}</h2>
       {children}
     </section>
+  );
+}
+
+/** Estado de la IA leído de las variables del servidor. Nunca muestra la clave. */
+function AssistantStatus({ status, regional }: { status: AIStatus; regional: RegionalSettings }) {
+  if (status.status === "configured") {
+    return (
+      <div className="flex flex-col gap-4 text-sm">
+        <span className="self-start">
+          <Badge tone="success">Configurado</Badge>
+        </span>
+        <dl className="flex flex-col divide-y divide-line">
+          {[
+            ["Proveedor", status.providerLabel],
+            ["Modelo", status.model],
+            ["Mensajes por conversación", `Hasta ${status.maxMessagesPerConversation}`],
+            ["Presupuesto mensual", status.monthlyTokenBudget ? `${formatNumber(status.monthlyTokenBudget, regional)} tokens` : "Sin tope"],
+          ].map(([label, value]) => (
+            <div key={label} className="flex flex-col gap-1 py-3 sm:flex-row sm:justify-between sm:gap-6">
+              <dt className="text-fg-subtle">{label}</dt>
+              <dd className="text-fg sm:text-right">{value}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="text-fg-muted">La conversación con clientes todavía no está habilitada: llega en la Fase 4.2.</p>
+      </div>
+    );
+  }
+  return (
+    <div className="flex flex-col gap-4 text-sm">
+      <span className="self-start">
+        <Badge tone="warning">No configurado</Badge>
+      </span>
+      {status.status === "missing" ? (
+        <p className="text-fg-muted">
+          Falta cargar en el servidor: {status.missing.map((name) => <code key={name} className="mx-0.5 rounded bg-surface-2 px-1.5 py-0.5 text-xs">{name}</code>)}.
+        </p>
+      ) : (
+        <ul className="flex list-disc flex-col gap-1 pl-5 text-fg-muted">
+          {status.problems.map((problem) => (
+            <li key={problem}>{problem}</li>
+          ))}
+        </ul>
+      )}
+      <p className="text-fg-muted">Mientras tanto, tu página sigue recibiendo consultas por el formulario.</p>
+    </div>
   );
 }

@@ -19,14 +19,15 @@ export function ArtistHeader({ slug, artistName }: { slug: string; artistName: s
           <ul className="flex gap-8 text-sm text-fg-muted">
             {links.map((link) => (
               <li key={link.href}>
-                <a href={link.href} className="transition-colors hover:text-fg">
+                <a href={`/artist/${slug}${link.href}`} className="transition-colors hover:text-fg">
                   {link.label}
                 </a>
               </li>
             ))}
           </ul>
         </nav>
-        <a href="#contacto" className={buttonClasses({ size: "sm" })}>
+        {/* Con la ruta completa, los enlaces también sirven desde las páginas internas (trabajo, asistente). */}
+        <a href={`/artist/${slug}#contacto`} className={buttonClasses({ size: "sm" })}>
           Iniciar proyecto
         </a>
       </div>
