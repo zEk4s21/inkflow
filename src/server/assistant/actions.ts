@@ -5,13 +5,15 @@ import { z } from "zod";
 import { getServerEnv } from "@/server/env";
 import { AIProviderError, getAiConfig, getAiProvider } from "@/server/integrations/ai";
 import { getCaptchaConfig, verifyTurnstile } from "@/server/requests/captcha";
+import { findOrCreateClient, isRequestRateLimited } from "@/server/requests/intake";
 import { clientIp, submitterHash } from "@/server/requests/rate-limit";
+import { assistantRequestSchema } from "@/server/requests/schemas";
 import { createSupabaseAdminClient } from "@/server/supabase/admin";
 import { createSupabasePublicClient } from "@/server/supabase/public";
 import { getPublicArtist } from "@/server/artists/public-artist";
 import type { Brief } from "./brief";
 import { ASSISTANT_LIMITS, closeConversation, createConversation, loadConversation } from "./conversation";
-import type { AssistantState } from "./state";
+import type { AssistantState, ConfirmState } from "./state";
 import { InvalidModelOutputError, MAX_USER_MESSAGE, runTurn } from "./turn";
 
 const messageSchema = z.string().trim().min(1, "Escribí un mensaje.").max(MAX_USER_MESSAGE, `Hasta ${MAX_USER_MESSAGE} caracteres.`);
@@ -68,8 +70,9 @@ export async function sendAssistantMessage(slug: string, prev: AssistantState, f
     }
     const id = await createConversation(slug, workspace.id, hash);
     if (!id) return fail(FAILED);
-    conversation = { id, brief: {}, messageCount: 0, messages: [] };
+    conversation = { id, status: "open", brief: {}, messageCount: 0, messages: [] };
   }
+  if (conversation.status !== "open") return { ...fail("Esta consulta ya se envió. Para otra idea, empezá de nuevo."), started: true, sent: true };
 
   const maxMessages = config.maxMessagesPerConversation;
   if (conversation.messageCount >= maxMessages) return { ...fail(LIMIT, 0), started: true };
@@ -122,6 +125,7 @@ export async function sendAssistantMessage(slug: string, prev: AssistantState, f
 
   return {
     started: true,
+    sent: false,
     messages: [...conversation.messages, { role: "user", content: message }, { role: "assistant", content: turn.reply }],
     brief: turn.brief,
     ready: turn.ready,
@@ -134,4 +138,86 @@ export async function sendAssistantMessage(slug: string, prev: AssistantState, f
 export async function restartAssistant(slug: string) {
   const { data: workspace } = await createSupabasePublicClient().from("workspaces").select("id").eq("slug", slug).maybeSingle();
   if (workspace) await closeConversation(slug, workspace.id);
+}
+
+/**
+ * Crea la consulta con el resumen que la persona revisó y confirmó, más sus datos de contacto.
+ * La conversación se marca como confirmada antes de crear nada, así un doble envío no duplica.
+ */
+export async function confirmAssistantRequest(slug: string, _prev: ConfirmState, formData: FormData): Promise<ConfirmState> {
+  // Campo trampa invisible: si viene completo es un bot.
+  if (String(formData.get("website") ?? "") !== "") return { status: "sent" };
+
+  const field = (name: string) => String(formData.get(name) ?? "");
+  const parsed = assistantRequestSchema.safeParse({
+    name: field("name"),
+    email: field("email"),
+    phone: field("phone"),
+    instagramHandle: field("instagramHandle"),
+    idea: field("idea"),
+    bodyZone: field("bodyZone"),
+    sizeLabel: field("sizeLabel"),
+    style: field("style"),
+    colorMode: field("colorMode"),
+    isCoverUp: field("isCoverUp"),
+    details: field("details"),
+    confirmed: field("confirmed"),
+  });
+  if (!parsed.success) {
+    const fieldErrors: Record<string, string> = {};
+    for (const issue of parsed.error.issues) fieldErrors[issue.path.join(".")] ??= issue.message;
+    return { status: "error", message: "Revisá los campos marcados.", fieldErrors };
+  }
+  const values = parsed.data;
+
+  if (getCaptchaConfig().mode === "missing") return { status: "error", message: UNAVAILABLE };
+  const { data: workspace } = await createSupabasePublicClient().from("workspaces").select("id").eq("slug", slug).maybeSingle();
+  if (!workspace) return { status: "error", message: UNAVAILABLE };
+  const conversation = await loadConversation(workspace.id);
+  if (!conversation) {
+    return { status: "error", message: "Esta conversación ya no está disponible. Empezá de nuevo o usá el formulario." };
+  }
+  if (conversation.status !== "open") return { status: "sent" };
+
+  const admin = createSupabaseAdminClient();
+  const ip = clientIp(await headers());
+  const hash = ip ? submitterHash(ip, getServerEnv().SUPABASE_SECRET_KEY) : null;
+  const limited = await isRequestRateLimited(admin, workspace.id, hash);
+  if (limited === null) return { status: "error", message: FAILED };
+  if (limited) return { status: "error", message: "Recibimos varias consultas seguidas. Esperá un rato o escribí por Instagram." };
+
+  const { data: claimed } = await admin
+    .from("conversations")
+    .update({ status: "confirmed" })
+    .eq("id", conversation.id)
+    .eq("status", "open")
+    .select("id");
+  if (!claimed?.length) return { status: "error", message: "Esta consulta ya se envió." };
+  const release = () => admin.from("conversations").update({ status: "open" }).eq("id", conversation.id).eq("status", "confirmed");
+
+  const clientId = await findOrCreateClient(admin, workspace.id, values);
+  if (!clientId) {
+    await release();
+    return { status: "error", message: FAILED };
+  }
+  const { error } = await admin.from("tattoo_requests").insert({
+    workspace_id: workspace.id,
+    client_id: clientId,
+    source: "assistant",
+    conversation_id: conversation.id,
+    idea: values.idea,
+    body_zone: values.bodyZone,
+    size_label: values.sizeLabel,
+    style: values.style,
+    color_mode: values.colorMode,
+    is_cover_up: values.isCoverUp,
+    details: values.details,
+    submitter_hash: hash,
+  });
+  if (error) {
+    console.error("[assistant] request insert", error.code);
+    await release();
+    return { status: "error", message: FAILED };
+  }
+  return { status: "sent" };
 }

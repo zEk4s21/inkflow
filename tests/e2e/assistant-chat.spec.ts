@@ -46,7 +46,7 @@ test.describe("Ink Assistant con respuestas simuladas", () => {
     await box.press("Enter");
     await expect(log).toContainText("ya tengo lo básico");
     await expect(resumen.getByRole("status")).toContainText("Ya está lo básico");
-    await expect(resumen.getByRole("link", { name: "Ir al formulario" })).toBeVisible();
+    await expect(resumen.getByRole("button", { name: "Revisar y enviar" })).toBeVisible();
 
     // En la base quedó la conversación con el resumen validado, y el token solo como hash.
     const { data } = await adminClient()
@@ -68,6 +68,64 @@ test.describe("Ink Assistant con respuestas simuladas", () => {
     await expect(log).not.toContainText("Una golondrina con una rosa");
     await expect(resumen).not.toContainText("10 cm");
     await expect(resumen.getByText("Falta")).toHaveCount(3);
+  });
+
+  test("sin confirmación no se crea nada; confirmada llega al panel con la conversación", async ({ page }, testInfo) => {
+    await page.goto(`/artist/${studio.slug}/assistant`);
+    const log = page.getByRole("log", { name: "Mensajes" });
+    const box = page.getByRole("textbox", { name: "Tu mensaje" });
+    await expect(async () => {
+      await box.fill("Un tigre entre flores de loto");
+      await box.press("Enter");
+      await expect(log).toContainText("Anoté tu idea", { timeout: 2000 });
+    }).toPass();
+    for (const [text, reply] of [["Espalda alta", "Anoté la zona"], ["30 cm", "ya tengo lo básico"]]) {
+      await box.fill(text);
+      await box.press("Enter");
+      await expect(log).toContainText(reply);
+    }
+
+    await page.getByRole("button", { name: "Revisar y enviar" }).click();
+    const review = page.getByRole("form", { name: "Revisar y enviar" });
+    await expect(review.getByRole("textbox", { name: "Idea" })).toHaveValue("Un tigre entre flores de loto");
+    await review.getByRole("textbox", { name: "Estilo" }).fill("Japonés");
+    await review.getByRole("combobox", { name: "Color" }).selectOption("color");
+    const name = `Cliente asistente ${testInfo.project.name}`;
+    await review.getByRole("textbox", { name: "Nombre" }).fill(name);
+    await review.getByRole("textbox", { name: "Email" }).fill(`asistente-${testInfo.project.name}-${Date.now()}@example.com`);
+
+    // Sin tildar la confirmación, el servidor no crea nada (se saltea la validación del navegador).
+    await review.getByRole("button", { name: "Enviar consulta" }).click();
+    await expect(review.getByText("Tildá la confirmación para enviar.")).toBeVisible();
+    const requests = () =>
+      adminClient().from("tattoo_requests").select("id, source, style, color_mode, conversation_id, workspaces!inner (slug)").eq("workspaces.slug", studio.slug);
+    expect((await requests()).data).toEqual([]);
+    // Lo escrito no se pierde después del error.
+    await expect(review.getByRole("textbox", { name: "Nombre" })).toHaveValue(name);
+
+    await review.getByRole("checkbox", { name: "Revisé el resumen y quiero enviar la consulta." }).check();
+    await review.getByRole("button", { name: "Enviar consulta" }).click();
+    await expect(page.getByRole("status").filter({ hasText: "Recibí tu consulta" })).toBeVisible();
+    await expect(box).toHaveCount(0);
+    const { data } = await requests();
+    expect(data).toHaveLength(1);
+    expect(data?.[0]).toMatchObject({ source: "assistant", style: "Japonés", color_mode: "color" });
+    expect(data?.[0].conversation_id).toBeTruthy();
+
+    // Al volver, la conversación figura como enviada y se puede empezar otra.
+    await page.reload();
+    await expect(page.getByRole("status").filter({ hasText: "Recibí tu consulta" })).toBeVisible();
+    await page.getByRole("button", { name: "Empezar de nuevo" }).click();
+    await expect(page.getByRole("textbox", { name: "Tu mensaje" })).toBeVisible();
+
+    await signIn(page, studio.email);
+    await page.goto("/panel/solicitudes");
+    await page.getByRole("link", { name: new RegExp(name) }).first().click();
+    await expect(page.getByText("desde el asistente")).toBeVisible();
+    await expect(page.getByText("Japonés")).toBeVisible();
+    const conversation = page.getByRole("region", { name: "Conversación con el asistente" });
+    await conversation.getByText("Conversación con el asistente").click();
+    await expect(conversation).toContainText("Espalda alta");
   });
 
   test("no acepta mensajes vacíos ni más largos que el tope", async ({ page }) => {

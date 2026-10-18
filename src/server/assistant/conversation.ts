@@ -14,6 +14,8 @@ const MESSAGES_LIMIT = 80;
 
 export type StoredConversation = {
   id: string;
+  /** "confirmed": ya se mandó la consulta y no se puede seguir. */
+  status: "open" | "confirmed";
   brief: Brief;
   /** Mensajes que mandó la persona. */
   messageCount: number;
@@ -27,7 +29,7 @@ export function hashToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
 }
 
-/** Conversación abierta y vigente de la cookie, para ese estudio. Si no hay, null. */
+/** Conversación vigente (abierta o ya enviada) de la cookie, para ese estudio. Si no hay, null. */
 export async function loadConversation(workspaceId: string): Promise<StoredConversation | null> {
   const token = (await cookies()).get(COOKIE)?.value;
   if (!token || !/^[A-Za-z0-9_-]{43}$/.test(token)) return null;
@@ -35,10 +37,10 @@ export async function loadConversation(workspaceId: string): Promise<StoredConve
   const admin = createSupabaseAdminClient();
   const { data: conversation } = await admin
     .from("conversations")
-    .select("id, brief, message_count")
+    .select("id, status, brief, message_count")
     .eq("token_hash", hashToken(token))
     .eq("workspace_id", workspaceId)
-    .eq("status", "open")
+    .in("status", ["open", "confirmed"])
     .gt("expires_at", new Date().toISOString())
     .maybeSingle();
   if (!conversation) return null;
@@ -53,6 +55,7 @@ export async function loadConversation(workspaceId: string): Promise<StoredConve
 
   return {
     id: conversation.id,
+    status: conversation.status as StoredConversation["status"],
     brief: readBrief(conversation.brief),
     messageCount: conversation.message_count,
     messages: messages.reverse().map((message) => ({ role: message.role as AIMessage["role"], content: message.content })),

@@ -267,14 +267,14 @@ isOneToOne: false
                   ]
                 },"tattoo_requests": {
                   Row: {
-                    "body_zone": string | null,"client_id": string,"created_at": string,"deleted_at": string | null,"id": string,"idea": string,"size_label": string | null,"source": string,"status": string,"submitter_hash": string | null,"updated_at": string,"workspace_id": string
+                    "body_zone": string | null,"client_id": string,"color_mode": string | null,"conversation_id": string | null,"created_at": string,"deleted_at": string | null,"details": string | null,"id": string,"idea": string,"is_cover_up": boolean | null,"size_label": string | null,"source": string,"status": string,"style": string | null,"submitter_hash": string | null,"updated_at": string,"workspace_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "body_zone"?: string | null,"client_id": string,"created_at"?: string,"deleted_at"?: string | null,"id"?: string,"idea": string,"size_label"?: string | null,"source"?: string,"status"?: string,"submitter_hash"?: string | null,"updated_at"?: string,"workspace_id": string
+                    "body_zone"?: string | null,"client_id": string,"color_mode"?: string | null,"conversation_id"?: string | null,"created_at"?: string,"deleted_at"?: string | null,"details"?: string | null,"id"?: string,"idea": string,"is_cover_up"?: boolean | null,"size_label"?: string | null,"source"?: string,"status"?: string,"style"?: string | null,"submitter_hash"?: string | null,"updated_at"?: string,"workspace_id": string
                   }
                   Update: {
-                    "body_zone"?: string | null,"client_id"?: string,"created_at"?: string,"deleted_at"?: string | null,"id"?: string,"idea"?: string,"size_label"?: string | null,"source"?: string,"status"?: string,"submitter_hash"?: string | null,"updated_at"?: string,"workspace_id"?: string
+                    "body_zone"?: string | null,"client_id"?: string,"color_mode"?: string | null,"conversation_id"?: string | null,"created_at"?: string,"deleted_at"?: string | null,"details"?: string | null,"id"?: string,"idea"?: string,"is_cover_up"?: boolean | null,"size_label"?: string | null,"source"?: string,"status"?: string,"style"?: string | null,"submitter_hash"?: string | null,"updated_at"?: string,"workspace_id"?: string
                   }
                   Relationships: [
                     {
@@ -282,6 +282,12 @@ isOneToOne: false
       columns: ["client_id"]
 isOneToOne: false
       referencedRelation: "clients"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "tattoo_requests_conversation_id_fkey"
+      columns: ["conversation_id"]
+isOneToOne: true
+      referencedRelation: "conversations"
       referencedColumns: ["id"]
     },{
       foreignKeyName: "tattoo_requests_workspace_id_fkey"

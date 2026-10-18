@@ -1,14 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { useActionState, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Button, buttonClasses } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { TextAreaField } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
-import { restartAssistant, sendAssistantMessage } from "@/server/assistant/actions";
+import { confirmAssistantRequest, restartAssistant, sendAssistantMessage } from "@/server/assistant/actions";
 import { BRIEF_FIELDS, BRIEF_LABELS, briefValue, REQUIRED_FIELDS, type Brief } from "@/server/assistant/brief";
-import type { AssistantState, ChatMessage } from "@/server/assistant/state";
+import type { AssistantState, ChatMessage, ConfirmState } from "@/server/assistant/state";
+import { AssistantConfirm } from "./assistant-confirm";
 import { useTurnstile } from "./turnstile";
 
 /** Cuando quedan estos mensajes o menos, se muestra cuántos. */
@@ -32,6 +32,8 @@ export function AssistantChat({
   maxLength: number;
 }) {
   const [state, formAction, pending] = useActionState(sendAssistantMessage.bind(null, slug), initialState);
+  const [confirmState, confirmAction, confirming] = useActionState(confirmAssistantRequest.bind(null, slug), { status: "idle" } as ConfirmState);
+  const [reviewing, setReviewing] = useState(false);
   const [lastSent, setLastSent] = useState("");
   const captcha = useTurnstile(state.started ? null : turnstileSiteKey);
   const resetCaptcha = captcha.reset;
@@ -54,7 +56,8 @@ export function AssistantChat({
     }
   }
 
-  const blocked = state.remaining === 0;
+  const sent = state.sent || confirmState.status === "sent";
+  const blocked = state.remaining === 0 || sent;
 
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
@@ -88,37 +91,46 @@ export function AssistantChat({
           )}
         </div>
 
-        <form action={formAction} onSubmit={(event) => setLastSent(String(new FormData(event.currentTarget).get("message") ?? "").trim())} className="flex flex-col gap-3">
-          <TextAreaField
-            key={state.version}
-            label="Tu mensaje"
-            name="message"
-            defaultValue={state.draft ?? ""}
-            maxLength={maxLength}
-            required
-            disabled={blocked}
-            onKeyDown={submitOnEnter}
-            placeholder="Por ejemplo: una golondrina con una rosa, en el antebrazo"
-            hint="Enter para enviar, Shift + Enter para bajar de línea. No hace falta que dejes tus datos acá."
-            className="min-h-24"
-          />
-          {captcha.widget}
-          <div className="flex flex-wrap items-center gap-3">
-            <Button type="submit" loading={pending} disabled={blocked || (captcha.required && !captcha.token)}>
-              Enviar
-            </Button>
-            {state.remaining <= REMAINING_WARNING && !blocked && (
-              <span className="text-xs text-fg-subtle">
-                {state.remaining === 1 ? "Te queda 1 mensaje" : `Te quedan ${state.remaining} mensajes`}
-              </span>
-            )}
-          </div>
-          {state.error && (
-            <p role="alert" className="text-sm text-danger">
-              {state.error}
+        {sent ? (
+          <div role="status" className="flex flex-col gap-2 rounded-lg border border-success/40 bg-success/5 p-5">
+            <h2 className="font-medium">¡Listo! Recibí tu consulta</h2>
+            <p className="text-sm leading-relaxed text-fg-muted">
+              La voy a leer con el resumen de esta charla y te respondo por el medio de contacto que dejaste. Todavía no hay nada reservado.
             </p>
-          )}
-        </form>
+          </div>
+        ) : (
+          <form action={formAction} onSubmit={(event) => setLastSent(String(new FormData(event.currentTarget).get("message") ?? "").trim())} className="flex flex-col gap-3">
+            <TextAreaField
+              key={state.version}
+              label="Tu mensaje"
+              name="message"
+              defaultValue={state.draft ?? ""}
+              maxLength={maxLength}
+              required
+              disabled={blocked}
+              onKeyDown={submitOnEnter}
+              placeholder="Por ejemplo: una golondrina con una rosa, en el antebrazo"
+              hint="Enter para enviar, Shift + Enter para bajar de línea. No hace falta que dejes tus datos acá."
+              className="min-h-24"
+            />
+            {captcha.widget}
+            <div className="flex flex-wrap items-center gap-3">
+              <Button type="submit" loading={pending} disabled={blocked || (captcha.required && !captcha.token)}>
+                Enviar
+              </Button>
+              {state.remaining <= REMAINING_WARNING && !blocked && (
+                <span className="text-xs text-fg-subtle">
+                  {state.remaining === 1 ? "Te queda 1 mensaje" : `Te quedan ${state.remaining} mensajes`}
+                </span>
+              )}
+            </div>
+            {state.error && (
+              <p role="alert" className="text-sm text-danger">
+                {state.error}
+              </p>
+            )}
+          </form>
+        )}
 
         {state.started && (
           <form action={restartAssistant.bind(null, slug)}>
@@ -129,12 +141,23 @@ export function AssistantChat({
         )}
       </section>
 
-      <BriefPanel slug={slug} brief={state.brief} ready={state.ready} />
+      {reviewing && state.ready && !sent ? (
+        <AssistantConfirm
+          key={JSON.stringify(state.brief)}
+          brief={state.brief}
+          state={confirmState}
+          action={confirmAction}
+          pending={confirming}
+          onBack={() => setReviewing(false)}
+        />
+      ) : (
+        <BriefPanel brief={state.brief} ready={state.ready} sent={sent} onReview={() => setReviewing(true)} />
+      )}
     </div>
   );
 }
 
-function BriefPanel({ slug, brief, ready }: { slug: string; brief: Brief; ready: boolean }) {
+function BriefPanel({ brief, ready, sent, onReview }: { brief: Brief; ready: boolean; sent: boolean; onReview: () => void }) {
   return (
     <aside aria-label="Resumen de tu idea" className="flex flex-col gap-4 self-start rounded-lg border border-line bg-surface-1 p-6 lg:sticky lg:top-24">
       <h2 className="font-medium">Resumen de tu idea</h2>
@@ -151,14 +174,14 @@ function BriefPanel({ slug, brief, ready }: { slug: string; brief: Brief; ready:
           );
         })}
       </dl>
-      {ready ? (
+      {sent ? (
+        <p className="text-xs text-fg-subtle">Este resumen ya se envió con tu consulta.</p>
+      ) : ready ? (
         <div role="status" className="flex flex-col gap-3 text-sm">
-          <p className="text-fg-muted">
-            Ya está lo básico. Mandar la consulta desde acá todavía no está habilitado: mientras tanto, pasala al formulario.
-          </p>
-          <Link href={`/artist/${slug}#contacto`} className={buttonClasses({ variant: "secondary", size: "sm", className: "self-start" })}>
-            Ir al formulario
-          </Link>
+          <p className="text-fg-muted">Ya está lo básico. Revisalo, dejá cómo responderte y enviá la consulta.</p>
+          <Button type="button" size="sm" onClick={onReview} className="self-start">
+            Revisar y enviar
+          </Button>
         </div>
       ) : (
         <p className="text-xs text-fg-subtle">Se completa solo a medida que charlamos. Lo mínimo: idea, zona y tamaño.</p>

@@ -6,6 +6,8 @@ export type ChatMessage = { role: "user" | "assistant"; content: string };
 export type AssistantState = {
   /** Ya hay conversación: no se vuelve a pedir el captcha. */
   started: boolean;
+  /** Ya se mandó la consulta de esta conversación. */
+  sent: boolean;
   messages: ChatMessage[];
   brief: Brief;
   ready: boolean;
@@ -21,6 +23,7 @@ export type AssistantState = {
 export function toAssistantState(conversation: StoredConversation | null, maxMessages: number): AssistantState {
   return {
     started: conversation !== null,
+    sent: conversation?.status === "confirmed",
     messages: conversation?.messages ?? [],
     brief: conversation?.brief ?? {},
     ready: conversation ? isBriefReady(conversation.brief) : false,
@@ -28,3 +31,8 @@ export function toAssistantState(conversation: StoredConversation | null, maxMes
     version: 0,
   };
 }
+
+export type ConfirmState =
+  | { status: "idle" }
+  | { status: "sent" }
+  | { status: "error"; message: string; fieldErrors?: Record<string, string> };

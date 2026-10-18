@@ -37,7 +37,7 @@ Alcance: microapp para un tatuador, con base preparada para venderse como SaaS.
 
 - [x] 4.1 Proveedor configurable + estado "no configurado": interfaz `AIProvider` con adaptador de Anthropic (Messages API, sin SDK), configuración por variables de entorno validada, estado en Ajustes (nunca muestra la clave) y `/artist/[slug]/assistant` que, sin asistente, manda al formulario. Probado con fetch simulado: sin clave real no se llamó a la API
 - [x] 4.2 Conversación con brief estructurado: chat en `/artist/[slug]/assistant` con resumen al costado (idea, zona, tamaño, estilo, color, cover up, otros detalles). El modelo devuelve JSON que valida zod; el servidor une el resumen sin borrar datos y decide cuándo está listo. Conversación por cookie httpOnly (en la base solo el hash), captcha y límite al empezar, tope de mensajes y de tokens por mes. Probado con un proveedor simulado (`AI_PROVIDER=simulated`, marcado en pantalla); falta probarlo con la clave real. Mandar la consulta desde el chat queda para la 4.3
-- [ ] 4.3 Confirmación y creación de solicitud
+- [x] 4.3 Confirmación y creación de solicitud: con lo básico listo, "Revisar y enviar" abre el resumen editable más los datos de contacto (no pasan por el modelo). Sin tildar la confirmación no se crea nada. La consulta llega al panel como "desde el asistente", con estilo, color, cover up, otros detalles y la conversación completa. Una conversación genera una sola consulta; comparte el límite de envíos del formulario
 - [ ] 4.4 Límites y costos
 
 ## Después de validar con el tatuador
