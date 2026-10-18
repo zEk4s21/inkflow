@@ -49,9 +49,9 @@ erDiagram
 | `portfolio_items` | `status in ('draft','published')`, `position`, `category` (texto), una foto por trabajo (`image_path`, `image_width`, `image_height`, `alt_text`); `image_path` debe empezar con el `workspace_id`; borrado lógico |
 | ~~`portfolio_images`~~ | Postergada: v1 usa una foto por trabajo |
 | ~~`portfolio_categories`~~ | Postergada: la categoría es texto en el trabajo y los filtros salen de los publicados |
-| `clients` | único parcial (`workspace_id`, `lower(email)`) donde `deleted_at is null` |
+| `clients` | email o teléfono obligatorio; teléfono solo dígitos; únicos parciales (`workspace_id`, `lower(email)`) y (`workspace_id`, `phone`) donde `deleted_at is null`; borrado lógico |
 | `conversations` / `conversation_messages` | `public_token_hash`, `expires_at` (retención limitada) |
-| `tattoo_requests` | `status in ('new','reviewing','needs_info','quoted','accepted','rejected','completed','cancelled')`, `source in ('form','assistant','manual')`, `public_token_hash` |
+| `tattoo_requests` | `status in ('new','reviewing','needs_info','quoted','accepted','rejected','completed','cancelled')`, `source in ('form','assistant','manual')`, `idea`, `body_zone`, `size_label`, `submitter_hash` (HMAC de la IP, para el límite de envíos); un trigger exige que el cliente sea del mismo workspace; borrado lógico. `public_token_hash` llega con el seguimiento para clientes |
 | `request_attachments` | bucket **privado**, URLs firmadas |
 | `status_history` | solo insert |
 | `private_notes` | nunca expuestas por rutas públicas |

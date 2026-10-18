@@ -3,9 +3,11 @@ import { notFound } from "next/navigation";
 import { buttonClasses } from "@/components/ui/button";
 import { ArtistHeader } from "@/components/public/artist-header";
 import { PortfolioGrid } from "@/components/public/portfolio-grid";
+import { RequestForm } from "@/components/public/request-form";
 import { PublicSection } from "@/components/public/section";
 import { WorkImage } from "@/components/public/work-image";
 import { getPublicArtist, getPublishedWorks, listPublicArtistSlugs } from "@/server/artists/public-artist";
+import { getCaptchaConfig } from "@/server/requests/captcha";
 
 export async function generateStaticParams() {
   const slugs = await listPublicArtistSlugs();
@@ -29,6 +31,7 @@ export default async function ArtistPage({ params }: PageProps<"/artist/[slug]">
   const artist = await getPublicArtist(slug);
   if (!artist) notFound();
   const works = await getPublishedWorks(slug);
+  const captcha = getCaptchaConfig();
   const heroWorks = works.slice(0, 3);
 
   return (
@@ -163,24 +166,27 @@ export default async function ArtistPage({ params }: PageProps<"/artist/[slug]">
         )}
 
         <PublicSection id="contacto" eyebrow="Contacto" title="Contame tu idea">
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="flex flex-col gap-4 rounded-lg border border-line bg-surface-1 p-6">
-              <h3 className="text-lg font-medium">Por ahora, por Instagram</h3>
+          <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr]">
+            {captcha.mode === "missing" ? (
+              <p className="text-fg-muted">El formulario no está disponible por ahora. Escribime por Instagram.</p>
+            ) : (
+              <RequestForm slug={artist.slug} turnstileSiteKey={captcha.mode === "turnstile" ? captcha.siteKey : null} />
+            )}
+            <div className="flex flex-col gap-4 self-start rounded-lg border border-line bg-surface-1 p-6">
+              <h3 className="text-lg font-medium">¿Tenés referencias?</h3>
               <p className="text-sm leading-relaxed text-fg-muted">
-                Mandá un mensaje con tu idea, la zona del cuerpo, el tamaño aproximado y referencias si tenés.
+                Mandá la consulta y después pasame las imágenes por Instagram. Cargar fotos desde acá llega más adelante.
               </p>
               {artist.instagram && (
-                <a href={artist.instagram.url} target="_blank" rel="noopener" className={buttonClasses({ className: "self-start" })}>
+                <a
+                  href={artist.instagram.url}
+                  target="_blank"
+                  rel="noopener"
+                  className={buttonClasses({ variant: "secondary", className: "self-start" })}
+                >
                   Escribir a @{artist.instagram.handle}
                 </a>
               )}
-            </div>
-            <div className="flex flex-col gap-4 rounded-lg border border-dashed border-line p-6">
-              <span className="self-start rounded-full bg-surface-3 px-2.5 py-1 text-xs text-fg-muted">Próximamente</span>
-              <h3 className="text-lg font-medium">Formulario y asistente</h3>
-              <p className="text-sm leading-relaxed text-fg-muted">
-                Vas a poder contar tu idea acá mismo y un asistente te va a ayudar a armar la consulta paso a paso.
-              </p>
             </div>
           </div>
         </PublicSection>

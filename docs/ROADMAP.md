@@ -23,9 +23,9 @@ Alcance: microapp para un tatuador, con base preparada para venderse como SaaS.
 - [x] 2.2 Login por magic link + protección de `/panel`. El panel muestra el estudio y el perfil reales; solicitudes y portfolio siguen con datos demo hasta 2.4-2.6
 - [x] 2.3 Perfil y página pública editables desde Ajustes (nombre, bio, estilos, estudio, Instagram, publicar/ocultar, proceso y FAQ). La página pública lee de Supabase; los trabajos siguen siendo demo hasta 2.4
 - [x] 2.4 Portfolio administrable: subir foto (se achica en el navegador), título, categoría, zona, descripción, texto alternativo, publicar/ocultar, reordenar y borrar. La página pública lee solo trabajos publicados
-- [ ] 2.5 Formulario de consulta (captcha + rate limit)
+- [x] 2.5 Formulario de consulta en la página pública con Cloudflare Turnstile, campo trampa y límite de envíos (3 por hora por conexión, 30 por hora por estudio). Cada consulta crea o reutiliza el cliente por email o WhatsApp. En el panel: lista y detalle de solicitudes, lista de clientes y solicitudes nuevas en Inicio (solo lectura)
 - [ ] 2.6 Solicitudes: estados, historial, notas
-- [ ] 2.7 Clientes con deduplicación
+- [ ] 2.7 Clientes: editar, unir duplicados que no comparten email ni teléfono
 
 ## Fase 3 · Turnos
 
@@ -48,4 +48,6 @@ Presupuestos y pagos manuales, cuidados y seguimiento, auditoría, onboarding de
 
 - Las fotos demo son recortes de capturas de Instagram (baja calidad), no se versionan y solo se cargan en local con `pnpm db:seed-portfolio`. En producción el portfolio arranca vacío hasta que Esteban suba sus originales.
 - La biografía de Esteban no está cargada; los textos de proceso y FAQ del seed son provisorios.
+- Sin claves de Turnstile el formulario se muestra como "no disponible" y deriva a Instagram. En producción hay que cargar `NEXT_PUBLIC_TURNSTILE_SITE_KEY` y `TURNSTILE_SECRET_KEY`.
+- El formulario todavía no acepta fotos de referencia: se piden por Instagram.
 - Con Cache Components, `generateStaticParams` no puede devolver una lista vacía: si la base no tiene slugs (o no responde en el build) se prerenderiza un slug placeholder `_` que responde 404.

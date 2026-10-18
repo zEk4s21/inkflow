@@ -52,6 +52,8 @@ jobs:
             echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$PUBLISHABLE_KEY"
             echo "SUPABASE_SECRET_KEY=$SECRET_KEY"
             echo "NEXT_PUBLIC_SITE_URL=http://localhost:3100"
+            # Cloudflare Turnstile no se puede resolver desde CI: el e2e prueba el formulario sin captcha.
+            echo "INKFLOW_ALLOW_NO_CAPTCHA=1"
           } >> "$GITHUB_ENV"
       - name: Tests de integración contra la base
         run: pnpm test

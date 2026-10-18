@@ -40,6 +40,7 @@ Todas las variables están documentadas en [.env.example](.env.example). La app 
 
 - `NEXT_PUBLIC_*` llegan al navegador. Nunca pongas un secreto con ese prefijo.
 - `SUPABASE_SECRET_KEY` saltea RLS: se usa solo en código de servidor (`src/server`).
+- El formulario de consulta usa Cloudflare Turnstile. En local podés usar las claves de prueba de Cloudflare (están en `.env.example`) o `INKFLOW_ALLOW_NO_CAPTCHA=1`, que lo deja sin captcha. Esa variable **nunca** va en producción; sin claves, el formulario se muestra como no disponible.
 
 El registro público de cuentas está **desactivado** (`supabase/config.toml`). Las cuentas de tatuadores se crean por invitación.
 
