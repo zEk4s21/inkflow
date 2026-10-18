@@ -57,7 +57,7 @@ erDiagram
 | `request_notes` | notas internas: `author_id` = usuario de la sesión, `body` 1-2000; borrado lógico solo por su autor; un trigger exige que la solicitud sea del mismo workspace; nunca expuestas por rutas públicas |
 | `availability_rules` | `weekday` 1-7 (lunes a domingo), `start_time`/`end_time` en hora local del workspace, `slot_minutes` 30-720, `buffer_minutes` 0-240; se reemplaza entero con `set_weekly_availability(artist, rules)`, que rechaza franjas superpuestas |
 | `availability_blocks` | `period tstzrange` finito y no vacío, `reason` ≤120; `add_availability_block` convierte fechas y horas locales con la zona del workspace (sin horas = días completos) |
-| `appointments` | `EXCLUDE USING gist (artist_id WITH =, blocked_range WITH &&) WHERE (status = 'confirmed')` |
+| `appointments` | `period tstzrange` finito, `buffer_minutes` 0-240, `blocked_period` = período + margen (lo calcula un trigger), `status in ('requested','confirmed','cancelled','completed','no_show')`, `source in ('form','manual')`, `request_id` opcional. `EXCLUDE USING gist (artist_id WITH =, blocked_period WITH &&) WHERE (status = 'confirmed')`: Postgres impide dos turnos confirmados superpuestos; los pedidos sí pueden coincidir. Un trigger exige tatuador, cliente y solicitud del mismo workspace. `merge_clients` también mueve los turnos |
 
 Postergadas hasta después de la v1: `quotes`, `payments`, `care_instructions`, `follow_ups`, `audit_events`.
 

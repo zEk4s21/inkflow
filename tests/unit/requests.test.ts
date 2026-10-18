@@ -33,6 +33,14 @@ describe("requestFormSchema", () => {
     expect(requestFormSchema.safeParse({ ...base, email: "a@b.co", idea: "rosa" }).success).toBe(false);
   });
 
+  it("el turno es opcional y, si viene, tiene que ser una fecha ISO", () => {
+    const withContact = { ...base, email: "a@b.co" };
+    expect(requestFormSchema.parse(withContact).slot).toBeNull();
+    expect(requestFormSchema.parse({ ...withContact, slot: "" }).slot).toBeNull();
+    expect(requestFormSchema.parse({ ...withContact, slot: "2030-03-04T13:00:00.000Z" }).slot).toBe("2030-03-04T13:00:00.000Z");
+    expect(requestFormSchema.safeParse({ ...withContact, slot: "mañana a la tarde" }).success).toBe(false);
+  });
+
   it("normalizePhone deja solo dígitos", () => {
     expect(normalizePhone("(011) 15-2233-4455")).toBe("01115223344" + "55");
   });

@@ -5,12 +5,14 @@ import { PanelPageHeader } from "@/components/panel/page-header";
 import { DeleteNoteButton } from "@/components/panel/requests/delete-note-button";
 import { NoteForm } from "@/components/panel/requests/note-form";
 import { StatusControl } from "@/components/panel/requests/status-control";
-import { RequestStatusBadge } from "@/components/ui/badge";
+import { Badge, RequestStatusBadge } from "@/components/ui/badge";
+import { APPOINTMENT_STATUS_META } from "@/config/appointment-status";
 import {
   REQUEST_STATUS_META,
   type RequestStatus,
 } from "@/config/request-status";
 import { formatDateTime } from "@/lib/format";
+import { getRequestAppointments } from "@/server/appointments/queries";
 import { requireWorkspace } from "@/server/auth/panel-context";
 import {
   getMemberNames,
@@ -37,9 +39,10 @@ export default async function RequestDetailPage({
     getWorkspaceRegional(workspace.id),
   ]);
   if (!request) notFound();
-  const [activity, names] = await Promise.all([
+  const [activity, names, appointments] = await Promise.all([
     getRequestActivity(workspace.id, request.id),
     getMemberNames(workspace.id),
+    getRequestAppointments(workspace.id, request.id),
   ]);
   const canEdit = role === "owner" || role === "artist";
   const status = request.status as RequestStatus;
@@ -147,6 +150,31 @@ export default async function RequestDetailPage({
                 requestId={request.id}
                 status={status}
               />
+            </section>
+          )}
+          {appointments.length > 0 && (
+            <section aria-label="Turno pedido" className="flex flex-col gap-4 rounded-lg border border-line bg-surface-1/40 p-6">
+              <h2 className="font-medium">Turno pedido</h2>
+              <ul className="flex flex-col gap-3 text-sm">
+                {appointments.map((appointment) => {
+                  const meta = APPOINTMENT_STATUS_META[appointment.status];
+                  return (
+                    <li key={appointment.id} className="flex flex-wrap items-center justify-between gap-3">
+                      <span className="first-letter:uppercase">
+                        {formatDateTime(appointment.start, regional, { weekday: "long", day: "numeric", month: "long" })},{" "}
+                        {formatDateTime(appointment.start, regional, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })} a{" "}
+                        {formatDateTime(appointment.end, regional, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
+                      </span>
+                      <Badge tone={meta.tone}>{meta.label}</Badge>
+                    </li>
+                  );
+                })}
+              </ul>
+              {appointments.some((appointment) => appointment.status === "requested") && (
+                <p className="text-sm text-fg-muted">
+                  El cliente lo pidió desde tu página y todavía no está reservado. Confirmarlo, reprogramarlo o rechazarlo desde acá llega en la Fase 3.3; mientras tanto, coordinalo por mensaje.
+                </p>
+              )}
             </section>
           )}
           <section className="flex flex-col gap-4 rounded-lg border border-line bg-surface-1/40 p-6">

@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
+import { Suspense } from "react";
 import { buttonClasses } from "@/components/ui/button";
 import { ArtistHeader } from "@/components/public/artist-header";
 import { PortfolioGrid } from "@/components/public/portfolio-grid";
 import { RequestForm } from "@/components/public/request-form";
 import { PublicSection } from "@/components/public/section";
 import { WorkImage } from "@/components/public/work-image";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getPublicArtist, getPublishedWorks, listPublicArtistSlugs } from "@/server/artists/public-artist";
+import { getPublicAvailability, toSlotDays } from "@/server/availability/public";
 import { getCaptchaConfig } from "@/server/requests/captcha";
 
 export async function generateStaticParams() {
@@ -170,7 +174,9 @@ export default async function ArtistPage({ params }: PageProps<"/artist/[slug]">
             {captcha.mode === "missing" ? (
               <p className="text-fg-muted">El formulario no está disponible por ahora. Escribime por Instagram.</p>
             ) : (
-              <RequestForm slug={artist.slug} turnstileSiteKey={captcha.mode === "turnstile" ? captcha.siteKey : null} />
+              <Suspense fallback={<RequestFormSkeleton />}>
+                <RequestFormWithSlots slug={artist.slug} turnstileSiteKey={captcha.mode === "turnstile" ? captcha.siteKey : null} />
+              </Suspense>
             )}
             <div className="flex flex-col gap-4 self-start rounded-lg border border-line bg-surface-1 p-6">
               <h3 className="text-lg font-medium">¿Tenés referencias?</h3>
@@ -196,5 +202,28 @@ export default async function ArtistPage({ params }: PageProps<"/artist/[slug]">
         {artist.artistName} · Hecho con INKFLOW
       </footer>
     </>
+  );
+}
+
+/** Los turnos libres cambian con cada pedido confirmado: se calculan en cada visita, fuera de la caché. */
+async function RequestFormWithSlots({ slug, turnstileSiteKey }: { slug: string; turnstileSiteKey: string | null }) {
+  await connection();
+  const availability = await getPublicAvailability(slug).catch((error: unknown) => {
+    // Sin turnos el formulario sigue sirviendo como consulta.
+    console.error("[artist] turnos", error instanceof Error ? error.message : error);
+    return null;
+  });
+  const slotDays = availability ? toSlotDays(availability.slots, availability.regional) : [];
+  return <RequestForm slug={slug} turnstileSiteKey={turnstileSiteKey} slotDays={slotDays} />;
+}
+
+function RequestFormSkeleton() {
+  return (
+    <div className="flex flex-col gap-5" aria-hidden>
+      <Skeleton className="h-36" />
+      <Skeleton className="h-12" />
+      <Skeleton className="h-12" />
+      <Skeleton className="h-12 w-40" />
+    </div>
   );
 }
