@@ -41,6 +41,8 @@ Las referencias que manda un cliente **nunca** pasan al portfolio automáticamen
 
 ## Configuración vigente
 
+- `/panel` responde 404 en producción mientras no haya login (`src/server/panel-access.ts`). Cubierto por un test E2E. Solo se puede ver en desarrollo o con `INKFLOW_PANEL_PREVIEW=1`.
+
 - Registro público desactivado (`supabase/config.toml` → `[auth] enable_signup = false`). Cubierto por un test de integración.
 - Redirects de auth limitados a `/auth/callback` local.
 

@@ -10,14 +10,14 @@ Alcance: microapp para un tatuador, con base preparada para venderse como SaaS.
 | 0.2 Documentación base | Hecho | `README.md`, `docs/` |
 | 0.3 Supabase local + `.env.example` + validación de variables | Hecho | Test de integración: registro público rechazado |
 
-## Fase 1 · Diseño y estructura visual (siguiente)
+## Fase 1 · Diseño y estructura visual ✅
 
-- [ ] 1.1 Tokens, tipografías y primitivas UI
-- [ ] 1.2 Página pública del artista (contenido demo marcado como tal)
-- [ ] 1.3 Portfolio con filtros y ficha
-- [ ] 1.4 Shell del panel (desktop, tablet y móvil) con estados vacíos
+- [x] 1.1 Tokens, tipografías y primitivas UI: catálogo en `/dev/ui` (solo desarrollo). **Pendiente de aprobación visual.** Falta el componente Toast (se suma con los formularios reales).
+- [x] 1.2 Página pública del artista en `/artist/esti`: portada, perfil, proceso, FAQ y contacto. Contenido demo con aviso visible; formulario y asistente marcados como "Próximamente".
+- [x] 1.3 Portfolio con filtros (solo categorías con trabajos) y ficha de trabajo con navegación anterior/siguiente. Fallback si una foto no carga.
+- [x] 1.4 Panel en `/panel`: sidebar en compu, barra inferior en celu/tablet; Inicio, Solicitudes, Agenda, Clientes, Portfolio y Ajustes con estados vacíos y marcas "Disponible en la Fase N". **En producción devuelve 404** hasta que exista login (vista previa con `INKFLOW_PANEL_PREVIEW=1`).
 
-## Fase 2 · Fundamentos funcionales
+## Fase 2 · Fundamentos funcionales (siguiente)
 
 - [ ] 2.1 Migraciones de workspaces, miembros, settings y perfiles + RLS
 - [ ] 2.2 Login por magic link + protección de `/panel`
@@ -46,4 +46,5 @@ Presupuestos y pagos manuales, cuidados y seguimiento, auditoría, onboarding de
 
 ## Problemas conocidos
 
-- Ninguno abierto.
+- Las fotos demo son recortes de capturas de Instagram (baja calidad) y no se versionan (`public/demo/` en `.gitignore`). En un clon limpio se ve el reemplazo "Imagen no disponible". Se reemplazan por originales en la Fase 2.
+- La biografía de Esteban no está cargada; textos de proceso y FAQ son provisorios.
