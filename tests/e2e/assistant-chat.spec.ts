@@ -17,6 +17,12 @@ test.describe("Ink Assistant con respuestas simuladas", () => {
     await studio?.cleanup();
   });
 
+  test("la página pública ofrece el asistente en contacto", async ({ page }) => {
+    await page.goto(`/artist/${studio.slug}`);
+    await page.getByRole("link", { name: "Armar mi idea con el asistente" }).click();
+    await expect(page).toHaveURL(new RegExp(`/artist/${studio.slug}/assistant$`));
+  });
+
   test("arma el resumen, lo recuerda al volver y se puede empezar de nuevo", async ({ page }) => {
     await page.goto(`/artist/${studio.slug}/assistant`);
     await expect(page.getByText("Respuestas simuladas (prueba)")).toBeVisible();
