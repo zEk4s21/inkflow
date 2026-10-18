@@ -141,5 +141,9 @@ test.describe("Ink Assistant con respuestas simuladas", () => {
     const card = page.getByRole("region", { name: "Ink Assistant" });
     await expect(card.getByText("Simulado (sin IA)")).toBeVisible();
     await expect(card).toContainText("nunca en producción");
+    // Consumo del mes de este estudio (las respuestas simuladas no gastan tokens).
+    await expect(card.getByText("Este mes")).toBeVisible();
+    await expect(card.getByText("Conversaciones")).toBeVisible();
+    await expect(card).toContainText("Sin tope mensual");
   });
 });

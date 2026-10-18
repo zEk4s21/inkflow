@@ -10,6 +10,7 @@ import { formatNumber } from "@/lib/format";
 import { parseFaq, parseProcess } from "@/server/artists/page-content";
 import { signOut } from "@/server/auth/actions";
 import { requireWorkspace } from "@/server/auth/panel-context";
+import { monthStartUtc } from "@/server/assistant/conversation";
 import { getAiStatus, type AIStatus } from "@/server/integrations/ai";
 import { createSupabaseServerClient } from "@/server/supabase/server";
 
@@ -84,7 +85,7 @@ export default async function SettingsPage() {
           </dl>
         </Card>
         <Card title="Ink Assistant">
-          <AssistantStatus status={getAiStatus()} regional={regional} />
+          <AssistantStatus status={getAiStatus()} usage={await getMonthlyAiUsage(workspace.id)} regional={regional} />
         </Card>
       </div>
 
@@ -108,8 +109,21 @@ function Card({ title, children }: { title: string; children: ReactNode }) {
 }
 
 /** Estado de la IA leído de las variables del servidor. Nunca muestra la clave. */
-function AssistantStatus({ status, regional }: { status: AIStatus; regional: RegionalSettings }) {
+/** Consumo del mes (UTC, igual que el tope), leído con la sesión del miembro (RLS). */
+async function getMonthlyAiUsage(workspaceId: string): Promise<AIUsage | null> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .rpc("workspace_ai_usage", { p_workspace: workspaceId, p_since: monthStartUtc().toISOString() })
+    .single();
+  return error ? null : data;
+}
+
+type AIUsage = { conversations: number; requests: number; tokens: number };
+
+function AssistantStatus({ status, usage, regional }: { status: AIStatus; usage: AIUsage | null; regional: RegionalSettings }) {
   if (status.status === "configured") {
+    const budget = status.monthlyTokenBudget;
+    const share = usage && budget ? Math.min(1, usage.tokens / budget) : null;
     return (
       <div className="flex flex-col gap-4 text-sm">
         <span className="self-start">
@@ -128,11 +142,55 @@ function AssistantStatus({ status, regional }: { status: AIStatus; regional: Reg
             </div>
           ))}
         </dl>
+        <div className="flex flex-col gap-3">
+          <h3 className="text-fg-subtle">Este mes</h3>
+          {usage ? (
+            <>
+              <dl className="grid grid-cols-3 gap-3">
+                {[
+                  ["Conversaciones", usage.conversations],
+                  ["Consultas enviadas", usage.requests],
+                  ["Tokens", usage.tokens],
+                ].map(([label, value]) => (
+                  <div key={label} className="flex flex-col gap-1 rounded-md border border-line p-3">
+                    <dt className="text-xs text-fg-subtle">{label}</dt>
+                    <dd className="text-lg tabular-nums">{formatNumber(Number(value), regional)}</dd>
+                  </div>
+                ))}
+              </dl>
+              {share !== null && budget ? (
+                <div className="flex flex-col gap-2">
+                  <div
+                    role="meter"
+                    aria-label="Tokens usados del tope mensual"
+                    aria-valuemin={0}
+                    aria-valuemax={budget}
+                    aria-valuenow={Math.min(usage.tokens, budget)}
+                    className="h-2 overflow-hidden rounded-full bg-surface-2"
+                  >
+                    <div className={share >= 1 ? "h-full bg-danger" : share >= 0.8 ? "h-full bg-warning" : "h-full bg-success"} style={{ width: `${share * 100}%` }} />
+                  </div>
+                  <p className={share >= 1 ? "text-danger" : "text-fg-muted"}>
+                    {share >= 1
+                      ? "Llegaste al tope del mes: el asistente se muestra como no disponible hasta el día 1 y las consultas siguen entrando por el formulario."
+                      : `${formatNumber(Math.round(share * 100), regional)} % del tope mensual.`}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-fg-muted">Sin tope mensual: para poner uno, cargá AI_MONTHLY_TOKEN_BUDGET_PER_WORKSPACE en el servidor.</p>
+              )}
+            </>
+          ) : (
+            <p className="text-fg-muted">No se pudo leer el consumo del mes.</p>
+          )}
+          <p className="text-xs text-fg-subtle">
+            El mes se cuenta en UTC. El costo en plata depende del modelo: se ve en la consola del proveedor.
+          </p>
+        </div>
         <p className="text-fg-muted">
           {status.simulated
             ? "Las respuestas son fijas y la página lo avisa: sirve solo para probar la pantalla, nunca en producción."
-            : "Los clientes ya pueden conversar con el asistente en tu página."}{" "}
-          Mandar la consulta desde el chat todavía no está habilitado (llega en la Fase 4.3).
+            : "Los clientes ya pueden conversar con el asistente en tu página y mandarte la consulta desde ahí."}
         </p>
       </div>
     );

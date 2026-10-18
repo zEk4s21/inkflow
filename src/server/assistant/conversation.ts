@@ -101,3 +101,19 @@ export async function closeConversation(slug: string, workspaceId: string) {
 
 /** Conversaciones nuevas por hora: por persona (IP) y por estudio. */
 export const ASSISTANT_LIMITS = { perSubmitter: 5, perWorkspace: 60 } as const;
+
+/** Inicio del mes calendario en UTC: desde ahí se cuenta el tope mensual de tokens. */
+export function monthStartUtc(now = new Date()) {
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+}
+
+/** El estudio ya gastó su tope mensual de tokens. Sin tope, nunca. null si no se pudo consultar. */
+export async function isMonthlyBudgetReached(workspaceId: string, budget: number | null): Promise<boolean | null> {
+  if (budget === null) return false;
+  const { data, error } = await createSupabaseAdminClient().rpc("workspace_ai_tokens_since", {
+    p_workspace: workspaceId,
+    p_since: monthStartUtc().toISOString(),
+  });
+  if (error) return null;
+  return data >= budget;
+}

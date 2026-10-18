@@ -8,7 +8,7 @@ import { ArtistHeader } from "@/components/public/artist-header";
 import { buttonClasses } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getPublicArtist, listPublicArtistSlugs } from "@/server/artists/public-artist";
-import { loadConversation } from "@/server/assistant/conversation";
+import { isMonthlyBudgetReached, loadConversation } from "@/server/assistant/conversation";
 import { toAssistantState } from "@/server/assistant/state";
 import { greeting, MAX_USER_MESSAGE } from "@/server/assistant/turn";
 import { getAiConfig } from "@/server/integrations/ai";
@@ -62,6 +62,10 @@ async function Assistant({ slug, artistName }: { slug: string; artistName: strin
   if (config.status !== "configured" || captcha.mode === "missing" || !workspace) return <Unavailable slug={slug} />;
 
   const conversation = await loadConversation(workspace.id);
+  // Con el tope del mes alcanzado no se ofrece el chat, salvo para ver una consulta ya enviada.
+  if (conversation?.status !== "confirmed" && (await isMonthlyBudgetReached(workspace.id, config.monthlyTokenBudget)) !== false) {
+    return <Unavailable slug={slug} />;
+  }
   return (
     <AssistantChat
       // Al empezar de nuevo cambia la conversación y el chat arranca vacío.
