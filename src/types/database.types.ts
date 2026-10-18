@@ -221,7 +221,9 @@ isOneToOne: true
             [_ in never]: never
           }
           Functions: {
-            [_ in never]: never
+            "merge_clients":
+{ Args: { "source": string,"target": string }; Returns: undefined
+                           }
           }
           Enums: {
             [_ in never]: never

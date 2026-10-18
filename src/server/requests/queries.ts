@@ -135,3 +135,30 @@ export async function countRequestsByStatus(workspaceId: string) {
   for (const row of data) counts.set(row.status as RequestStatus, (counts.get(row.status as RequestStatus) ?? 0) + 1);
   return { total: data.length, byStatus: counts };
 }
+
+/** Ficha de un cliente con sus solicitudes, más nuevas primero. */
+export async function getClient(workspaceId: string, id: string) {
+  if (!/^[0-9a-f-]{36}$/.test(id)) return null;
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase
+    .from("clients")
+    .select("id, name, email, phone, instagram_handle, created_at, tattoo_requests (id, status, idea, created_at, deleted_at)")
+    .eq("workspace_id", workspaceId)
+    .eq("id", id)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (!data) return null;
+  const requests = data.tattoo_requests
+    .filter((request) => request.deleted_at === null)
+    .map(
+      (request): RequestSummary => ({
+        id: request.id,
+        status: request.status as RequestStatus,
+        idea: request.idea,
+        createdAt: new Date(request.created_at),
+        client: { id: data.id, name: data.name },
+      }),
+    )
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  return { ...data, requests };
+}

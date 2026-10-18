@@ -4,7 +4,7 @@ vi.mock("server-only", () => ({}));
 
 const { verifyTurnstile } = await import("@/server/requests/captcha");
 const { clientIp, submitterHash } = await import("@/server/requests/rate-limit");
-const { requestFormSchema, normalizePhone } = await import("@/server/requests/schemas");
+const { clientFormSchema, requestFormSchema, normalizePhone } = await import("@/server/requests/schemas");
 
 const base = {
   name: "Ana",
@@ -69,5 +69,20 @@ describe("rate limit", () => {
     expect(hash).not.toContain("203");
     expect(hash).toBe(submitterHash("203.0.113.5", "clave"));
     expect(hash).not.toBe(submitterHash("203.0.113.5", "otra"));
+  });
+});
+
+describe("clientFormSchema", () => {
+  const client = { name: "Ana", email: "", phone: "", instagramHandle: "" };
+
+  it("normaliza los datos de contacto", () => {
+    const parsed = clientFormSchema.parse({ ...client, email: " Ana@Mail.com ", phone: "+54 9 11 2233-4455", instagramHandle: "@ana.tattoo" });
+    expect(parsed).toEqual({ name: "Ana", email: "ana@mail.com", phone: "5491122334455", instagramHandle: "ana.tattoo" });
+  });
+
+  it("no deja al cliente sin email ni WhatsApp", () => {
+    const result = clientFormSchema.safeParse({ ...client, instagramHandle: "ana" });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.path).toEqual(["email"]);
   });
 });

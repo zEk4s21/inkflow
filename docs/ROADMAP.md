@@ -17,7 +17,7 @@ Alcance: microapp para un tatuador, con base preparada para venderse como SaaS.
 - [x] 1.3 Portfolio con filtros (solo categorías con trabajos) y ficha de trabajo con navegación anterior/siguiente. Fallback si una foto no carga.
 - [x] 1.4 Panel en `/panel`: sidebar en compu, barra inferior en celu/tablet; Inicio, Solicitudes, Agenda, Clientes, Portfolio y Ajustes con estados vacíos y marcas "Disponible en la Fase N". Protegido con login desde la Fase 2.2.
 
-## Fase 2 · Fundamentos funcionales (en curso)
+## Fase 2 · Fundamentos funcionales ✅
 
 - [x] 2.1 Migraciones de workspaces, miembros, settings y perfiles + RLS, con tests de aislamiento entre workspaces
 - [x] 2.2 Login por magic link + protección de `/panel`. El panel muestra el estudio y el perfil reales; solicitudes y portfolio siguen con datos demo hasta 2.4-2.6
@@ -25,7 +25,7 @@ Alcance: microapp para un tatuador, con base preparada para venderse como SaaS.
 - [x] 2.4 Portfolio administrable: subir foto (se achica en el navegador), título, categoría, zona, descripción, texto alternativo, publicar/ocultar, reordenar y borrar. La página pública lee solo trabajos publicados
 - [x] 2.5 Formulario de consulta en la página pública con Cloudflare Turnstile, campo trampa y límite de envíos (3 por hora por conexión, 30 por hora por estudio). Cada consulta crea o reutiliza el cliente por email o WhatsApp. En el panel: lista y detalle de solicitudes, lista de clientes y solicitudes nuevas en Inicio (solo lectura)
 - [x] 2.6 Solicitudes: cambiar estado desde el detalle (owner o artista, cualquier estado a cualquier otro), historial automático con quién y cuándo, notas internas (cada uno borra las suyas) y filtro por estado en el listado
-- [ ] 2.7 Clientes: editar, unir duplicados que no comparten email ni teléfono
+- [x] 2.7 Clientes: ficha con sus solicitudes, edición de datos de contacto (avisa si el email o WhatsApp ya es de otro cliente) y unión de duplicados que no comparten email ni teléfono
 
 ## Fase 3 · Turnos
 

@@ -150,7 +150,12 @@ export default async function RequestDetailPage({
             </section>
           )}
           <section className="flex flex-col gap-4 rounded-lg border border-line bg-surface-1/40 p-6">
-            <h2 className="font-medium">Contacto</h2>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="font-medium">Contacto</h2>
+              <Link href={`/panel/clientes/${client.id}`} className="text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline">
+                Ver ficha
+              </Link>
+            </div>
             <dl className="flex flex-col gap-3 text-sm">
               {client.email && (
                 <div className="flex flex-col gap-1">
