@@ -43,7 +43,8 @@ Las referencias que manda un cliente **nunca** pasan al portfolio automáticamen
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Pública por diseño |
 | `TURNSTILE_SECRET_KEY` | **Secreta.** Verifica el captcha en el servidor |
 | `INKFLOW_ALLOW_NO_CAPTCHA` | Solo desarrollo y CI. **Nunca en producción**: deja el formulario sin captcha |
-| `AI_API_KEY`, `RESEND_API_KEY` | Secretas (fases futuras) |
+| `AI_API_KEY` | Secreta, solo servidor (Fase 4) |
+| `RESEND_API_KEY` | Secreta (fase futura) |
 
 ## Configuración vigente
 
@@ -65,6 +66,8 @@ Las referencias que manda un cliente **nunca** pasan al portfolio automáticamen
 - Pedido de turno: entra por la misma Server Action del formulario (captcha, trampa, límite de envíos). El servidor recalcula los turnos libres en ese momento y rechaza cualquier inicio que no esté en la lista, así que no se puede pedir un horario inventado, bloqueado o fuera de la anticipación mínima. El turno se guarda como `requested` y no reserva nada: nunca se le dice al cliente que está reservado. Anon no tiene privilegios sobre `appointments`.
 
 - Gestión de turnos (`src/server/appointments/actions.ts`): owner o artista cambian estado y horario (únicas columnas editables) y dan turnos a mano (`source = 'manual'`, solo pedidos o confirmados); staff solo lee. Las transiciones las valida un trigger en la base, no solo la interfaz. Dos turnos confirmados que se pisan los rechaza la restricción de exclusión aunque lleguen en paralelo. Cubierto por `tests/integration/appointments-management.test.ts`. Cubierto por `tests/integration/rls-appointments.test.ts` y `tests/e2e/appointments.spec.ts`.
+
+- IA (`src/server/integrations/ai`): proveedor y clave solo en variables de servidor (`AI_PROVIDER`, `AI_API_KEY`, `AI_MODEL`, sin prefijo `NEXT_PUBLIC_`). El panel muestra proveedor, modelo y límites, nunca la clave, y los errores del proveedor no incluyen la clave ni el texto enviado. Sin configuración, la página del asistente no dice por qué: solo ofrece el formulario. El modelo solo devuelve texto; no tiene herramientas ni escribe en la base.
 
 - Registro público desactivado (`supabase/config.toml` → `[auth] enable_signup = false`). Cubierto por un test de integración.
 - Redirects de auth limitados a `/auth/callback` local.

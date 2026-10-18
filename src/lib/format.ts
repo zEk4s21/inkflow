@@ -18,3 +18,7 @@ export function formatDateTime(
   const { locale, timeZone } = resolveRegional(regional);
   return new Intl.DateTimeFormat(locale, { ...options, timeZone }).format(date);
 }
+
+export function formatNumber(value: number, regional?: Partial<RegionalSettings> | null): string {
+  return new Intl.NumberFormat(resolveRegional(regional).locale).format(value);
+}

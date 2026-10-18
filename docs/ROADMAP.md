@@ -33,9 +33,9 @@ Alcance: microapp para un tatuador, con base preparada para venderse como SaaS.
 - [x] 3.2 Pedido de turno público: el formulario de consulta ofrece elegir día y hora entre los turnos libres de las próximas tres semanas (opcional). El turno queda "a confirmar" y no ocupa el horario; el servidor vuelve a verificar que siga libre antes de guardarlo. Se ve en la solicitud y en "Turnos pedidos" de `/panel/agenda`
 - [x] 3.3 Gestión de turnos: confirmar, rechazar, reprogramar y cancelar desde la agenda o la solicitud; marcar como realizado o ausente una vez que empezó; dar turnos a mano desde una solicitud. Postgres impide dos turnos confirmados superpuestos (contando el margen), probado con confirmaciones en paralelo. Los cambios no se le avisan al cliente todavía: lo indica el panel
 
-## Fase 4 · Ink Assistant
+## Fase 4 · Ink Assistant (en curso)
 
-- [ ] 4.1 Proveedor configurable + estado "no configurado"
+- [x] 4.1 Proveedor configurable + estado "no configurado": interfaz `AIProvider` con adaptador de Anthropic (Messages API, sin SDK), configuración por variables de entorno validada, estado en Ajustes (nunca muestra la clave) y `/artist/[slug]/assistant` que, sin asistente, manda al formulario. Probado con fetch simulado: sin clave real no se llamó a la API
 - [ ] 4.2 Conversación con brief estructurado
 - [ ] 4.3 Confirmación y creación de solicitud
 - [ ] 4.4 Límites y costos
