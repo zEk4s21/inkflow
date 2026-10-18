@@ -1,24 +1,39 @@
 import type { Metadata } from "next";
 import { PanelPageHeader, PendingBadge } from "@/components/panel/page-header";
-import { DEFAULT_REGIONAL } from "@/config/regional";
-import { DEMO_ARTIST } from "@/server/artists/demo-data";
+import { Button } from "@/components/ui/button";
+import { resolveRegional } from "@/config/regional";
+import { signOut } from "@/server/auth/actions";
+import { requireWorkspace } from "@/server/auth/panel-context";
+import { createSupabaseServerClient } from "@/server/supabase/server";
 
 export const metadata: Metadata = { title: "Ajustes" };
 
-export default function SettingsPage() {
-  const artist = DEMO_ARTIST;
+export default async function SettingsPage() {
+  const { workspace, profile } = await requireWorkspace();
+  const supabase = await createSupabaseServerClient();
+  const { data: settings } = await supabase
+    .from("workspace_settings")
+    .select("locale, currency, timezone, location_label, instagram_handle")
+    .eq("workspace_id", workspace.id)
+    .maybeSingle();
+  const regional = resolveRegional({
+    locale: settings?.locale,
+    currency: settings?.currency,
+    timeZone: settings?.timezone,
+  });
+  const empty = "Sin cargar";
   const sections = [
-    { title: "Perfil", rows: [["Nombre", artist.fullName], ["Nombre artístico", artist.artistName], ["Estudio", artist.locationLabel]] },
-    { title: "Página pública", rows: [["Dirección", `/artist/${artist.slug}`], ["Estilos", artist.styles.join(", ")], ["Biografía", artist.bio ?? "Sin cargar"]] },
-    { title: "Región", rows: [["Idioma", DEFAULT_REGIONAL.locale], ["Moneda", DEFAULT_REGIONAL.currency], ["Zona horaria", DEFAULT_REGIONAL.timeZone]] },
+    { title: "Perfil", rows: [["Nombre", profile?.fullName ?? empty], ["Nombre artístico", profile?.displayName ?? empty], ["Estudio", settings?.location_label ?? empty]] },
+    { title: "Página pública", rows: [["Dirección", `/artist/${workspace.slug}`], ["Estilos", profile?.styles.join(", ") || empty], ["Biografía", profile?.bio ?? empty], ["Instagram", settings?.instagram_handle ? `@${settings.instagram_handle}` : empty]] },
+    { title: "Región", rows: [["Idioma", regional.locale], ["Moneda", regional.currency], ["Zona horaria", regional.timeZone]] },
   ];
 
   return (
     <>
       <PanelPageHeader
         title="Ajustes"
-        description="Así está configurada tu cuenta hoy. La edición se habilita en la Fase 2."
-        actions={<PendingBadge phase="la Fase 2" />}
+        description="Así está configurada tu cuenta hoy. La edición llega en la Fase 2.3."
+        actions={<PendingBadge phase="la Fase 2.3" />}
       />
       <div className="grid gap-6 lg:grid-cols-2">
         {sections.map((section) => (
@@ -41,6 +56,12 @@ export default function SettingsPage() {
           </p>
         </section>
       </div>
+      {/* En celu y tablet no hay sidebar: la salida está acá. */}
+      <form action={signOut} className="lg:hidden">
+        <Button type="submit" variant="secondary" className="w-full">
+          Salir de la cuenta
+        </Button>
+      </form>
     </>
   );
 }

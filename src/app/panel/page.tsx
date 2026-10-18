@@ -3,14 +3,14 @@ import Link from "next/link";
 import { CopyLinkButton } from "@/components/panel/copy-link-button";
 import { PanelPageHeader, PendingBadge } from "@/components/panel/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
-import { DEMO_ARTIST } from "@/server/artists/demo-data";
+import { requireWorkspace } from "@/server/auth/panel-context";
 import { getPublishedWorks } from "@/server/artists/public-artist";
 
 export const metadata: Metadata = { title: "Inicio" };
 
 export default async function PanelHome() {
-  const artist = DEMO_ARTIST;
-  const works = await getPublishedWorks(artist.slug);
+  const { workspace } = await requireWorkspace();
+  const works = await getPublishedWorks(workspace.slug);
 
   return (
     <>
@@ -27,7 +27,7 @@ export default async function PanelHome() {
           <EmptyState
             title="Todavía no hay solicitudes"
             description="Cuando alguien te consulte desde tu página, la vas a ver acá. Compartí tu link en la bio de Instagram."
-            action={<CopyLinkButton path={`/artist/${artist.slug}`} />}
+            action={<CopyLinkButton path={`/artist/${workspace.slug}`} />}
           />
         </section>
 
@@ -50,7 +50,7 @@ export default async function PanelHome() {
         </h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <QuickLink href="/panel/portfolio" title="Portfolio" detail={`${works.length} trabajos publicados`} />
-          <QuickLink href={`/artist/${artist.slug}`} title="Mi página pública" detail={`/artist/${artist.slug}`} />
+          <QuickLink href={`/artist/${workspace.slug}`} title="Mi página pública" detail={`/artist/${workspace.slug}`} />
           <QuickLink href="/panel/ajustes" title="Ajustes" detail="Perfil, horarios y región" />
         </div>
       </section>

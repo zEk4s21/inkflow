@@ -43,6 +43,15 @@ Todas las variables están documentadas en [.env.example](.env.example). La app 
 
 El registro público de cuentas está **desactivado** (`supabase/config.toml`). Las cuentas de tatuadores se crean por invitación.
 
+## Dar acceso al panel
+
+```bash
+pnpm member:add <email> <slug-del-workspace> [owner|artist|staff]
+# ej. en local, con el seed: pnpm member:add vos@example.com esti owner
+```
+
+Después esa persona entra en `/ingresar` con su email y recibe un link (en local, los emails se ven en http://127.0.0.1:54324). El script usa `SUPABASE_SECRET_KEY` de `.env.local`.
+
 ## Testing
 
 ```bash

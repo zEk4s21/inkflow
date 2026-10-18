@@ -4,13 +4,14 @@ import { PanelPageHeader, PendingBadge } from "@/components/panel/page-header";
 import { WorkImage } from "@/components/public/work-image";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { DEMO_ARTIST } from "@/server/artists/demo-data";
+import { requireWorkspace } from "@/server/auth/panel-context";
 import { getPublishedWorks } from "@/server/artists/public-artist";
 
 export const metadata: Metadata = { title: "Portfolio" };
 
 export default async function PanelPortfolioPage() {
-  const works = await getPublishedWorks(DEMO_ARTIST.slug);
+  const { workspace } = await requireWorkspace();
+  const works = await getPublishedWorks(workspace.slug);
 
   return (
     <>
@@ -25,7 +26,7 @@ export default async function PanelPortfolioPage() {
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
           {works.map((work) => (
             <li key={work.id} className="flex flex-col gap-2">
-              <Link href={`/artist/${DEMO_ARTIST.slug}/work/${work.id}`} className="overflow-hidden rounded-md">
+              <Link href={`/artist/${workspace.slug}/work/${work.id}`} className="overflow-hidden rounded-md">
                 <WorkImage {...work.image} sizes="(min-width: 1280px) 18vw, (min-width: 640px) 30vw, 45vw" className="w-full" />
               </Link>
               <div className="flex flex-col gap-1.5">

@@ -15,12 +15,12 @@ Alcance: microapp para un tatuador, con base preparada para venderse como SaaS.
 - [x] 1.1 Tokens, tipografías y primitivas UI: catálogo en `/dev/ui` (solo desarrollo). **Pendiente de aprobación visual.** Falta el componente Toast (se suma con los formularios reales).
 - [x] 1.2 Página pública del artista en `/artist/esti`: portada, perfil, proceso, FAQ y contacto. Contenido demo con aviso visible; formulario y asistente marcados como "Próximamente".
 - [x] 1.3 Portfolio con filtros (solo categorías con trabajos) y ficha de trabajo con navegación anterior/siguiente. Fallback si una foto no carga.
-- [x] 1.4 Panel en `/panel`: sidebar en compu, barra inferior en celu/tablet; Inicio, Solicitudes, Agenda, Clientes, Portfolio y Ajustes con estados vacíos y marcas "Disponible en la Fase N". **En producción devuelve 404** hasta que exista login (vista previa con `INKFLOW_PANEL_PREVIEW=1`).
+- [x] 1.4 Panel en `/panel`: sidebar en compu, barra inferior en celu/tablet; Inicio, Solicitudes, Agenda, Clientes, Portfolio y Ajustes con estados vacíos y marcas "Disponible en la Fase N". Protegido con login desde la Fase 2.2.
 
-## Fase 2 · Fundamentos funcionales (siguiente)
+## Fase 2 · Fundamentos funcionales (en curso)
 
-- [ ] 2.1 Migraciones de workspaces, miembros, settings y perfiles + RLS
-- [ ] 2.2 Login por magic link + protección de `/panel`
+- [x] 2.1 Migraciones de workspaces, miembros, settings y perfiles + RLS, con tests de aislamiento entre workspaces
+- [x] 2.2 Login por magic link + protección de `/panel`. El panel muestra el estudio y el perfil reales; solicitudes y portfolio siguen con datos demo hasta 2.4-2.6
 - [ ] 2.3 Perfil y página pública editables
 - [ ] 2.4 Portfolio administrable
 - [ ] 2.5 Formulario de consulta (captcha + rate limit)

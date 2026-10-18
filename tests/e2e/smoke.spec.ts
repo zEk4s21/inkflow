@@ -17,8 +17,16 @@ test("el catálogo de diseño no existe en producción", async ({ page }) => {
   expect(response?.status()).toBe(404);
 });
 
-test("el panel no existe en producción mientras no haya login", async ({ page }) => {
+test("el panel sin sesión redirige al login", async ({ page }) => {
   for (const path of ["/panel", "/panel/solicitudes", "/panel/ajustes"]) {
-    expect((await page.goto(path))?.status()).toBe(404);
+    await page.goto(path);
+    await expect(page).toHaveURL(/\/ingresar$/);
   }
+  await expect(page.getByRole("heading", { name: "Entrá a tu panel" })).toBeVisible();
+});
+
+test("un link de ingreso inválido vuelve al login con aviso", async ({ page }) => {
+  await page.goto("/auth/confirm?token_hash=falso&type=email");
+  await expect(page).toHaveURL(/\/ingresar\?error=link$/);
+  await expect(page.getByText("El link venció o ya se usó. Pedí uno nuevo.")).toBeVisible();
 });

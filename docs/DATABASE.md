@@ -1,6 +1,8 @@
 # Base de datos
 
-> Estado: **sin tablas todavía.** El modelo se crea en la Fase 2 con migraciones en `supabase/migrations/`. Este documento es el diseño acordado en la Fase 0.
+> Estado: **creadas** `workspaces`, `workspace_members`, `workspace_settings` y `artist_profiles` (Fase 2.1, `supabase/migrations/20261018012835_workspaces_y_perfiles.sql`). El resto del modelo es el diseño acordado en la Fase 0 y se crea en las fases siguientes.
+>
+> `supabase/seed.sql` carga el workspace `esti` solo en la base local.
 
 ## Convenciones
 
@@ -40,8 +42,8 @@ erDiagram
 |---|---|
 | `workspaces` | `slug` único (URL pública) |
 | `workspace_members` | PK (`workspace_id`, `user_id`), `role in ('owner','artist','staff')` |
-| `workspace_settings` | 1:1 con workspace; `locale`, `currency`, `timezone`, textos públicos, proceso y FAQ (`jsonb`) |
-| `artist_profiles` | `workspace_id`, `user_id`, `display_name`, `bio`, `styles text[]`, `is_public` |
+| `workspace_settings` | 1:1 con workspace; `locale`, `currency`, `timezone` (validada contra `pg_timezone_names`), `location_label`, `instagram_handle`, proceso y FAQ (`jsonb`) |
+| `artist_profiles` | `workspace_id`, `user_id` (opcional), `display_name`, `full_name`, `bio`, `styles text[]`, `is_public` |
 | `portfolio_items` | `status in ('draft','published')`, `position`; índice (`workspace_id`, `status`, `position`) |
 | `portfolio_images` | `storage_path` en bucket **público** |
 | `portfolio_categories` + `portfolio_item_categories` | únicas por workspace |
