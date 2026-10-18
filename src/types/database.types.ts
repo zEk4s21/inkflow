@@ -43,6 +43,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"portfolio_items": {
+                  Row: {
+                    "alt_text": string,"body_zone": string | null,"category": string,"created_at": string,"deleted_at": string | null,"description": string | null,"id": string,"image_height": number,"image_path": string,"image_width": number,"position": number,"status": string,"title": string,"updated_at": string,"workspace_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "alt_text": string,"body_zone"?: string | null,"category": string,"created_at"?: string,"deleted_at"?: string | null,"description"?: string | null,"id"?: string,"image_height": number,"image_path": string,"image_width": number,"position"?: number,"status"?: string,"title": string,"updated_at"?: string,"workspace_id": string
+                  }
+                  Update: {
+                    "alt_text"?: string,"body_zone"?: string | null,"category"?: string,"created_at"?: string,"deleted_at"?: string | null,"description"?: string | null,"id"?: string,"image_height"?: number,"image_path"?: string,"image_width"?: number,"position"?: number,"status"?: string,"title"?: string,"updated_at"?: string,"workspace_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "portfolio_items_workspace_id_fkey"
+      columns: ["workspace_id"]
+isOneToOne: false
+      referencedRelation: "workspaces"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"workspace_members": {
                   Row: {
                     "created_at": string,"role": string,"updated_at": string,"user_id": string,"workspace_id": string

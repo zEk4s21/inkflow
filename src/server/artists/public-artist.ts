@@ -1,13 +1,15 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
+import { getPublicEnv } from "@/config/env";
+import { portfolioImageUrl } from "@/lib/storage";
 import { createSupabasePublicClient } from "@/server/supabase/public";
-import { DEMO_WORKS, DEMO_WORKS_SLUG } from "./demo-data";
 import { parseFaq, parseProcess } from "./page-content";
 import type { PortfolioWork, PublicArtist } from "./types";
 
 /*
- * Punto único de lectura de datos públicos. Perfil y textos salen de Supabase (rol anon,
- * solo perfiles publicados). Los trabajos siguen siendo demo hasta la Fase 2.4.
+ * Punto único de lectura de datos públicos, desde Supabase con el rol anon: la RLS solo
+ * deja ver perfiles publicados y trabajos publicados. Se cachea y se invalida con
+ * updateTag(artistCacheTag(slug)) cuando el panel guarda cambios.
  */
 
 export function artistCacheTag(slug: string) {
@@ -70,12 +72,41 @@ export async function getPublicArtist(slug: string): Promise<PublicArtist | null
       : null,
     process: parseProcess(settings?.process),
     faq: parseFaq(settings?.faq),
-    isDemo: slug === DEMO_WORKS_SLUG,
   };
 }
 
 export async function getPublishedWorks(slug: string): Promise<PortfolioWork[]> {
-  return slug === DEMO_WORKS_SLUG ? DEMO_WORKS : [];
+  "use cache";
+  cacheTag(artistCacheTag(slug));
+  cacheLife("hours");
+
+  if (!SLUG_PATTERN.test(slug)) return [];
+  const supabase = createSupabasePublicClient();
+  const { data: workspace } = await supabase.from("workspaces").select("id").eq("slug", slug).maybeSingle();
+  if (!workspace) return [];
+
+  const { data, error } = await supabase
+    .from("portfolio_items")
+    .select("id, title, category, body_zone, description, image_path, image_width, image_height, alt_text")
+    .eq("workspace_id", workspace.id)
+    .order("position")
+    .order("id");
+  if (error) throw new Error(`No se pudo leer el portfolio de "${slug}": ${error.message}`);
+
+  const supabaseUrl = getPublicEnv().NEXT_PUBLIC_SUPABASE_URL;
+  return data.map((work) => ({
+    id: work.id,
+    title: work.title,
+    category: work.category,
+    bodyZone: work.body_zone,
+    description: work.description,
+    image: {
+      src: portfolioImageUrl(supabaseUrl, work.image_path),
+      alt: work.alt_text,
+      width: work.image_width,
+      height: work.image_height,
+    },
+  }));
 }
 
 export async function getPublishedWork(slug: string, workId: string): Promise<PortfolioWork | null> {

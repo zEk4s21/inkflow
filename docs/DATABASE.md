@@ -2,7 +2,9 @@
 
 > Estado: **creadas** `workspaces`, `workspace_members`, `workspace_settings` y `artist_profiles` (Fase 2.1, `supabase/migrations/20261018012835_workspaces_y_perfiles.sql`). El resto del modelo es el diseño acordado en la Fase 0 y se crea en las fases siguientes.
 >
-> `supabase/seed.sql` carga el workspace `esti` solo en la base local.
+> Fase 2.4 (`20261018020342_portfolio.sql`): `portfolio_items` y el bucket `portfolio`.
+>
+> `supabase/seed.sql` carga el workspace `esti` solo en la base local. Las fotos demo se cargan aparte con `pnpm db:seed-portfolio` (lee `public/demo/*.jpg`, que no se versiona).
 
 ## Convenciones
 
@@ -44,9 +46,9 @@ erDiagram
 | `workspace_members` | PK (`workspace_id`, `user_id`), `role in ('owner','artist','staff')` |
 | `workspace_settings` | 1:1 con workspace; `locale`, `currency`, `timezone` (validada contra `pg_timezone_names`), `location_label`, `instagram_handle`, proceso y FAQ (`jsonb`) |
 | `artist_profiles` | `workspace_id`, `user_id` (opcional), `display_name`, `full_name`, `bio`, `styles text[]`, `is_public` |
-| `portfolio_items` | `status in ('draft','published')`, `position`; índice (`workspace_id`, `status`, `position`) |
-| `portfolio_images` | `storage_path` en bucket **público** |
-| `portfolio_categories` + `portfolio_item_categories` | únicas por workspace |
+| `portfolio_items` | `status in ('draft','published')`, `position`, `category` (texto), una foto por trabajo (`image_path`, `image_width`, `image_height`, `alt_text`); `image_path` debe empezar con el `workspace_id`; borrado lógico |
+| ~~`portfolio_images`~~ | Postergada: v1 usa una foto por trabajo |
+| ~~`portfolio_categories`~~ | Postergada: la categoría es texto en el trabajo y los filtros salen de los publicados |
 | `clients` | único parcial (`workspace_id`, `lower(email)`) donde `deleted_at is null` |
 | `conversations` / `conversation_messages` | `public_token_hash`, `expires_at` (retención limitada) |
 | `tattoo_requests` | `status in ('new','reviewing','needs_info','quoted','accepted','rejected','completed','cancelled')`, `source in ('form','assistant','manual')`, `public_token_hash` |

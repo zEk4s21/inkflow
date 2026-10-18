@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { buttonClasses } from "@/components/ui/button";
 import { ArtistHeader } from "@/components/public/artist-header";
-import { DemoBanner } from "@/components/public/demo-banner";
 import { PortfolioGrid } from "@/components/public/portfolio-grid";
 import { PublicSection } from "@/components/public/section";
 import { WorkImage } from "@/components/public/work-image";
@@ -34,7 +33,6 @@ export default async function ArtistPage({ params }: PageProps<"/artist/[slug]">
 
   return (
     <>
-      {artist.isDemo && <DemoBanner />}
       <ArtistHeader slug={artist.slug} artistName={artist.artistName} />
 
       <main id="contenido">
