@@ -140,4 +140,42 @@ describe.skipIf(!url || !publishableKey || !secretKey)("Conversaciones del asist
     const { data } = await member.from("tattoo_requests").select("style, color_mode, is_cover_up, conversation_id").eq("conversation_id", id).single().throwOnError();
     expect(data).toEqual({ style: "Tradicional", color_mode: "color", is_cover_up: false, conversation_id: id });
   });
+
+  it("el consumo del mes lo ve cada estudio, solo el suyo", async () => {
+    const id = await conversation();
+    await admin.rpc("record_conversation_turn", { p_conversation: id, p_max_messages: 30, p_input_tokens: 40, p_output_tokens: 2 }).throwOnError();
+    const since = new Date(Date.now() - 60_000).toISOString();
+    const { data: own } = await member.rpc("workspace_ai_usage", { p_workspace: ws.a, p_since: since }).single().throwOnError();
+    expect(own.conversations).toBeGreaterThanOrEqual(1);
+    expect(own.tokens).toBeGreaterThanOrEqual(42);
+    // Otro estudio no ve nada (RLS), y el público no puede llamarla.
+    expect((await outsider.rpc("workspace_ai_usage", { p_workspace: ws.a, p_since: since }).single()).data).toEqual({ conversations: 0, requests: 0, tokens: 0 });
+    expect((await anon.rpc("workspace_ai_usage", { p_workspace: ws.a, p_since: since })).error?.code).toBe("42501");
+    expect((await member.rpc("purge_expired_conversations")).error?.code).toBe("42501");
+  });
+
+  it("al vencer se borra lo charlado, salvo en las conversaciones que terminaron en consulta", async () => {
+    const past = new Date(Date.now() - 1000).toISOString();
+    const expired = await conversation();
+    const confirmed = await conversation();
+    const fresh = await conversation();
+    for (const id of [expired, confirmed, fresh]) await admin.rpc("record_conversation_turn", turn(id, 30)).throwOnError();
+    await admin.from("conversations").update({ expires_at: past }).in("id", [expired, confirmed]).throwOnError();
+    await admin.from("conversations").update({ status: "confirmed" }).eq("id", confirmed).throwOnError();
+    const old = await conversation();
+    await admin.from("conversations").update({ created_at: new Date(Date.now() - 70 * 86_400_000).toISOString(), expires_at: past }).eq("id", old).throwOnError();
+
+    await admin.rpc("purge_expired_conversations").throwOnError();
+
+    const messages = async (id: string) => (await admin.from("conversation_messages").select("id").eq("conversation_id", id)).data?.length;
+    expect(await messages(expired)).toBe(0);
+    expect(await messages(confirmed)).toBe(2);
+    expect(await messages(fresh)).toBe(2);
+    const { data: rows } = await admin.from("conversations").select("id, status, brief, input_tokens").in("id", [expired, confirmed, old]).throwOnError();
+    const byId = new Map(rows.map((row) => [row.id, row]));
+    // La vencida queda vacía y cerrada, con sus tokens para el tope del mes; la vieja se borra.
+    expect(byId.get(expired)).toMatchObject({ status: "closed", brief: {}, input_tokens: 100 });
+    expect(byId.get(confirmed)).toMatchObject({ status: "confirmed", brief: { idea: "hola" } });
+    expect(byId.has(old)).toBe(false);
+  });
 });

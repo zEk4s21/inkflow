@@ -12,7 +12,7 @@ import { createSupabaseAdminClient } from "@/server/supabase/admin";
 import { createSupabasePublicClient } from "@/server/supabase/public";
 import { getPublicArtist } from "@/server/artists/public-artist";
 import type { Brief } from "./brief";
-import { ASSISTANT_LIMITS, closeConversation, createConversation, loadConversation } from "./conversation";
+import { ASSISTANT_LIMITS, closeConversation, createConversation, isMonthlyBudgetReached, loadConversation } from "./conversation";
 import type { AssistantState, ConfirmState } from "./state";
 import { InvalidModelOutputError, MAX_USER_MESSAGE, runTurn } from "./turn";
 
@@ -77,14 +77,9 @@ export async function sendAssistantMessage(slug: string, prev: AssistantState, f
   const maxMessages = config.maxMessagesPerConversation;
   if (conversation.messageCount >= maxMessages) return { ...fail(LIMIT, 0), started: true };
 
-  if (config.monthlyTokenBudget !== null) {
-    // Mes calendario en UTC; cuenta las conversaciones empezadas este mes.
-    const now = new Date();
-    const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
-    const { data: used, error } = await admin.rpc("workspace_ai_tokens_since", { p_workspace: workspace.id, p_since: monthStart });
-    if (error) return fail(FAILED);
-    if (used >= config.monthlyTokenBudget) return { ...fail(UNAVAILABLE), started: true };
-  }
+  const budgetReached = await isMonthlyBudgetReached(workspace.id, config.monthlyTokenBudget);
+  if (budgetReached === null) return fail(FAILED);
+  if (budgetReached) return { ...fail(UNAVAILABLE), started: true };
 
   const record = (args: { inputTokens: number; outputTokens: number; brief?: Brief; reply?: string }) =>
     admin.rpc("record_conversation_turn", {

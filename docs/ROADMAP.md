@@ -33,12 +33,12 @@ Alcance: microapp para un tatuador, con base preparada para venderse como SaaS.
 - [x] 3.2 Pedido de turno público: el formulario de consulta ofrece elegir día y hora entre los turnos libres de las próximas tres semanas (opcional). El turno queda "a confirmar" y no ocupa el horario; el servidor vuelve a verificar que siga libre antes de guardarlo. Se ve en la solicitud y en "Turnos pedidos" de `/panel/agenda`
 - [x] 3.3 Gestión de turnos: confirmar, rechazar, reprogramar y cancelar desde la agenda o la solicitud; marcar como realizado o ausente una vez que empezó; dar turnos a mano desde una solicitud. Postgres impide dos turnos confirmados superpuestos (contando el margen), probado con confirmaciones en paralelo. Los cambios no se le avisan al cliente todavía: lo indica el panel
 
-## Fase 4 · Ink Assistant (en curso)
+## Fase 4 · Ink Assistant ✅
 
 - [x] 4.1 Proveedor configurable + estado "no configurado": interfaz `AIProvider` con adaptador de Anthropic (Messages API, sin SDK), configuración por variables de entorno validada, estado en Ajustes (nunca muestra la clave) y `/artist/[slug]/assistant` que, sin asistente, manda al formulario. Probado con fetch simulado: sin clave real no se llamó a la API
 - [x] 4.2 Conversación con brief estructurado: chat en `/artist/[slug]/assistant` con resumen al costado (idea, zona, tamaño, estilo, color, cover up, otros detalles). El modelo devuelve JSON que valida zod; el servidor une el resumen sin borrar datos y decide cuándo está listo. Conversación por cookie httpOnly (en la base solo el hash), captcha y límite al empezar, tope de mensajes y de tokens por mes. Probado con un proveedor simulado (`AI_PROVIDER=simulated`, marcado en pantalla); falta probarlo con la clave real. Mandar la consulta desde el chat queda para la 4.3
 - [x] 4.3 Confirmación y creación de solicitud: con lo básico listo, "Revisar y enviar" abre el resumen editable más los datos de contacto (no pasan por el modelo). Sin tildar la confirmación no se crea nada. La consulta llega al panel como "desde el asistente", con estilo, color, cover up, otros detalles y la conversación completa. Una conversación genera una sola consulta; comparte el límite de envíos del formulario
-- [ ] 4.4 Límites y costos
+- [x] 4.4 Límites y costos: Ajustes muestra el consumo del mes (conversaciones, consultas enviadas y tokens contra el tope, con aviso al 80 % y al 100 %). Con el tope alcanzado el asistente se muestra como no disponible y el formulario sigue andando. Retención: al vencer (7 días) se borra lo charlado en conversaciones que no terminaron en consulta; la fila vacía queda para el conteo y se borra a los 62 días (pg_cron diario). El costo en plata no se calcula: depende del modelo y se ve en la consola del proveedor
 
 ## Después de validar con el tatuador
 

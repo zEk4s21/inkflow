@@ -363,6 +363,9 @@ isOneToOne: true
 "merge_clients":
 { Args: { "source": string,"target": string }; Returns: undefined
                            },
+"purge_expired_conversations":
+{ Args: Record<PropertyKey, never>; Returns: undefined
+                           },
 "record_conversation_turn":
 { Args: { "p_assistant_message"?: string,"p_brief"?: Json,"p_conversation": string,"p_input_tokens": number,"p_max_messages": number,"p_output_tokens": number,"p_user_message"?: string }; Returns: boolean
                            },
@@ -371,6 +374,11 @@ isOneToOne: true
                            },
 "workspace_ai_tokens_since":
 { Args: { "p_since": string,"p_workspace": string }; Returns: number
+                           },
+"workspace_ai_usage":
+{ Args: { "p_since": string,"p_workspace": string }; Returns: {
+              "conversations": number,"requests": number,"tokens": number
+            }[]
                            }
           }
           Enums: {
