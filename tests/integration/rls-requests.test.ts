@@ -107,6 +107,8 @@ describe.skipIf(!url || !publishableKey || !secretKey)("RLS de clientes y solici
   it("los miembros no crean clientes ni editan otra cosa que el estado", async () => {
     const insert = await ownerA.from("clients").insert({ workspace_id: ws.a, name: "Otro", phone: "1122334455" });
     expect(insert.error).not.toBeNull();
+    const move = await ownerA.from("clients").update({ workspace_id: ws.b }).eq("id", clients.a);
+    expect(move.error).not.toBeNull();
     const idea = await ownerA.from("tattoo_requests").update({ idea: "Idea cambiada por el panel" }).eq("workspace_id", ws.a);
     expect(idea.error).not.toBeNull();
   });
@@ -193,5 +195,42 @@ describe.skipIf(!url || !publishableKey || !secretKey)("RLS de clientes y solici
       .from("tattoo_requests")
       .insert({ workspace_id: ws.a, client_id: clients.b, idea: "Cruce de workspaces" });
     expect(cross.error).not.toBeNull();
+  });
+
+  it("owner o artista editan datos de contacto; staff y otros workspaces no", async () => {
+    const { data } = await artistA.from("clients").update({ instagram_handle: "cliente.a" }).eq("id", clients.a).select("id").throwOnError();
+    expect(data).toHaveLength(1);
+    const byStaff = await staffA.from("clients").update({ name: "Cambiado" }).eq("id", clients.a).select("id");
+    expect(byStaff.data ?? []).toHaveLength(0);
+    const byOther = await ownerB.from("clients").update({ name: "Cambiado" }).eq("id", clients.a).select("id");
+    expect(byOther.data ?? []).toHaveLength(0);
+    // Sin email ni teléfono no puede quedar.
+    expect((await ownerA.from("clients").update({ email: null }).eq("id", clients.a)).error).not.toBeNull();
+  });
+
+  it("une dos clientes: mueve solicitudes, completa datos y da de baja el repetido", async () => {
+    const { data: byPhone } = await admin
+      .from("clients")
+      .insert({ workspace_id: ws.a, name: "Mismo por WhatsApp", phone: "5491199990000" })
+      .select("id")
+      .single()
+      .throwOnError();
+    await admin.from("tattoo_requests").insert({ workspace_id: ws.a, client_id: byPhone.id, idea: "Segunda consulta por WhatsApp" }).throwOnError();
+
+    expect((await staffA.rpc("merge_clients", { source: byPhone.id, target: clients.a })).error).not.toBeNull();
+    expect((await ownerB.rpc("merge_clients", { source: byPhone.id, target: clients.a })).error).not.toBeNull();
+    expect((await anon.rpc("merge_clients", { source: byPhone.id, target: clients.a })).error).not.toBeNull();
+    // No se puede traer un cliente de otro workspace.
+    expect((await ownerA.rpc("merge_clients", { source: clients.b, target: clients.a })).error).not.toBeNull();
+
+    await ownerA.rpc("merge_clients", { source: byPhone.id, target: clients.a }).throwOnError();
+    const { data: target } = await admin.from("clients").select("phone, email").eq("id", clients.a).single().throwOnError();
+    expect(target).toEqual({ phone: "5491199990000", email: `cliente-a-${run}@example.com` });
+    const { data: source } = await admin.from("clients").select("deleted_at").eq("id", byPhone.id).single().throwOnError();
+    expect(source.deleted_at).not.toBeNull();
+    const { count } = await admin.from("tattoo_requests").select("id", { count: "exact", head: true }).eq("client_id", byPhone.id);
+    expect(count).toBe(0);
+    // Ya dado de baja, no se puede volver a unir.
+    expect((await ownerA.rpc("merge_clients", { source: byPhone.id, target: clients.a })).error).not.toBeNull();
   });
 });
