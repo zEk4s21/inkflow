@@ -4,7 +4,7 @@ test.describe("página pública del tatuador", () => {
   test("muestra portada, secciones y aviso de contenido demo", async ({ page }) => {
     await page.goto("/artist/esti");
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Esti");
-    await expect(page.getByRole("note")).toContainText("contenido de ejemplo");
+    await expect(page.getByRole("note")).toContainText("los trabajos son de ejemplo");
     for (const title of ["Trabajos", "El proceso", "Preguntas frecuentes", "Contame tu idea"]) {
       await expect(page.getByRole("heading", { level: 2, name: title })).toBeVisible();
     }

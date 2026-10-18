@@ -4,13 +4,13 @@ export type PublicArtist = {
   artistName: string;
   fullName: string;
   styles: string[];
-  locationLabel: string;
+  locationLabel: string | null;
   /** null cuando el tatuador todavía no cargó su biografía. */
   bio: string | null;
   instagram: { handle: string; url: string } | null;
   process: Array<{ title: string; description: string }>;
   faq: Array<{ question: string; answer: string }>;
-  /** true mientras el contenido sea de ejemplo y no venga de la base de datos. */
+  /** true mientras los trabajos sean de ejemplo y no vengan de la base de datos. */
   isDemo: boolean;
 };
 

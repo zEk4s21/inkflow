@@ -29,7 +29,8 @@ jobs:
           } >> "$GITHUB_ENV"
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm e2e
+      # Lo que no necesita base. El resto de los e2e corre en el job "database".
+      - run: pnpm e2e tests/e2e/smoke.spec.ts
 
   database:
     runs-on: ubuntu-latest
@@ -54,8 +55,8 @@ jobs:
           } >> "$GITHUB_ENV"
       - name: Tests de integración contra la base
         run: pnpm test
-      - name: Login de punta a punta
+      - name: E2E contra la base
         run: |
           pnpm build
           pnpm exec playwright install --with-deps chromium
-          pnpm e2e tests/e2e/auth.spec.ts
+          pnpm e2e
