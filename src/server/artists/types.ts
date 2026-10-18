@@ -10,8 +10,6 @@ export type PublicArtist = {
   instagram: { handle: string; url: string } | null;
   process: Array<{ title: string; description: string }>;
   faq: Array<{ question: string; answer: string }>;
-  /** true mientras los trabajos sean de ejemplo y no vengan de la base de datos. */
-  isDemo: boolean;
 };
 
 export type PortfolioWork = {

@@ -1,31 +1,11 @@
 import { expect, test } from "@playwright/test";
-import { adminClient, hasDatabase, signIn } from "./helpers";
+import { createStudio as createFixture, hasDatabase, signIn } from "./helpers";
+
+const createStudio = (label: string, role: "owner" | "staff" = "owner") => createFixture(label, { role });
 
 // Cada test usa su propio workspace para no pisar los datos del seed ni de otros tests.
 test.describe("edición del perfil y la página pública", () => {
   test.skip(!hasDatabase, "Necesita Supabase local");
-
-  async function createStudio(label: string, role: "owner" | "staff" = "owner") {
-    const admin = adminClient();
-    const slug = `e2e-${label}-${Date.now()}`;
-    const email = `${slug}@example.com`;
-    const { data: workspace } = await admin.from("workspaces").insert({ slug, name: slug }).select("id").single().throwOnError();
-    await admin.from("workspace_settings").insert({ workspace_id: workspace.id }).throwOnError();
-    await admin
-      .from("artist_profiles")
-      .insert({ workspace_id: workspace.id, display_name: "Prueba", is_public: true })
-      .throwOnError();
-    const { data } = await admin.auth.admin.createUser({ email, email_confirm: true });
-    await admin.from("workspace_members").insert({ workspace_id: workspace.id, user_id: data.user!.id, role }).throwOnError();
-    return {
-      slug,
-      email,
-      cleanup: async () => {
-        await admin.from("workspaces").delete().eq("id", workspace.id);
-        await admin.auth.admin.deleteUser(data.user!.id);
-      },
-    };
-  }
 
   test("el owner edita el perfil y se ve en la página pública", async ({ page }, testInfo) => {
     const studio = await createStudio(`perfil-${testInfo.project.name}`);

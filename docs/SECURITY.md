@@ -29,7 +29,7 @@
 
 | Bucket | Acceso |
 |---|---|
-| `portfolio` | Público (solo imágenes de trabajos publicados) |
+| `portfolio` | Público para leer por URL. Subir y borrar: owner o artista, solo en la carpeta `<workspace_id>/` (políticas en `storage.objects`). JPG/PNG/WebP hasta 10 MB. Las fotos se achican a 2000 px en el navegador, lo que además elimina los metadatos EXIF (ubicación GPS). Al borrar un trabajo se borra la foto |
 | `client-private` | Privado. URLs firmadas de corta vida, solo para miembros del workspace |
 
 Las referencias que manda un cliente **nunca** pasan al portfolio automáticamente.

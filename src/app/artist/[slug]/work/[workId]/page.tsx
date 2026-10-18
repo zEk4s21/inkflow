@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { buttonClasses } from "@/components/ui/button";
 import { ArtistHeader } from "@/components/public/artist-header";
-import { DemoBanner } from "@/components/public/demo-banner";
 import { WorkImage } from "@/components/public/work-image";
 import {
   getPublicArtist,
@@ -48,7 +47,6 @@ export default async function WorkPage({ params }: PageProps<"/artist/[slug]/wor
 
   return (
     <>
-      {artist.isDemo && <DemoBanner />}
       <ArtistHeader slug={artist.slug} artistName={artist.artistName} />
       <main className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-10 sm:px-8 lg:grid-cols-[1.2fr_1fr] lg:py-16">
         <WorkImage {...work.image} priority sizes="(min-width: 1024px) 55vw, 100vw" className="w-full rounded-lg" />

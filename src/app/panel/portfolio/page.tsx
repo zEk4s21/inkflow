@@ -1,42 +1,67 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { PanelPageHeader, PendingBadge } from "@/components/panel/page-header";
-import { WorkImage } from "@/components/public/work-image";
-import { Badge } from "@/components/ui/badge";
+import { PanelPageHeader } from "@/components/panel/page-header";
+import { NewWorkForm } from "@/components/panel/portfolio/new-work-form";
+import { WorkCard, type PanelWork } from "@/components/panel/portfolio/work-card";
+import { buttonClasses } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { getPublicEnv } from "@/config/env";
+import { portfolioImageUrl } from "@/lib/storage";
 import { requireWorkspace } from "@/server/auth/panel-context";
-import { getPublishedWorks } from "@/server/artists/public-artist";
+import { createSupabaseServerClient } from "@/server/supabase/server";
 
 export const metadata: Metadata = { title: "Portfolio" };
 
 export default async function PanelPortfolioPage() {
-  const { workspace } = await requireWorkspace();
-  const works = await getPublishedWorks(workspace.slug);
+  const { workspace, role } = await requireWorkspace();
+  const canEdit = role === "owner" || role === "artist";
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase
+    .from("portfolio_items")
+    .select("id, title, category, body_zone, description, alt_text, status, image_path, image_width, image_height")
+    .eq("workspace_id", workspace.id)
+    .is("deleted_at", null)
+    .order("position")
+    .order("created_at", { ascending: false });
+
+  const supabaseUrl = getPublicEnv().NEXT_PUBLIC_SUPABASE_URL;
+  const works: PanelWork[] = (data ?? []).map((work) => ({
+    id: work.id,
+    title: work.title,
+    category: work.category,
+    bodyZone: work.body_zone,
+    description: work.description,
+    altText: work.alt_text,
+    published: work.status === "published",
+    image: { src: portfolioImageUrl(supabaseUrl, work.image_path), width: work.image_width, height: work.image_height },
+  }));
+  const categories = [...new Set(works.map((work) => work.category))].sort((a, b) => a.localeCompare(b, "es"));
+  const publishedCount = works.filter((work) => work.published).length;
 
   return (
     <>
       <PanelPageHeader
         title="Portfolio"
-        description="Los trabajos que se ven en tu página. Subir, editar y reordenar se habilita en la Fase 2."
-        actions={<PendingBadge phase="la Fase 2" />}
+        description={`${publishedCount} publicados de ${works.length}. El orden de esta lista es el de tu página.`}
+        actions={
+          <a href={`/artist/${workspace.slug}#trabajos`} target="_blank" rel="noopener" className={buttonClasses({ variant: "secondary", size: "sm" })}>
+            Ver en mi página
+          </a>
+        }
       />
+      {canEdit && <NewWorkForm workspaceId={workspace.id} categories={categories} />}
       {works.length === 0 ? (
-        <EmptyState title="Todavía no publicaste trabajos" description="Subí tu primer trabajo para que aparezca en tu página." />
+        <EmptyState title="Todavía no hay trabajos" description="Subí tu primer trabajo para que aparezca en tu página." />
       ) : (
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
-          {works.map((work) => (
-            <li key={work.id} className="flex flex-col gap-2">
-              <Link href={`/artist/${workspace.slug}/work/${work.id}`} className="overflow-hidden rounded-md">
-                <WorkImage {...work.image} sizes="(min-width: 1280px) 18vw, (min-width: 640px) 30vw, 45vw" className="w-full" />
-              </Link>
-              <div className="flex flex-col gap-1.5">
-                <span className="truncate text-sm font-medium">{work.title}</span>
-                <span className="flex items-center gap-2">
-                  <Badge tone="success">Publicado</Badge>
-                  <span className="text-xs text-fg-subtle">{work.category}</span>
-                </span>
-              </div>
-            </li>
+        <ul className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
+          {works.map((work, index) => (
+            <WorkCard
+              key={work.id}
+              work={work}
+              categories={categories}
+              canEdit={canEdit}
+              isFirst={index === 0}
+              isLast={index === works.length - 1}
+            />
           ))}
         </ul>
       )}

@@ -15,7 +15,8 @@
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
     "db:types": "supabase gen types typescript --local > src/types/database.types.ts",
-    "member:add": "node --env-file-if-exists=.env.local scripts/add-member.mjs"
+    "member:add": "node --env-file-if-exists=.env.local scripts/add-member.mjs",
+    "db:seed-portfolio": "node --env-file-if-exists=.env.local scripts/seed-demo-portfolio.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
