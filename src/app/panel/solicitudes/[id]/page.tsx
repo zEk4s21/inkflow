@@ -7,6 +7,9 @@ import { NewAppointment } from "@/components/panel/appointments/new-appointment"
 import { DeleteNoteButton } from "@/components/panel/requests/delete-note-button";
 import { NoteForm } from "@/components/panel/requests/note-form";
 import { StatusControl } from "@/components/panel/requests/status-control";
+import { NewQuote } from "@/components/panel/quotes/new-quote";
+import { QuoteActions } from "@/components/panel/quotes/quote-actions";
+import { QuoteDetails } from "@/components/panel/quotes/quote-details";
 import { Badge, RequestStatusBadge } from "@/components/ui/badge";
 import { APPOINTMENT_STATUS_META } from "@/config/appointment-status";
 import {
@@ -18,6 +21,7 @@ import { COLOR_LABELS } from "@/server/assistant/brief";
 import { formatDateTime } from "@/lib/format";
 import { getRequestAppointments, getSlotMinutes } from "@/server/appointments/queries";
 import { appointmentView } from "@/server/appointments/view";
+import { getRequestQuotes } from "@/server/quotes/queries";
 import { requireWorkspace } from "@/server/auth/panel-context";
 import {
   getConversationMessages,
@@ -45,13 +49,16 @@ export default async function RequestDetailPage({
     getWorkspaceRegional(workspace.id),
   ]);
   if (!request) notFound();
-  const [activity, names, appointments, slotMinutes, conversation] = await Promise.all([
+  const [activity, names, appointments, slotMinutes, conversation, quotes] = await Promise.all([
     getRequestActivity(workspace.id, request.id),
     getMemberNames(workspace.id),
     getRequestAppointments(workspace.id, request.id),
     profile ? getSlotMinutes(profile.id) : null,
     request.conversation_id ? getConversationMessages(request.conversation_id) : null,
+    getRequestQuotes(workspace.id, request.id),
   ]);
+  // Uno abierto (borrador o enviado) a la vez: lo garantiza un índice único en la base.
+  const hasOpenQuote = quotes.some((quote) => quote.status === "draft" || quote.status === "sent");
   // Datos que suma el asistente: solo se muestran los que vinieron.
   const extras = [
     ["Estilo", request.style],
@@ -210,6 +217,40 @@ export default async function RequestDetailPage({
                 requestId={request.id}
                 status={status}
               />
+            </section>
+          )}
+          {(quotes.length > 0 || canEdit) && (
+            <section aria-label="Presupuesto" className="flex flex-col gap-4 rounded-lg border border-line bg-surface-1/40 p-6">
+              <h2 className="font-medium">Presupuesto</h2>
+              {quotes.length === 0 && <p className="text-sm text-fg-muted">Todavía no tiene presupuesto.</p>}
+              <ul className="flex flex-col gap-5 divide-y divide-line text-sm">
+                {quotes.map((quote) => (
+                  <li key={quote.id} className="flex flex-col gap-3 pt-5 first:pt-0">
+                    <QuoteDetails quote={quote} regional={regional} />
+                    {canEdit && (
+                      <QuoteActions
+                        quoteId={quote.id}
+                        status={quote.status}
+                        today={today}
+                        currency={quote.currency}
+                        current={{
+                          amount: String(quote.amount),
+                          deposit: quote.deposit === null ? "" : String(quote.deposit),
+                          estimatedSessions: quote.estimatedSessions === null ? "" : String(quote.estimatedSessions),
+                          validUntil: quote.validUntil ?? "",
+                          message: quote.message ?? "",
+                        }}
+                      />
+                    )}
+                  </li>
+                ))}
+              </ul>
+              {canEdit && !hasOpenQuote && <NewQuote requestId={request.id} today={today} currency={regional.currency} />}
+              {canEdit && (
+                <p className="text-xs text-fg-subtle">
+                  INKFLOW todavía no le manda el presupuesto al cliente: pasáselo por mensaje y marcalo como enviado.
+                </p>
+              )}
             </section>
           )}
           {(appointments.length > 0 || canEdit) && (
