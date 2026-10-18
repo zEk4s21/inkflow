@@ -32,8 +32,8 @@ erDiagram
   conversations ||--o{ conversation_messages : contiene
   conversations |o--o| tattoo_requests : origina
   tattoo_requests ||--o{ request_attachments : referencias
-  tattoo_requests ||--o{ status_history : historial
-  tattoo_requests ||--o{ private_notes : notas
+  tattoo_requests ||--o{ request_status_history : historial
+  tattoo_requests ||--o{ request_notes : notas
   tattoo_requests ||--o{ appointments : agenda
   artist_profiles ||--o{ availability_rules : horario
   artist_profiles ||--o{ availability_blocks : bloqueos
@@ -53,8 +53,8 @@ erDiagram
 | `conversations` / `conversation_messages` | `public_token_hash`, `expires_at` (retención limitada) |
 | `tattoo_requests` | `status in ('new','reviewing','needs_info','quoted','accepted','rejected','completed','cancelled')`, `source in ('form','assistant','manual')`, `idea`, `body_zone`, `size_label`, `submitter_hash` (HMAC de la IP, para el límite de envíos); un trigger exige que el cliente sea del mismo workspace; borrado lógico. `public_token_hash` llega con el seguimiento para clientes |
 | `request_attachments` | bucket **privado**, URLs firmadas |
-| `status_history` | solo insert |
-| `private_notes` | nunca expuestas por rutas públicas |
+| `request_status_history` | lo escribe un trigger al cambiar `tattoo_requests.status` (`from_status`, `to_status`, `changed_by`); nadie lo inserta ni edita desde la API |
+| `request_notes` | notas internas: `author_id` = usuario de la sesión, `body` 1-2000; borrado lógico solo por su autor; un trigger exige que la solicitud sea del mismo workspace; nunca expuestas por rutas públicas |
 | `availability_rules` / `availability_blocks` | horario en hora local + zona del workspace; bloqueos como `tstzrange` |
 | `appointments` | `EXCLUDE USING gist (artist_id WITH =, blocked_range WITH &&) WHERE (status = 'confirmed')` |
 

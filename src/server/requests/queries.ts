@@ -71,3 +71,67 @@ export async function listClients(workspaceId: string) {
   if (error) throw new Error(`No se pudieron leer los clientes: ${error.message}`);
   return data;
 }
+
+export type RequestActivity =
+  | { kind: "status"; id: string; at: Date; from: RequestStatus; to: RequestStatus; by: string | null }
+  | { kind: "note"; id: string; at: Date; body: string; by: string | null };
+
+/** Historial de estados y notas de una solicitud, del más viejo al más nuevo. */
+export async function getRequestActivity(workspaceId: string, requestId: string): Promise<RequestActivity[]> {
+  const supabase = await createSupabaseServerClient();
+  const [history, notes] = await Promise.all([
+    supabase
+      .from("request_status_history")
+      .select("id, from_status, to_status, changed_by, created_at")
+      .eq("workspace_id", workspaceId)
+      .eq("request_id", requestId),
+    supabase
+      .from("request_notes")
+      .select("id, body, author_id, created_at")
+      .eq("workspace_id", workspaceId)
+      .eq("request_id", requestId)
+      .is("deleted_at", null),
+  ]);
+  if (history.error || notes.error) throw new Error("No se pudo leer el historial de la solicitud.");
+  return [
+    ...history.data.map(
+      (row): RequestActivity => ({
+        kind: "status",
+        id: row.id,
+        at: new Date(row.created_at),
+        from: row.from_status as RequestStatus,
+        to: row.to_status as RequestStatus,
+        by: row.changed_by,
+      }),
+    ),
+    ...notes.data.map(
+      (row): RequestActivity => ({ kind: "note", id: row.id, at: new Date(row.created_at), body: row.body, by: row.author_id }),
+    ),
+  ].sort((a, b) => a.at.getTime() - b.at.getTime());
+}
+
+/** Nombre visible de cada miembro con perfil de artista (para firmar historial y notas). */
+export async function getMemberNames(workspaceId: string) {
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase
+    .from("artist_profiles")
+    .select("user_id, display_name")
+    .eq("workspace_id", workspaceId)
+    .not("user_id", "is", null);
+  return new Map((data ?? []).map((row) => [row.user_id!, row.display_name]));
+}
+
+/** Cantidad de solicitudes por estado, para los filtros del listado. */
+export async function countRequestsByStatus(workspaceId: string) {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("tattoo_requests")
+    .select("status")
+    .eq("workspace_id", workspaceId)
+    .is("deleted_at", null)
+    .limit(5000);
+  if (error) throw new Error(`No se pudieron contar las solicitudes: ${error.message}`);
+  const counts = new Map<RequestStatus, number>();
+  for (const row of data) counts.set(row.status as RequestStatus, (counts.get(row.status as RequestStatus) ?? 0) + 1);
+  return { total: data.length, byStatus: counts };
+}

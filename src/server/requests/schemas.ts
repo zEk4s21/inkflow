@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { instagramHandleSchema } from "@/server/settings/schemas";
+import { REQUEST_STATUSES } from "@/config/request-status";
 
 const optionalText = (max: number) =>
   z
@@ -38,3 +39,19 @@ export const requestFormSchema = z
   });
 
 export type RequestFormValues = z.input<typeof requestFormSchema>;
+
+export const requestIdSchema = z.uuid();
+
+export const statusChangeSchema = z.object({
+  requestId: requestIdSchema,
+  status: z.enum(REQUEST_STATUSES),
+});
+
+export const noteSchema = z.object({
+  requestId: requestIdSchema,
+  body: z
+    .string()
+    .trim()
+    .min(1, "Escribí la nota.")
+    .max(2000, "Máximo 2000 caracteres."),
+});

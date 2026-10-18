@@ -83,6 +83,58 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"request_notes": {
+                  Row: {
+                    "author_id": string | null,"body": string,"created_at": string,"deleted_at": string | null,"id": string,"request_id": string,"updated_at": string,"workspace_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "author_id"?: string | null,"body": string,"created_at"?: string,"deleted_at"?: string | null,"id"?: string,"request_id": string,"updated_at"?: string,"workspace_id": string
+                  }
+                  Update: {
+                    "author_id"?: string | null,"body"?: string,"created_at"?: string,"deleted_at"?: string | null,"id"?: string,"request_id"?: string,"updated_at"?: string,"workspace_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "request_notes_request_id_fkey"
+      columns: ["request_id"]
+isOneToOne: false
+      referencedRelation: "tattoo_requests"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "request_notes_workspace_id_fkey"
+      columns: ["workspace_id"]
+isOneToOne: false
+      referencedRelation: "workspaces"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"request_status_history": {
+                  Row: {
+                    "changed_by": string | null,"created_at": string,"from_status": string,"id": string,"request_id": string,"to_status": string,"workspace_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "changed_by"?: string | null,"created_at"?: string,"from_status": string,"id"?: string,"request_id": string,"to_status": string,"workspace_id": string
+                  }
+                  Update: {
+                    "changed_by"?: string | null,"created_at"?: string,"from_status"?: string,"id"?: string,"request_id"?: string,"to_status"?: string,"workspace_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "request_status_history_request_id_fkey"
+      columns: ["request_id"]
+isOneToOne: false
+      referencedRelation: "tattoo_requests"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "request_status_history_workspace_id_fkey"
+      columns: ["workspace_id"]
+isOneToOne: false
+      referencedRelation: "workspaces"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"tattoo_requests": {
                   Row: {
                     "body_zone": string | null,"client_id": string,"created_at": string,"deleted_at": string | null,"id": string,"idea": string,"size_label": string | null,"source": string,"status": string,"submitter_hash": string | null,"updated_at": string,"workspace_id": string

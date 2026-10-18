@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { createStudio, hasDatabase, signIn } from "./helpers";
+import { adminClient, createStudio, hasDatabase, signIn } from "./helpers";
 
 // IP inventada por test: el límite de envíos cuenta por IP y así los tests no se pisan.
 function randomIp() {
@@ -79,5 +79,47 @@ test.describe("consultas desde la página pública", () => {
       else await expect(form.getByText(/Recibimos varias consultas seguidas/)).toBeVisible();
     }
     await visitor.close();
+  });
+
+  test("cambia el estado, deja notas y filtra por estado", async ({ page }) => {
+    const admin = adminClient();
+    const { data: client } = await admin
+      .from("clients")
+      .insert({ workspace_id: studio.workspaceId, name: "Martina Seguimiento", phone: "5491100001111" })
+      .select("id")
+      .single()
+      .throwOnError();
+    const { data: request } = await admin
+      .from("tattoo_requests")
+      .insert({ workspace_id: studio.workspaceId, client_id: client.id, idea: "Una rosa fineline en la muñeca" })
+      .select("id")
+      .single()
+      .throwOnError();
+
+    await signIn(page, studio.email);
+    await page.goto(`/panel/solicitudes/${request.id}`);
+    await page.getByRole("combobox", { name: "Estado" }).selectOption("quoted");
+    await expect(page.getByText("Vos pasó de Nueva a Presupuestada")).toBeVisible();
+
+    await page.getByRole("textbox", { name: "Nueva nota" }).fill("Le pasé $80.000 por WhatsApp");
+    await page.getByRole("button", { name: "Agregar nota" }).click();
+    await expect(page.getByText("Le pasé $80.000 por WhatsApp")).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "Nueva nota" })).toHaveValue("");
+
+    // Después de recargar sigue todo guardado.
+    await page.reload();
+    await expect(page.getByRole("combobox", { name: "Estado" })).toHaveValue("quoted");
+    await expect(page.getByText("Nota de Vos")).toBeVisible();
+
+    await page.getByRole("button", { name: "Borrar" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "Borrar" }).click();
+    await expect(page.getByText("Le pasé $80.000 por WhatsApp")).toHaveCount(0);
+
+    await page.goto("/panel/solicitudes");
+    const filters = page.getByRole("navigation", { name: "Filtrar por estado" });
+    await filters.getByRole("link", { name: /Presupuestada/ }).click();
+    await expect(page).toHaveURL(/estado=quoted/);
+    await expect(page.getByRole("link", { name: /Martina Seguimiento/ })).toBeVisible();
+    await expect(page.locator("main ul li")).toHaveCount(1);
   });
 });
