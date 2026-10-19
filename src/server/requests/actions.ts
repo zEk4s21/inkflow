@@ -1,11 +1,13 @@
 "use server";
 
 import { headers } from "next/headers";
+import { after } from "next/server";
 import type { RegionalSettings } from "@/config/regional";
 import type { Slot } from "@/lib/availability";
 import { formatDateTime } from "@/lib/format";
 import { getPublicAvailability } from "@/server/availability/public";
 import { getServerEnv } from "@/server/env";
+import { notifyNewRequest } from "@/server/notifications/new-request";
 import { createSupabaseAdminClient } from "@/server/supabase/admin";
 import { createSupabasePublicClient } from "@/server/supabase/public";
 import { getCaptchaConfig, verifyTurnstile } from "./captcha";
@@ -99,6 +101,10 @@ export async function submitRequest(slug: string, _prev: RequestFormState, formD
     console.error("[requests] insert", error.code);
     return FAILED;
   }
+  // Los avisos salen después de responder: no demoran ni hacen fallar la consulta.
+  after(() =>
+    notifyNewRequest({ workspaceId: workspace.id, requestId: request.id, source: "form", clientName: values.name, clientEmail: values.email }),
+  );
   if (!slot) return { status: "sent" };
 
   // El turno queda "requested": no reserva nada hasta que el tatuador lo confirme (Fase 3.3).

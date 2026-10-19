@@ -193,6 +193,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"email_log": {
+                  Row: {
+                    "created_at": string,"detail": string | null,"id": string,"kind": string,"recipient": string,"request_id": string | null,"status": string,"workspace_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"detail"?: string | null,"id"?: string,"kind": string,"recipient": string,"request_id"?: string | null,"status": string,"workspace_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"detail"?: string | null,"id"?: string,"kind"?: string,"recipient"?: string,"request_id"?: string | null,"status"?: string,"workspace_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "email_log_request_id_fkey"
+      columns: ["request_id"]
+isOneToOne: false
+      referencedRelation: "tattoo_requests"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "email_log_workspace_id_fkey"
+      columns: ["workspace_id"]
+isOneToOne: false
+      referencedRelation: "workspaces"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"follow_ups": {
                   Row: {
                     "appointment_id": string | null,"created_at": string,"created_by": string | null,"done_at": string | null,"done_by": string | null,"due_on": string,"id": string,"kind": string,"note": string | null,"request_id": string,"workspace_id": string

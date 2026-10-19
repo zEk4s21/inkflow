@@ -1,10 +1,12 @@
 "use server";
 
 import { headers } from "next/headers";
+import { after } from "next/server";
 import { z } from "zod";
 import { getServerEnv } from "@/server/env";
 import { AIProviderError, getAiConfig, getAiProvider } from "@/server/integrations/ai";
 import { getCaptchaConfig, verifyTurnstile } from "@/server/requests/captcha";
+import { notifyNewRequest } from "@/server/notifications/new-request";
 import { findOrCreateClient, isRequestRateLimited } from "@/server/requests/intake";
 import { clientIp, submitterHash } from "@/server/requests/rate-limit";
 import { assistantRequestSchema } from "@/server/requests/schemas";
@@ -195,7 +197,7 @@ export async function confirmAssistantRequest(slug: string, _prev: ConfirmState,
     await release();
     return { status: "error", message: FAILED };
   }
-  const { error } = await admin.from("tattoo_requests").insert({
+  const { data: request, error } = await admin.from("tattoo_requests").insert({
     workspace_id: workspace.id,
     client_id: clientId,
     source: "assistant",
@@ -208,11 +210,14 @@ export async function confirmAssistantRequest(slug: string, _prev: ConfirmState,
     is_cover_up: values.isCoverUp,
     details: values.details,
     submitter_hash: hash,
-  });
+  }).select("id").single();
   if (error) {
     console.error("[assistant] request insert", error.code);
     await release();
     return { status: "error", message: FAILED };
   }
+  after(() =>
+    notifyNewRequest({ workspaceId: workspace.id, requestId: request.id, source: "assistant", clientName: values.name, clientEmail: values.email }),
+  );
   return { status: "sent" };
 }
