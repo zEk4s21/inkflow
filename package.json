@@ -15,6 +15,7 @@
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
     "db:types": "supabase gen types typescript --local > src/types/database.types.ts",
+    "studio:create": "node --env-file-if-exists=.env.local scripts/create-studio.mjs",
     "member:add": "node --env-file-if-exists=.env.local scripts/add-member.mjs",
     "local:setup": "node scripts/setup-local.mjs",
     "check:prod": "node scripts/check-production.mjs",

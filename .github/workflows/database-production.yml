@@ -1,0 +1,41 @@
+name: Base de producción
+
+# Aplica las migraciones al proyecto de Supabase de producción. Solo a mano (Actions > Base de
+# producción > Run workflow) y con los secretos del environment "production" (ver docs/DEPLOY.md).
+# Sin esos secretos falla en el primer paso sin tocar nada.
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Solo mostrar qué migraciones se aplicarían"
+        type: boolean
+        default: true
+
+concurrency:
+  group: database-production
+  cancel-in-progress: false
+
+jobs:
+  migrations:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+    steps:
+      - name: Revisar secretos
+        run: |
+          for name in SUPABASE_ACCESS_TOKEN SUPABASE_DB_PASSWORD SUPABASE_PROJECT_ID; do
+            if [ -z "${!name}" ]; then echo "Falta el secreto $name en el environment production."; exit 1; fi
+          done
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec supabase link --project-ref "$SUPABASE_PROJECT_ID"
+      - name: Migraciones
+        run: pnpm exec supabase db push ${{ inputs.dry_run && '--dry-run' || '' }}
