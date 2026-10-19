@@ -79,6 +79,7 @@ export async function createStudio(label: string, options: { role?: "owner" | "a
     slug,
     email,
     workspaceId: workspace.id,
+    userId,
     workIds,
     async storageFiles() {
       const { data } = await admin.storage.from("portfolio").list(workspace.id);
