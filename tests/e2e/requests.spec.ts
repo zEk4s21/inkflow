@@ -55,6 +55,17 @@ test.describe("consultas desde la página pública", () => {
     await page.goto("/panel/clientes");
     await expect(page.getByText("Lucía Gómez")).toHaveCount(1);
     await expect(page.getByText("2 solicitudes")).toBeVisible();
+
+    // Sin proveedor de email no sale nada, pero cada aviso queda anotado como "No enviado".
+    await page.goto("/panel/ajustes");
+    const emails = page.getByRole("region", { name: "Emails" });
+    await expect(emails.getByText("No configurado")).toBeVisible();
+    await expect(async () => {
+      await page.reload();
+      await expect(emails.getByText("No enviado", { exact: true })).toHaveCount(4, { timeout: 1000 });
+    }).toPass();
+    await expect(emails.getByText("Aviso de consulta nueva (a vos)")).toHaveCount(2);
+    await expect(emails.getByText("Confirmación de consulta (al cliente)")).toHaveCount(2);
   });
 
   test("pide email o WhatsApp y no guarda nada si falta", async ({ browser }) => {

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { PanelPageHeader } from "@/components/panel/page-header";
 import { CareForm } from "@/components/panel/settings/care-form";
+import { EmailStatusCard, type EmailLogEntry } from "@/components/panel/settings/email-status";
 import { PageContentForm } from "@/components/panel/settings/page-content-form";
 import { ProfileForm } from "@/components/panel/settings/profile-form";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +14,7 @@ import { signOut } from "@/server/auth/actions";
 import { requireWorkspace } from "@/server/auth/panel-context";
 import { monthStartUtc } from "@/server/assistant/conversation";
 import { getAiStatus, type AIStatus } from "@/server/integrations/ai";
+import { getEmailStatus } from "@/server/integrations/email";
 import { createSupabaseServerClient } from "@/server/supabase/server";
 
 export const metadata: Metadata = { title: "Ajustes" };
@@ -91,6 +93,9 @@ export default async function SettingsPage() {
         <Card title="Ink Assistant">
           <AssistantStatus status={getAiStatus()} usage={await getMonthlyAiUsage(workspace.id)} regional={regional} />
         </Card>
+        <Card title="Emails">
+          <EmailStatusCard status={getEmailStatus()} log={await getEmailLog(workspace.id)} regional={regional} />
+        </Card>
       </div>
 
       {/* En celu y tablet no hay sidebar: la salida está acá. */}
@@ -110,6 +115,18 @@ function Card({ title, children }: { title: string; children: ReactNode }) {
       {children}
     </section>
   );
+}
+
+/** Últimos avisos por email del estudio (enviados, no enviados o fallidos), leídos con RLS. */
+async function getEmailLog(workspaceId: string): Promise<EmailLogEntry[]> {
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase
+    .from("email_log")
+    .select("id, kind, recipient, status, detail, created_at")
+    .eq("workspace_id", workspaceId)
+    .order("created_at", { ascending: false })
+    .limit(8);
+  return (data ?? []).map((row) => ({ ...row, createdAt: row.created_at }));
 }
 
 /** Estado de la IA leído de las variables del servidor. Nunca muestra la clave. */

@@ -3,7 +3,7 @@
 Plataforma web para tatuadores: página pública con portfolio, consultas, asistente de IA, solicitudes, clientes y turnos.
 Arranca como microapp para un tatuador y está preparada para funcionar como SaaS multi-tatuador.
 
-> Estado: **Fase 0 completa** (base técnica). Todavía no hay funciones de producto. Ver [docs/ROADMAP.md](docs/ROADMAP.md).
+> Estado: **Fases 0 a 5 completas en código** (página pública, consultas, asistente, turnos, presupuestos, pagos manuales, link para el cliente, controles y emails). Falta la puesta en producción (Fase 6) y conectar los servicios externos: IA, captcha y email funcionan en modo "no configurado" hasta cargar sus claves. Ver [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Tecnologías
 
@@ -55,6 +55,7 @@ Todas las variables están documentadas en [.env.example](.env.example). La app 
 
 - `NEXT_PUBLIC_*` llegan al navegador. Nunca pongas un secreto con ese prefijo.
 - `SUPABASE_SECRET_KEY` saltea RLS: se usa solo en código de servidor (`src/server`).
+- Emails: sin `EMAIL_API_KEY` y `EMAIL_FROM` no se manda ninguno (Ajustes lo muestra como "No configurado"). Con Resend, `EMAIL_FROM` tiene que ser de un dominio verificado.
 - El formulario de consulta usa Cloudflare Turnstile. En local podés usar las claves de prueba de Cloudflare (están en `.env.example`) o `INKFLOW_ALLOW_NO_CAPTCHA=1`, que lo deja sin captcha. Esa variable **nunca** va en producción; sin claves, el formulario se muestra como no disponible.
 
 El registro público de cuentas está **desactivado** (`supabase/config.toml`). Las cuentas de tatuadores se crean por invitación.
