@@ -32,6 +32,8 @@ export type ClientView = {
     message: string | null;
     status: Extract<QuoteStatus, "sent" | "accepted" | "rejected">;
   } | null;
+  /** Indicaciones de cuidado del estudio: solo si la sesión ya se hizo y hay texto cargado. */
+  careInstructions: string | null;
   /** Cobrado neto (señas y pagos menos devoluciones, sin anulados). */
   paid: number;
   appointments: { start: Date; end: Date; status: Extract<AppointmentStatus, "requested" | "confirmed" | "completed"> }[];
@@ -59,7 +61,7 @@ export async function getClientView(token: string): Promise<ClientView | null> {
 
   const [workspace, settings, artist, quote, appointments, payments] = await Promise.all([
     admin.from("workspaces").select("slug, name").eq("id", request.workspace_id).single(),
-    admin.from("workspace_settings").select("locale, currency, timezone, instagram_handle").eq("workspace_id", request.workspace_id).maybeSingle(),
+    admin.from("workspace_settings").select("locale, currency, timezone, instagram_handle, care_instructions").eq("workspace_id", request.workspace_id).maybeSingle(),
     admin
       .from("artist_profiles")
       .select("display_name, is_public")
@@ -113,6 +115,10 @@ export async function getClientView(token: string): Promise<ClientView | null> {
       message: quote.data.message,
       status: quote.data.status as NonNullable<ClientView["quote"]>["status"],
     },
+    careInstructions:
+      request.status === "completed" || appointments.data.some((row) => row.status === "completed")
+        ? (settings.data?.care_instructions ?? null)
+        : null,
     paid: paymentTotals(
       payments.data.map((row) => ({ amount: Number(row.amount), kind: row.kind as PaymentKind, voided: false })),
       null,

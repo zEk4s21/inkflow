@@ -37,6 +37,8 @@ erDiagram
   tattoo_requests ||--o{ appointments : agenda
   tattoo_requests ||--o{ quotes : presupuesta
   tattoo_requests ||--o{ payments : cobra
+  tattoo_requests ||--o{ follow_ups : controles
+  appointments |o--o{ follow_ups : origina
   artist_profiles ||--o{ availability_rules : horario
   artist_profiles ||--o{ availability_blocks : bloqueos
   artist_profiles ||--o{ appointments : atiende
@@ -46,7 +48,7 @@ erDiagram
 |---|---|
 | `workspaces` | `slug` único (URL pública) |
 | `workspace_members` | PK (`workspace_id`, `user_id`), `role in ('owner','artist','staff')` |
-| `workspace_settings` | 1:1 con workspace; `locale`, `currency`, `timezone` (validada contra `pg_timezone_names`), `location_label`, `instagram_handle`, proceso y FAQ (`jsonb`) |
+| `workspace_settings` | 1:1 con workspace; `locale`, `currency`, `timezone` (validada contra `pg_timezone_names`), `location_label`, `instagram_handle`, proceso y FAQ (`jsonb`), `care_instructions` (≤4000, solo owner; se lee con la misma política pública que el resto) |
 | `artist_profiles` | `workspace_id`, `user_id` (opcional), `display_name`, `full_name`, `bio`, `styles text[]`, `is_public` |
 | `portfolio_items` | `status in ('draft','published')`, `position`, `category` (texto), una foto por trabajo (`image_path`, `image_width`, `image_height`, `alt_text`); `image_path` debe empezar con el `workspace_id`; borrado lógico |
 | ~~`portfolio_images`~~ | Postergada: v1 usa una foto por trabajo |
@@ -62,8 +64,9 @@ erDiagram
 | `appointments` | `period tstzrange` finito, `buffer_minutes` 0-240, `blocked_period` = período + margen (lo calcula un trigger), `status in ('requested','confirmed','cancelled','completed','no_show')`, `source in ('form','manual')`, `request_id` opcional. `EXCLUDE USING gist (artist_id WITH =, blocked_period WITH &&) WHERE (status = 'confirmed')`: Postgres impide dos turnos confirmados superpuestos; los pedidos sí pueden coincidir. Un trigger exige tatuador, cliente y solicitud del mismo workspace. Otro trigger valida los cambios de estado (`requested` → `confirmed`/`cancelled`; `confirmed` → `cancelled`/`completed`/`no_show`, estos dos solo después del inicio; los demás son finales) y que solo se reprogramen turnos abiertos. `merge_clients` también mueve los turnos |
 | `quotes` | `amount numeric(12,2) > 0`, `deposit` opcional (≤ `amount`), `currency` ISO de 3 letras (la del estudio al crearlo), `estimated_sessions` 1-20, `valid_until` (fecha), `message` ≤1000, `status in ('draft','sent','accepted','rejected','withdrawn')`, `sent_at`/`responded_at` (los pone un trigger), `created_by` = usuario de la sesión. Índice único parcial: un solo presupuesto abierto (`draft`/`sent`) por solicitud. Un trigger exige solicitud del mismo workspace, valida las transiciones (`draft` → `sent`/`withdrawn`; `sent` → `accepted`/`rejected`/`withdrawn`; el resto es final), impide editar montos y condiciones fuera de borrador y mover el presupuesto o cambiar su moneda. Otro trigger acompaña la solicitud: enviado → `quoted`, aceptado → `accepted`, solo si venía antes en el circuito |
 | `payments` | `amount numeric(12,2) > 0`, `currency` (la del estudio), `kind in ('deposit','payment','refund')` (refund resta), `method in ('cash','transfer','card','mercadopago','other')`, `paid_on` (fecha), `note` ≤300, `created_by`, `voided_at`/`voided_by`. Un trigger exige solicitud del mismo workspace y que lo único que cambie sea la anulación, una sola vez, con fecha y usuario puestos por la base. No se borra ni se edita |
+| `follow_ups` | controles para el tatuador: `kind in ('healing_check','touch_up','custom')` (custom exige `note`), `due_on` (fecha local), `note` ≤300, `appointment_id` opcional (único por turno y tipo), `done_at`/`done_by` (los pone la base). Al pasar un turno con solicitud a `completed`, un trigger crea los controles de 7 y 30 días con la fecha local del estudio. Un trigger exige solicitud del mismo workspace y que no se cambien solicitud, turno ni tipo |
 
-Postergadas hasta después de la v1: `care_instructions`, `follow_ups`, `audit_events`.
+Postergadas hasta después de la v1: `audit_events`.
 
 ## Migraciones
 

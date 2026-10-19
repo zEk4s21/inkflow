@@ -8,6 +8,8 @@ import { ClientLink } from "@/components/panel/requests/client-link";
 import { DeleteNoteButton } from "@/components/panel/requests/delete-note-button";
 import { NoteForm } from "@/components/panel/requests/note-form";
 import { StatusControl } from "@/components/panel/requests/status-control";
+import { FollowUpList } from "@/components/panel/follow-ups/follow-up-list";
+import { NewFollowUp } from "@/components/panel/follow-ups/new-follow-up";
 import { NewPayment } from "@/components/panel/payments/new-payment";
 import { PaymentList } from "@/components/panel/payments/payment-list";
 import { NewQuote } from "@/components/panel/quotes/new-quote";
@@ -24,6 +26,8 @@ import { COLOR_LABELS } from "@/server/assistant/brief";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import { getRequestAppointments, getSlotMinutes } from "@/server/appointments/queries";
 import { appointmentView } from "@/server/appointments/view";
+import { getRequestFollowUps } from "@/server/follow-ups/queries";
+import { addDays } from "@/server/follow-ups/schemas";
 import { getPaymentsForRequests } from "@/server/payments/queries";
 import { paymentTotals, referenceQuote } from "@/server/payments/schemas";
 import { getRequestQuotes } from "@/server/quotes/queries";
@@ -54,7 +58,7 @@ export default async function RequestDetailPage({
     getWorkspaceRegional(workspace.id),
   ]);
   if (!request) notFound();
-  const [activity, names, appointments, slotMinutes, conversation, quotes, payments] = await Promise.all([
+  const [activity, names, appointments, slotMinutes, conversation, quotes, payments, followUps] = await Promise.all([
     getRequestActivity(workspace.id, request.id),
     getMemberNames(workspace.id),
     getRequestAppointments(workspace.id, request.id),
@@ -62,6 +66,7 @@ export default async function RequestDetailPage({
     request.conversation_id ? getConversationMessages(request.conversation_id) : null,
     getRequestQuotes(workspace.id, request.id),
     getPaymentsForRequests(workspace.id, [request.id]),
+    getRequestFollowUps(workspace.id, request.id),
   ]);
   const baseQuote = referenceQuote(quotes);
   const totals = paymentTotals(payments, baseQuote?.amount ?? null);
@@ -334,6 +339,17 @@ export default async function RequestDetailPage({
                   </p>
                 </>
               )}
+            </section>
+          )}
+          {(followUps.length > 0 || canEdit) && (
+            <section aria-label="Controles" className="flex flex-col gap-4 rounded-lg border border-line bg-surface-1/40 p-6">
+              <h2 className="font-medium">Controles</h2>
+              {followUps.length === 0 ? (
+                <p className="text-sm text-fg-muted">Al marcar un turno como realizado se agendan dos: a los 7 días (cicatrización) y a los 30 (retoque).</p>
+              ) : (
+                <FollowUpList items={followUps} today={today} regional={regional} canEdit={canEdit} />
+              )}
+              {canEdit && <NewFollowUp requestId={request.id} defaultDate={addDays(today, 7)} />}
             </section>
           )}
           {canEdit && (
