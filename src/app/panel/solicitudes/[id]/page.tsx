@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { PanelPageHeader } from "@/components/panel/page-header";
 import { AppointmentActions } from "@/components/panel/appointments/appointment-actions";
 import { NewAppointment } from "@/components/panel/appointments/new-appointment";
+import { ClientLink } from "@/components/panel/requests/client-link";
 import { DeleteNoteButton } from "@/components/panel/requests/delete-note-button";
 import { NoteForm } from "@/components/panel/requests/note-form";
 import { StatusControl } from "@/components/panel/requests/status-control";
@@ -248,7 +249,7 @@ export default async function RequestDetailPage({
               {canEdit && !hasOpenQuote && <NewQuote requestId={request.id} today={today} currency={regional.currency} />}
               {canEdit && (
                 <p className="text-xs text-fg-subtle">
-                  INKFLOW todavía no le manda el presupuesto al cliente: pasáselo por mensaje y marcalo como enviado.
+                  INKFLOW no le avisa al cliente: pasáselo por mensaje y marcalo como enviado. Con el link para el cliente lo puede ver.
                 </p>
               )}
             </section>
@@ -294,6 +295,16 @@ export default async function RequestDetailPage({
                   </p>
                 </>
               )}
+            </section>
+          )}
+          {canEdit && (
+            <section aria-label="Link para el cliente" className="flex flex-col gap-4 rounded-lg border border-line bg-surface-1/40 p-6">
+              <h2 className="font-medium">Link para el cliente</h2>
+              <ClientLink
+                requestId={request.id}
+                phone={client.phone}
+                activeSince={request.public_token_created_at ? formatDateTime(new Date(request.public_token_created_at), regional) : null}
+              />
             </section>
           )}
           <section className="flex flex-col gap-4 rounded-lg border border-line bg-surface-1/40 p-6">

@@ -53,7 +53,7 @@ export async function getRequest(workspaceId: string, id: string) {
   const { data } = await supabase
     .from("tattoo_requests")
     .select(
-      "id, status, source, idea, body_zone, size_label, style, color_mode, is_cover_up, details, conversation_id, created_at, clients!inner (id, name, email, phone, instagram_handle)",
+      "id, status, source, idea, body_zone, size_label, style, color_mode, is_cover_up, details, conversation_id, public_token_created_at, created_at, clients!inner (id, name, email, phone, instagram_handle)",
     )
     .eq("workspace_id", workspaceId)
     .eq("id", id)

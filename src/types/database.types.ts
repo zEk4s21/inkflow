@@ -293,14 +293,14 @@ isOneToOne: false
                   ]
                 },"tattoo_requests": {
                   Row: {
-                    "body_zone": string | null,"client_id": string,"color_mode": string | null,"conversation_id": string | null,"created_at": string,"deleted_at": string | null,"details": string | null,"id": string,"idea": string,"is_cover_up": boolean | null,"size_label": string | null,"source": string,"status": string,"style": string | null,"submitter_hash": string | null,"updated_at": string,"workspace_id": string
+                    "body_zone": string | null,"client_id": string,"color_mode": string | null,"conversation_id": string | null,"created_at": string,"deleted_at": string | null,"details": string | null,"id": string,"idea": string,"is_cover_up": boolean | null,"public_token_created_at": string | null,"public_token_hash": string | null,"size_label": string | null,"source": string,"status": string,"style": string | null,"submitter_hash": string | null,"updated_at": string,"workspace_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "body_zone"?: string | null,"client_id": string,"color_mode"?: string | null,"conversation_id"?: string | null,"created_at"?: string,"deleted_at"?: string | null,"details"?: string | null,"id"?: string,"idea": string,"is_cover_up"?: boolean | null,"size_label"?: string | null,"source"?: string,"status"?: string,"style"?: string | null,"submitter_hash"?: string | null,"updated_at"?: string,"workspace_id": string
+                    "body_zone"?: string | null,"client_id": string,"color_mode"?: string | null,"conversation_id"?: string | null,"created_at"?: string,"deleted_at"?: string | null,"details"?: string | null,"id"?: string,"idea": string,"is_cover_up"?: boolean | null,"public_token_created_at"?: string | null,"public_token_hash"?: string | null,"size_label"?: string | null,"source"?: string,"status"?: string,"style"?: string | null,"submitter_hash"?: string | null,"updated_at"?: string,"workspace_id": string
                   }
                   Update: {
-                    "body_zone"?: string | null,"client_id"?: string,"color_mode"?: string | null,"conversation_id"?: string | null,"created_at"?: string,"deleted_at"?: string | null,"details"?: string | null,"id"?: string,"idea"?: string,"is_cover_up"?: boolean | null,"size_label"?: string | null,"source"?: string,"status"?: string,"style"?: string | null,"submitter_hash"?: string | null,"updated_at"?: string,"workspace_id"?: string
+                    "body_zone"?: string | null,"client_id"?: string,"color_mode"?: string | null,"conversation_id"?: string | null,"created_at"?: string,"deleted_at"?: string | null,"details"?: string | null,"id"?: string,"idea"?: string,"is_cover_up"?: boolean | null,"public_token_created_at"?: string | null,"public_token_hash"?: string | null,"size_label"?: string | null,"source"?: string,"status"?: string,"style"?: string | null,"submitter_hash"?: string | null,"updated_at"?: string,"workspace_id"?: string
                   }
                   Relationships: [
                     {
