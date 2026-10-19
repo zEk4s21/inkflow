@@ -8,6 +8,8 @@ import { ClientLink } from "@/components/panel/requests/client-link";
 import { DeleteNoteButton } from "@/components/panel/requests/delete-note-button";
 import { NoteForm } from "@/components/panel/requests/note-form";
 import { StatusControl } from "@/components/panel/requests/status-control";
+import { NewPayment } from "@/components/panel/payments/new-payment";
+import { PaymentList } from "@/components/panel/payments/payment-list";
 import { NewQuote } from "@/components/panel/quotes/new-quote";
 import { QuoteActions } from "@/components/panel/quotes/quote-actions";
 import { QuoteDetails } from "@/components/panel/quotes/quote-details";
@@ -19,9 +21,11 @@ import {
 } from "@/config/request-status";
 import { localDateOf } from "@/lib/availability";
 import { COLOR_LABELS } from "@/server/assistant/brief";
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime, formatMoney } from "@/lib/format";
 import { getRequestAppointments, getSlotMinutes } from "@/server/appointments/queries";
 import { appointmentView } from "@/server/appointments/view";
+import { getPaymentsForRequests } from "@/server/payments/queries";
+import { paymentTotals, referenceQuote } from "@/server/payments/schemas";
 import { getRequestQuotes } from "@/server/quotes/queries";
 import { requireWorkspace } from "@/server/auth/panel-context";
 import {
@@ -50,14 +54,18 @@ export default async function RequestDetailPage({
     getWorkspaceRegional(workspace.id),
   ]);
   if (!request) notFound();
-  const [activity, names, appointments, slotMinutes, conversation, quotes] = await Promise.all([
+  const [activity, names, appointments, slotMinutes, conversation, quotes, payments] = await Promise.all([
     getRequestActivity(workspace.id, request.id),
     getMemberNames(workspace.id),
     getRequestAppointments(workspace.id, request.id),
     profile ? getSlotMinutes(profile.id) : null,
     request.conversation_id ? getConversationMessages(request.conversation_id) : null,
     getRequestQuotes(workspace.id, request.id),
+    getPaymentsForRequests(workspace.id, [request.id]),
   ]);
+  const baseQuote = referenceQuote(quotes);
+  const totals = paymentTotals(payments, baseQuote?.amount ?? null);
+  const money = (amount: number) => formatMoney(amount, regional);
   // Uno abierto (borrador o enviado) a la vez: lo garantiza un índice único en la base.
   const hasOpenQuote = quotes.some((quote) => quote.status === "draft" || quote.status === "sent");
   // Datos que suma el asistente: solo se muestran los que vinieron.
@@ -251,6 +259,37 @@ export default async function RequestDetailPage({
                 <p className="text-xs text-fg-subtle">
                   INKFLOW no le avisa al cliente: pasáselo por mensaje y marcalo como enviado. Con el link para el cliente lo puede ver.
                 </p>
+              )}
+            </section>
+          )}
+          {(payments.length > 0 || canEdit) && (
+            <section aria-label="Pagos" className="flex flex-col gap-4 rounded-lg border border-line bg-surface-1/40 p-6">
+              <h2 className="font-medium">Pagos</h2>
+              <dl className="grid grid-cols-2 gap-3 text-sm">
+                <div className="flex flex-col gap-1">
+                  <dt className="text-fg-subtle">Cobrado</dt>
+                  <dd className="font-serif text-2xl tabular-nums">{money(totals.paid)}</dd>
+                </div>
+                {totals.balance !== null && (
+                  <div className="flex flex-col gap-1">
+                    <dt className="text-fg-subtle">{totals.balance < 0 ? "Cobrado de más" : "Saldo"}</dt>
+                    <dd className="font-serif text-2xl tabular-nums">{money(Math.abs(totals.balance))}</dd>
+                  </div>
+                )}
+              </dl>
+              {baseQuote ? (
+                <p className="text-xs text-fg-subtle">
+                  Contra el presupuesto {baseQuote.status === "accepted" ? "aceptado" : "enviado"} de {money(baseQuote.amount)}.
+                </p>
+              ) : (
+                <p className="text-xs text-fg-subtle">El saldo aparece cuando hay un presupuesto enviado o aceptado.</p>
+              )}
+              {payments.length > 0 && <PaymentList payments={payments} regional={regional} canEdit={canEdit} />}
+              {canEdit && (
+                <>
+                  <NewPayment requestId={request.id} today={today} currency={regional.currency} firstPayment={totals.paid === 0} />
+                  <p className="text-xs text-fg-subtle">INKFLOW no cobra: anotá acá lo que recibiste por otro medio.</p>
+                </>
               )}
             </section>
           )}
