@@ -213,6 +213,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"quotes": {
+                  Row: {
+                    "amount": number,"created_at": string,"created_by": string | null,"currency": string,"deposit": number | null,"estimated_sessions": number | null,"id": string,"message": string | null,"request_id": string,"responded_at": string | null,"sent_at": string | null,"status": string,"updated_at": string,"valid_until": string | null,"workspace_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount": number,"created_at"?: string,"created_by"?: string | null,"currency": string,"deposit"?: number | null,"estimated_sessions"?: number | null,"id"?: string,"message"?: string | null,"request_id": string,"responded_at"?: string | null,"sent_at"?: string | null,"status"?: string,"updated_at"?: string,"valid_until"?: string | null,"workspace_id": string
+                  }
+                  Update: {
+                    "amount"?: number,"created_at"?: string,"created_by"?: string | null,"currency"?: string,"deposit"?: number | null,"estimated_sessions"?: number | null,"id"?: string,"message"?: string | null,"request_id"?: string,"responded_at"?: string | null,"sent_at"?: string | null,"status"?: string,"updated_at"?: string,"valid_until"?: string | null,"workspace_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "quotes_request_id_fkey"
+      columns: ["request_id"]
+isOneToOne: false
+      referencedRelation: "tattoo_requests"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "quotes_workspace_id_fkey"
+      columns: ["workspace_id"]
+isOneToOne: false
+      referencedRelation: "workspaces"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"request_notes": {
                   Row: {
                     "author_id": string | null,"body": string,"created_at": string,"deleted_at": string | null,"id": string,"request_id": string,"updated_at": string,"workspace_id": string

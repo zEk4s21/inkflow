@@ -6,8 +6,10 @@ import { ClientForm } from "@/components/panel/clients/client-form";
 import { MergeClient } from "@/components/panel/clients/merge-client";
 import { PanelPageHeader } from "@/components/panel/page-header";
 import { RequestList } from "@/components/panel/request-list";
+import { QuoteDetails } from "@/components/panel/quotes/quote-details";
 import { formatDateTime } from "@/lib/format";
 import { requireWorkspace } from "@/server/auth/panel-context";
+import { getQuotesForRequests } from "@/server/quotes/queries";
 import { getClient, getWorkspaceRegional, listClients } from "@/server/requests/queries";
 
 export const metadata: Metadata = { title: "Cliente" };
@@ -18,6 +20,10 @@ export default async function ClientDetailPage({ params }: PageProps<"/panel/cli
   const [client, regional] = await Promise.all([getClient(workspace.id, id), getWorkspaceRegional(workspace.id)]);
   if (!client) notFound();
   const canEdit = role === "owner" || role === "artist";
+  const quotes = await getQuotesForRequests(
+    workspace.id,
+    client.requests.map((request) => request.id),
+  );
   const others = canEdit ? (await listClients(workspace.id)).filter((other) => other.id !== client.id) : [];
 
   return (
@@ -37,6 +43,20 @@ export default async function ClientDetailPage({ params }: PageProps<"/panel/cli
         </Card>
 
         <div className="flex flex-col gap-6 self-start">
+          {quotes.length > 0 && (
+            <Card title={`Presupuestos (${quotes.length})`}>
+              <ul className="flex flex-col gap-5 divide-y divide-line text-sm">
+                {quotes.map((quote) => (
+                  <li key={quote.id} className="flex flex-col gap-3 pt-5 first:pt-0">
+                    <QuoteDetails quote={quote} regional={regional} />
+                    <Link href={`/panel/solicitudes/${quote.requestId}`} className="self-start text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline">
+                      Ver solicitud
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
           <Card title="Datos de contacto">
             {canEdit ? (
               <ClientForm
@@ -84,7 +104,7 @@ export default async function ClientDetailPage({ params }: PageProps<"/panel/cli
 
 function Card({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="flex flex-col gap-5 rounded-lg border border-line bg-surface-1/40 p-6">
+    <section aria-label={title} className="flex flex-col gap-5 rounded-lg border border-line bg-surface-1/40 p-6">
       <h2 className="font-medium">{title}</h2>
       {children}
     </section>

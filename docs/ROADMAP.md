@@ -40,9 +40,17 @@ Alcance: microapp para un tatuador, con base preparada para venderse como SaaS.
 - [x] 4.3 Confirmación y creación de solicitud: con lo básico listo, "Revisar y enviar" abre el resumen editable más los datos de contacto (no pasan por el modelo). Sin tildar la confirmación no se crea nada. La consulta llega al panel como "desde el asistente", con estilo, color, cover up, otros detalles y la conversación completa. Una conversación genera una sola consulta; comparte el límite de envíos del formulario
 - [x] 4.4 Límites y costos: Ajustes muestra el consumo del mes (conversaciones, consultas enviadas y tokens contra el tope, con aviso al 80 % y al 100 %). Con el tope alcanzado el asistente se muestra como no disponible y el formulario sigue andando. Retención: al vencer (7 días) se borra lo charlado en conversaciones que no terminaron en consulta; la fila vacía queda para el conteo y se borra a los 62 días (pg_cron diario). El costo en plata no se calcula: depende del modelo y se ve en la consola del proveedor
 
+## Fase 5 · Presupuestos, pagos y seguimiento
+
+- [x] 5.1 Presupuestos: desde la solicitud, owner o artista arman un presupuesto (total, seña opcional, sesiones estimadas, vigencia y mensaje para el cliente) como borrador o ya marcado como enviado, y anotan si el cliente aceptó o rechazó. Un solo presupuesto abierto por solicitud; lo enviado no se edita: se retira y se arma otro, así queda el historial. Al enviarlo la solicitud pasa a "Presupuestada" y al aceptarlo a "Aceptada" (solo si venía antes en el circuito). Se ve en la solicitud y en la ficha del cliente. **INKFLOW todavía no le manda el presupuesto al cliente**: se lo pasa el tatuador por mensaje (llega con el link privado de la 5.2)
+- [ ] 5.2 Link privado para el cliente: ver el estado de su solicitud y su presupuesto
+- [ ] 5.3 Pagos manuales: registrar señas y pagos (sin pasarela)
+- [ ] 5.4 Cuidados y seguimiento
+- [ ] 5.5 Emails transaccionales, con estado "no configurado" mientras no haya proveedor
+
 ## Después de validar con el tatuador
 
-Presupuestos y pagos manuales, cuidados y seguimiento, auditoría, onboarding de nuevos tatuadores y planes.
+Auditoría, onboarding de nuevos tatuadores y planes.
 
 ## Problemas conocidos
 
