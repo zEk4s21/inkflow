@@ -77,6 +77,8 @@ Las referencias que manda un cliente **nunca** pasan al portfolio automáticamen
 
 - Pagos (`src/server/payments/actions.ts`): owner o artista registran y anulan (acción con rol + zod, fecha no futura en la zona del estudio; RLS y privilegios por columna como segunda barrera); staff solo lee y anon nada. La moneda la pone el servidor. Un pago no se edita ni se borra: la única columna actualizable es `voided_at`, y el trigger pone la fecha y el usuario reales. El link del cliente muestra solo el total cobrado, nunca el medio ni las notas. Cubierto por `tests/integration/rls-payments.test.ts`, `tests/unit/payments.test.ts` y `tests/e2e/payments.spec.ts`.
 
+- Cuidados y controles: los cuidados los edita solo el owner (`updateCareInstructions`, privilegio por columna y RLS de `workspace_settings`); como el resto de la configuración de un estudio publicado, son legibles públicamente, así que no deben llevar datos privados. El link del cliente los muestra solo cuando la sesión ya se hizo. Los controles (`src/server/follow-ups`) los ven los miembros y los cambian owner o artista; los automáticos los crea un trigger con los permisos de quien cierra el turno, y "hecho" lo fechan la base y el usuario de la sesión. No se exponen al cliente. Cubierto por `tests/integration/rls-follow-ups.test.ts`, `tests/unit/follow-ups.test.ts` y `tests/e2e/follow-ups.spec.ts`.
+
 - Registro público desactivado (`supabase/config.toml` → `[auth] enable_signup = false`). Cubierto por un test de integración.
 - Redirects de auth limitados a `/auth/callback` local.
 

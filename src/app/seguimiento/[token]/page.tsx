@@ -145,6 +145,14 @@ async function Tracking({ params }: Pick<PageProps<"/seguimiento/[token]">, "par
           </Card>
         )}
 
+        {view.careInstructions && (
+          <Card label="Cuidados">
+            <h2 className="font-medium">Cuidados</h2>
+            <p className="whitespace-pre-line leading-relaxed">{view.careInstructions}</p>
+            <p className="text-sm text-fg-muted">Si algo no se ve bien o tenés dudas, escribime.</p>
+          </Card>
+        )}
+
         <Card label="Tu idea">
           <h2 className="font-medium">Tu idea</h2>
           <p className="whitespace-pre-line leading-relaxed">{request.idea}</p>

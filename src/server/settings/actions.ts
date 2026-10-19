@@ -5,7 +5,7 @@ import { z } from "zod";
 import { artistCacheTag } from "@/server/artists/public-artist";
 import { requireWorkspace } from "@/server/auth/panel-context";
 import { createSupabaseServerClient } from "@/server/supabase/server";
-import { pageContentSchema, profileFormSchema } from "./schemas";
+import { careInstructionsSchema, pageContentSchema, profileFormSchema } from "./schemas";
 
 export type FormState = {
   status: "idle" | "saved" | "error";
@@ -104,5 +104,28 @@ export async function updatePageContent(_prev: FormState, formData: FormData): P
   }
 
   updateTag(artistCacheTag(context.workspace.slug));
+  return { status: "saved", message: "Cambios guardados." };
+}
+
+/** Indicaciones de cuidado que ve el cliente en su link cuando la sesión ya se hizo. */
+export async function updateCareInstructions(_prev: FormState, formData: FormData): Promise<FormState> {
+  const context = await requireWorkspace();
+  if (context.role !== "owner") return FORBIDDEN;
+
+  const parsed = careInstructionsSchema.safeParse(formData.get("careInstructions") ?? "");
+  if (!parsed.success) {
+    return { status: "error", message: "Revisá los campos marcados.", fieldErrors: { careInstructions: parsed.error.issues[0].message } };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("workspace_settings")
+    .update({ care_instructions: parsed.data })
+    .eq("workspace_id", context.workspace.id)
+    .select("workspace_id");
+  if (error || data.length !== 1) {
+    console.error("[settings] updateCareInstructions", error?.code);
+    return FAILED;
+  }
   return { status: "saved", message: "Cambios guardados." };
 }

@@ -53,3 +53,9 @@ export const pageContentSchema = z.object({
   process: processSchema,
   faq: faqSchema,
 });
+
+export const careInstructionsSchema = z
+  .string()
+  .trim()
+  .max(4000, "Máximo 4000 caracteres.")
+  .transform((value) => (value === "" ? null : value));

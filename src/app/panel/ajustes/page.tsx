@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { PanelPageHeader } from "@/components/panel/page-header";
+import { CareForm } from "@/components/panel/settings/care-form";
 import { PageContentForm } from "@/components/panel/settings/page-content-form";
 import { ProfileForm } from "@/components/panel/settings/profile-form";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +22,7 @@ export default async function SettingsPage() {
   const supabase = await createSupabaseServerClient();
   const { data: settings } = await supabase
     .from("workspace_settings")
-    .select("locale, currency, timezone, location_label, instagram_handle, process, faq")
+    .select("locale, currency, timezone, location_label, instagram_handle, process, faq, care_instructions")
     .eq("workspace_id", workspace.id)
     .maybeSingle();
   const regional = resolveRegional({
@@ -61,6 +62,9 @@ export default async function SettingsPage() {
           </Card>
           <Card title="Textos de la página">
             <PageContentForm process={parseProcess(settings?.process)} faq={parseFaq(settings?.faq)} />
+          </Card>
+          <Card title="Cuidados después de la sesión">
+            <CareForm initial={settings?.care_instructions ?? ""} />
           </Card>
         </>
       ) : (

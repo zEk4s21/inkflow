@@ -193,6 +193,38 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"follow_ups": {
+                  Row: {
+                    "appointment_id": string | null,"created_at": string,"created_by": string | null,"done_at": string | null,"done_by": string | null,"due_on": string,"id": string,"kind": string,"note": string | null,"request_id": string,"workspace_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "appointment_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"done_at"?: string | null,"done_by"?: string | null,"due_on": string,"id"?: string,"kind": string,"note"?: string | null,"request_id": string,"workspace_id": string
+                  }
+                  Update: {
+                    "appointment_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"done_at"?: string | null,"done_by"?: string | null,"due_on"?: string,"id"?: string,"kind"?: string,"note"?: string | null,"request_id"?: string,"workspace_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "follow_ups_appointment_id_fkey"
+      columns: ["appointment_id"]
+isOneToOne: false
+      referencedRelation: "appointments"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "follow_ups_request_id_fkey"
+      columns: ["request_id"]
+isOneToOne: false
+      referencedRelation: "tattoo_requests"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "follow_ups_workspace_id_fkey"
+      columns: ["workspace_id"]
+isOneToOne: false
+      referencedRelation: "workspaces"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"payments": {
                   Row: {
                     "amount": number,"created_at": string,"created_by": string | null,"currency": string,"id": string,"kind": string,"method": string,"note": string | null,"paid_on": string,"request_id": string,"voided_at": string | null,"voided_by": string | null,"workspace_id": string
@@ -371,14 +403,14 @@ isOneToOne: false
                   ]
                 },"workspace_settings": {
                   Row: {
-                    "created_at": string,"currency": string,"faq": NonNullable<Json>,"instagram_handle": string | null,"locale": string,"location_label": string | null,"process": NonNullable<Json>,"timezone": string,"updated_at": string,"workspace_id": string
+                    "care_instructions": string | null,"created_at": string,"currency": string,"faq": NonNullable<Json>,"instagram_handle": string | null,"locale": string,"location_label": string | null,"process": NonNullable<Json>,"timezone": string,"updated_at": string,"workspace_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"currency"?: string,"faq"?: NonNullable<Json>,"instagram_handle"?: string | null,"locale"?: string,"location_label"?: string | null,"process"?: NonNullable<Json>,"timezone"?: string,"updated_at"?: string,"workspace_id": string
+                    "care_instructions"?: string | null,"created_at"?: string,"currency"?: string,"faq"?: NonNullable<Json>,"instagram_handle"?: string | null,"locale"?: string,"location_label"?: string | null,"process"?: NonNullable<Json>,"timezone"?: string,"updated_at"?: string,"workspace_id": string
                   }
                   Update: {
-                    "created_at"?: string,"currency"?: string,"faq"?: NonNullable<Json>,"instagram_handle"?: string | null,"locale"?: string,"location_label"?: string | null,"process"?: NonNullable<Json>,"timezone"?: string,"updated_at"?: string,"workspace_id"?: string
+                    "care_instructions"?: string | null,"created_at"?: string,"currency"?: string,"faq"?: NonNullable<Json>,"instagram_handle"?: string | null,"locale"?: string,"location_label"?: string | null,"process"?: NonNullable<Json>,"timezone"?: string,"updated_at"?: string,"workspace_id"?: string
                   }
                   Relationships: [
                     {
