@@ -55,6 +55,7 @@ async function Tracking({ params }: Pick<PageProps<"/seguimiento/[token]">, "par
   const validUntil = quote?.validUntil
     ? formatDateTime(new Date(`${quote.validUntil}T00:00:00Z`), { ...regional, timeZone: "UTC" }, { dateStyle: "long" })
     : null;
+  const balance = quote ? Math.round((quote.amount - view.paid) * 100) / 100 : 0;
   const expired = quote?.status === "sent" && quote.validUntil !== null && quote.validUntil < today;
 
   return (
@@ -98,11 +99,26 @@ async function Tracking({ params }: Pick<PageProps<"/seguimiento/[token]">, "par
               {validUntil && <Item label={expired ? "Venció el" : "Válido hasta"}>{validUntil}</Item>}
             </dl>
             {quote.message && <p className="whitespace-pre-line leading-relaxed">{quote.message}</p>}
+            {view.paid > 0 && (
+              <dl className="grid gap-4 border-t border-line pt-4 text-sm sm:grid-cols-2">
+                <Item label="Pagado">{money(view.paid)}</Item>
+                <Item label={balance < 0 ? "A tu favor" : "Saldo"}>{money(Math.abs(balance))}</Item>
+              </dl>
+            )}
             {quote.status === "sent" && (
               <p className="text-sm text-fg-muted">
                 {expired ? "Si todavía te interesa, escribime y lo actualizamos." : "Para aceptarlo o hacer preguntas, respondeme por mensaje."}
               </p>
             )}
+          </Card>
+        )}
+
+        {!quote && view.paid > 0 && (
+          <Card label="Pagos">
+            <h2 className="font-medium">Pagos</h2>
+            <p className="text-sm">
+              Recibí <span className="tabular-nums">{money(view.paid)}</span>.
+            </p>
           </Card>
         )}
 

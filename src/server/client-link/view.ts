@@ -4,6 +4,8 @@ import type { QuoteStatus } from "@/config/quote-status";
 import { resolveRegional, type RegionalSettings } from "@/config/regional";
 import type { RequestStatus } from "@/config/request-status";
 import { parseTstzRange } from "@/server/availability/schemas";
+import type { PaymentKind } from "@/config/payment";
+import { paymentTotals } from "@/server/payments/schemas";
 import { createSupabaseAdminClient } from "@/server/supabase/admin";
 import { CLIENT_TOKEN_PATTERN, hashClientToken } from "./token";
 
@@ -30,6 +32,8 @@ export type ClientView = {
     message: string | null;
     status: Extract<QuoteStatus, "sent" | "accepted" | "rejected">;
   } | null;
+  /** Cobrado neto (señas y pagos menos devoluciones, sin anulados). */
+  paid: number;
   appointments: { start: Date; end: Date; status: Extract<AppointmentStatus, "requested" | "confirmed" | "completed"> }[];
 };
 
@@ -39,6 +43,7 @@ const VISIBLE_APPOINTMENTS = ["requested", "confirmed", "completed"] as const;
 /**
  * Lo que ve el cliente con su link. Se lee con la clave secreta (el cliente no tiene sesión), así
  * que acá se elige a mano qué sale: nada de notas, historial, conversación ni datos de contacto.
+ * De los pagos sale solo el total cobrado, no el detalle (medio, notas).
  * Borradores y presupuestos retirados no se muestran; turnos cancelados tampoco.
  */
 export async function getClientView(token: string): Promise<ClientView | null> {
@@ -52,7 +57,7 @@ export async function getClientView(token: string): Promise<ClientView | null> {
     .maybeSingle();
   if (!request) return null;
 
-  const [workspace, settings, artist, quote, appointments] = await Promise.all([
+  const [workspace, settings, artist, quote, appointments, payments] = await Promise.all([
     admin.from("workspaces").select("slug, name").eq("id", request.workspace_id).single(),
     admin.from("workspace_settings").select("locale, currency, timezone, instagram_handle").eq("workspace_id", request.workspace_id).maybeSingle(),
     admin
@@ -75,8 +80,9 @@ export async function getClientView(token: string): Promise<ClientView | null> {
       .select("period, status")
       .eq("request_id", request.id)
       .in("status", VISIBLE_APPOINTMENTS),
+    admin.from("payments").select("amount, kind").eq("request_id", request.id).is("voided_at", null),
   ]);
-  if (workspace.error || settings.error || artist.error || quote.error || appointments.error) {
+  if (workspace.error || settings.error || artist.error || quote.error || appointments.error || payments.error) {
     throw new Error("No se pudo leer el seguimiento.");
   }
 
@@ -107,6 +113,10 @@ export async function getClientView(token: string): Promise<ClientView | null> {
       message: quote.data.message,
       status: quote.data.status as NonNullable<ClientView["quote"]>["status"],
     },
+    paid: paymentTotals(
+      payments.data.map((row) => ({ amount: Number(row.amount), kind: row.kind as PaymentKind, voided: false })),
+      null,
+    ).paid,
     appointments: appointments.data
       .flatMap((row) => {
         const period = parseTstzRange(row.period as string);

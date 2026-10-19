@@ -36,6 +36,10 @@ test.describe("link para el cliente", () => {
           status: "confirmed",
         })
         .throwOnError();
+      await admin
+        .from("payments")
+        .insert({ workspace_id: studio.workspaceId, request_id: request.id, amount: 25000, currency: "ARS", kind: "deposit", method: "transfer", paid_on: "2026-10-01", note: "Op. privada" })
+        .throwOnError();
       await admin.from("request_notes").insert({ workspace_id: studio.workspaceId, request_id: request.id, body: "Nota interna secreta", author_id: studio.userId! }).throwOnError();
 
       await signIn(page, studio.email);
@@ -58,6 +62,8 @@ test.describe("link para el cliente", () => {
       await expect(quote.getByText(/90\.000/)).toBeVisible();
       await expect(quote.getByText(/20\.000/)).toBeVisible();
       await expect(quote.getByText("Incluye diseño.")).toBeVisible();
+      await expect(quote.getByRole("definition").filter({ hasText: "65.000" })).toBeVisible();
+      await expect(tracking.getByText("Op. privada")).toHaveCount(0);
       const appointments = tracking.getByRole("region", { name: "Turnos" });
       await expect(appointments.getByText(/lunes, 4 de marzo, 10:00 a 13:00/i)).toBeVisible();
       await expect(appointments.getByText("Confirmado")).toBeVisible();

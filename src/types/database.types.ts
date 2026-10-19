@@ -193,6 +193,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"payments": {
+                  Row: {
+                    "amount": number,"created_at": string,"created_by": string | null,"currency": string,"id": string,"kind": string,"method": string,"note": string | null,"paid_on": string,"request_id": string,"voided_at": string | null,"voided_by": string | null,"workspace_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount": number,"created_at"?: string,"created_by"?: string | null,"currency": string,"id"?: string,"kind": string,"method": string,"note"?: string | null,"paid_on": string,"request_id": string,"voided_at"?: string | null,"voided_by"?: string | null,"workspace_id": string
+                  }
+                  Update: {
+                    "amount"?: number,"created_at"?: string,"created_by"?: string | null,"currency"?: string,"id"?: string,"kind"?: string,"method"?: string,"note"?: string | null,"paid_on"?: string,"request_id"?: string,"voided_at"?: string | null,"voided_by"?: string | null,"workspace_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "payments_request_id_fkey"
+      columns: ["request_id"]
+isOneToOne: false
+      referencedRelation: "tattoo_requests"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "payments_workspace_id_fkey"
+      columns: ["workspace_id"]
+isOneToOne: false
+      referencedRelation: "workspaces"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"portfolio_items": {
                   Row: {
                     "alt_text": string,"body_zone": string | null,"category": string,"created_at": string,"deleted_at": string | null,"description": string | null,"id": string,"image_height": number,"image_path": string,"image_width": number,"position": number,"status": string,"title": string,"updated_at": string,"workspace_id": string

@@ -6,9 +6,12 @@ import { ClientForm } from "@/components/panel/clients/client-form";
 import { MergeClient } from "@/components/panel/clients/merge-client";
 import { PanelPageHeader } from "@/components/panel/page-header";
 import { RequestList } from "@/components/panel/request-list";
+import { PaymentList } from "@/components/panel/payments/payment-list";
 import { QuoteDetails } from "@/components/panel/quotes/quote-details";
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime, formatMoney } from "@/lib/format";
 import { requireWorkspace } from "@/server/auth/panel-context";
+import { getPaymentsForRequests } from "@/server/payments/queries";
+import { paymentTotals } from "@/server/payments/schemas";
 import { getQuotesForRequests } from "@/server/quotes/queries";
 import { getClient, getWorkspaceRegional, listClients } from "@/server/requests/queries";
 
@@ -20,10 +23,11 @@ export default async function ClientDetailPage({ params }: PageProps<"/panel/cli
   const [client, regional] = await Promise.all([getClient(workspace.id, id), getWorkspaceRegional(workspace.id)]);
   if (!client) notFound();
   const canEdit = role === "owner" || role === "artist";
-  const quotes = await getQuotesForRequests(
-    workspace.id,
-    client.requests.map((request) => request.id),
-  );
+  const requestIds = client.requests.map((request) => request.id);
+  const [quotes, payments] = await Promise.all([
+    getQuotesForRequests(workspace.id, requestIds),
+    getPaymentsForRequests(workspace.id, requestIds),
+  ]);
   const others = canEdit ? (await listClients(workspace.id)).filter((other) => other.id !== client.id) : [];
 
   return (
@@ -43,6 +47,15 @@ export default async function ClientDetailPage({ params }: PageProps<"/panel/cli
         </Card>
 
         <div className="flex flex-col gap-6 self-start">
+          {payments.length > 0 && (
+            <Card title="Pagos">
+              <p className="text-sm text-fg-muted">
+                Cobrado en total: <span className="font-medium text-fg tabular-nums">{formatMoney(paymentTotals(payments, null).paid, regional)}</span>
+              </p>
+              {/* Para anular, desde la solicitud: acá es solo la vista general del cliente. */}
+              <PaymentList payments={payments} regional={regional} canEdit={false} />
+            </Card>
+          )}
           {quotes.length > 0 && (
             <Card title={`Presupuestos (${quotes.length})`}>
               <ul className="flex flex-col gap-5 divide-y divide-line text-sm">
