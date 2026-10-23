@@ -42,9 +42,12 @@ Las referencias que manda un cliente **nunca** pasan al portfolio automáticamen
 | `SUPABASE_SECRET_KEY` | **Secreta.** Saltea RLS. Solo en `src/server` |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Pública por diseño |
 | `TURNSTILE_SECRET_KEY` | **Secreta.** Verifica el captcha en el servidor |
-| `INKFLOW_ALLOW_NO_CAPTCHA` | Solo desarrollo y CI. **Nunca en producción**: deja el formulario sin captcha |
+| `INKFLOW_ALLOW_NO_CAPTCHA`, `INKFLOW_ALLOW_SIMULATED_AI` | Solo desarrollo y CI. **Nunca en producción**. Con `VERCEL_ENV=production` la app las ignora aunque estén cargadas |
 | `AI_API_KEY` | Secreta, solo servidor (Fase 4) |
-| `RESEND_API_KEY` | Secreta (fase futura) |
+| `EMAIL_API_KEY` | Secreta, solo servidor (Fase 5.5) |
+| `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD` | Secretas. Solo en el environment `production` de GitHub, para el workflow manual de migraciones |
+
+`pnpm check:prod` revisa las variables de producción antes de salir: URLs https, claves faltantes, secretos con prefijo `NEXT_PUBLIC_`, claves de prueba de Turnstile y modos de prueba. Nunca imprime valores.
 
 ## Configuración vigente
 
@@ -92,4 +95,4 @@ Las referencias que manda un cliente **nunca** pasan al portfolio automáticamen
 | Uso indebido de la secret key | Solo importable desde un módulo de servidor dedicado |
 | Prompt injection en el asistente | El modelo no tiene herramientas de escritura; la salida se valida y la confirmación es del usuario |
 | Abuso de formularios o costo de IA | Formulario: Turnstile, campo trampa y límite de envíos (implementado). IA: tope de mensajes y presupuesto por workspace |
-| Privacidad (Ley 25.326) | Minimización, consentimiento y borrado a pedido. Requiere revisión legal antes de comercializar |
+| Privacidad (Ley 25.326) | Minimización, borrado del asistente a los 7 días y borradores de privacidad y términos en `docs/legal`. Pendiente: revisión legal, inscripción en la AAIP si corresponde, base legal de la transferencia internacional (Supabase en Brasil, proveedores en EE.UU.) y aviso del art. 6 en el formulario |

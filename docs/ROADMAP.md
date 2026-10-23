@@ -48,6 +48,18 @@ Alcance: microapp para un tatuador, con base preparada para venderse como SaaS.
 - [x] 5.4 Cuidados y seguimiento: el owner escribe sus indicaciones de cuidado en Ajustes (INKFLOW no trae un texto armado) y el cliente las ve en su link cuando la sesión ya se hizo. Al marcar un turno como realizado se agendan dos controles (a los 7 días, cicatrización; a los 30, retoque) en la fecha local del estudio, y se pueden agregar otros a mano. Los controles se ven en la solicitud y los de la semana en el Inicio, con WhatsApp del cliente. INKFLOW no le escribe al cliente: los avisos automáticos dependen de la 5.5. El Inicio ahora muestra los próximos turnos reales (antes decía "se habilita en la Fase 3")
 - [x] 5.5 Emails transaccionales con estado "no configurado": al llegar una consulta (formulario o asistente) se arma un aviso para owner y artistas (solo nombre y link al panel) y una confirmación para el cliente si dejó email ("recibí tu consulta, todavía no hay nada reservado"). Adaptador de Resend por su API, sin SDK. **Hoy no hay proveedor configurado**: no sale ningún email, y Ajustes muestra "No configurado", qué variables faltan y cada aviso como "No enviado". Los avisos se mandan después de responder y nunca hacen fallar la consulta. Falta probarlo con una cuenta real de Resend y un dominio verificado; avisos de presupuesto, turno y controles quedan para después
 
+## Fase 6 · Producción
+
+- [x] 6.1 Preparación sin claves:
+  - Guía paso a paso ([DEPLOY.md](DEPLOY.md)).
+  - Workflow manual "Base de producción" para las migraciones (por defecto solo muestra qué aplicaría).
+  - `pnpm studio:create` para dar de alta un estudio vacío.
+  - `pnpm check:prod` para revisar las variables sin mostrar valores.
+  - En el deploy de producción de Vercel la app ignora el modo sin captcha y la IA simulada.
+  - Borradores de privacidad y términos ([legal](legal/README.md)) con lo que pide la Ley 25.326. **Requieren revisión legal**: no se publican en la app hasta entonces.
+- [ ] 6.2 Puesta en línea: cuentas, claves y dominio del dueño del proyecto, siguiendo DEPLOY.md. Pendiente de decisión: no se conecta ninguna clave hasta terminar el resto.
+- [ ] 6.3 Textos legales publicados (`/privacidad`, `/terminos`) y aviso del art. 6 en el formulario y el asistente, después de la revisión legal y la inscripción en la AAIP si corresponde.
+
 ## Después de validar con el tatuador
 
 Auditoría, onboarding de nuevos tatuadores y planes.

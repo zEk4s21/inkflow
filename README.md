@@ -93,7 +93,15 @@ CI (GitHub Actions) corre lint, typecheck, unit, build, E2E y los tests de integ
 
 ## Despliegue
 
-Pendiente (se documenta al cerrar la Fase 1). Plan: proyecto Supabase en la región São Paulo, app en Vercel y migraciones aplicadas con `supabase db push` desde CI, nunca a mano.
+Paso a paso en [docs/DEPLOY.md](docs/DEPLOY.md):
+- Supabase en São Paulo y Vercel.
+- Migraciones con el workflow manual "Base de producción", nunca a mano.
+- Alta del estudio con `pnpm studio:create` y `pnpm member:add`.
+- Chequeo previo con `pnpm check:prod`, que revisa las variables sin mostrar valores.
+
+En el deploy de producción de Vercel (`VERCEL_ENV=production`) la app ignora los modos de prueba (`INKFLOW_ALLOW_NO_CAPTCHA`, IA simulada).
+
+Los textos legales están en [docs/legal](docs/legal/) como **borradores para revisión legal**: todavía no se publican en la app.
 
 ## Documentación
 
@@ -101,3 +109,5 @@ Pendiente (se documenta al cerrar la Fase 1). Plan: proyecto Supabase en la regi
 - [Base de datos](docs/DATABASE.md)
 - [Seguridad](docs/SECURITY.md)
 - [Roadmap](docs/ROADMAP.md)
+- [Despliegue](docs/DEPLOY.md)
+- [Textos legales (borradores)](docs/legal/README.md)

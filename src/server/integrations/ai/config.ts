@@ -1,5 +1,6 @@
 import "server-only";
 import { z } from "zod";
+import { isProductionDeploy } from "@/server/deploy";
 
 /** Proveedores con adaptador. Sumar uno es escribir su adaptador y agregarlo acá. */
 export const AI_PROVIDERS = ["anthropic"] as const;
@@ -72,6 +73,9 @@ export function getAiConfig(env: Record<string, string | undefined> = process.en
 }
 
 function simulatedConfig(env: Record<string, string | undefined>): AIConfig {
+  if (isProductionDeploy(env)) {
+    return { status: "invalid", problems: ['AI_PROVIDER="simulated" no se acepta en producción: cargá un proveedor real o dejalo vacío.'] };
+  }
   if (env.INKFLOW_ALLOW_SIMULATED_AI !== "1") {
     return { status: "invalid", problems: ['AI_PROVIDER="simulated" solo funciona con INKFLOW_ALLOW_SIMULATED_AI=1 (nunca en producción).'] };
   }

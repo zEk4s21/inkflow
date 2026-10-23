@@ -1,19 +1,20 @@
 import "server-only";
+import { isProductionDeploy } from "@/server/deploy";
 
 const VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 
 export type CaptchaConfig =
   | { mode: "turnstile"; siteKey: string; secretKey: string }
-  /** Solo con INKFLOW_ALLOW_NO_CAPTCHA=1 (desarrollo y tests sin acceso a Cloudflare). */
+  /** Solo con INKFLOW_ALLOW_NO_CAPTCHA=1 (desarrollo y tests sin acceso a Cloudflare); nunca en producción. */
   | { mode: "disabled" }
   /** Faltan las claves: el formulario se muestra como no disponible. */
   | { mode: "missing" };
 
-export function getCaptchaConfig(): CaptchaConfig {
-  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
-  const secretKey = process.env.TURNSTILE_SECRET_KEY;
+export function getCaptchaConfig(env: Record<string, string | undefined> = process.env): CaptchaConfig {
+  const siteKey = env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+  const secretKey = env.TURNSTILE_SECRET_KEY;
   if (siteKey && secretKey) return { mode: "turnstile", siteKey, secretKey };
-  if (process.env.INKFLOW_ALLOW_NO_CAPTCHA === "1") return { mode: "disabled" };
+  if (env.INKFLOW_ALLOW_NO_CAPTCHA === "1" && !isProductionDeploy(env)) return { mode: "disabled" };
   return { mode: "missing" };
 }
 
