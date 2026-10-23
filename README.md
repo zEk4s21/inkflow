@@ -46,7 +46,7 @@ pnpm dev
 
 `local:setup` levanta Supabase local, escribe en `.env.local` la URL y las claves locales (respeta el resto
 de las variables que ya tengas, como `AI_API_KEY`), habilita el formulario sin captcha (solo local), da acceso
-al panel si pasás un email y carga el portfolio de ejemplo si hay fotos en `public/demo/` (no se versionan).
+al panel si pasás un email, aplica las migraciones nuevas si la base ya existía y carga el portfolio de ejemplo si hay fotos en `public/demo/` (no se versionan).
 Se puede correr de nuevo sin romper nada. El link para entrar al panel llega a Mailpit: http://127.0.0.1:54324.
 
 ## Configuración
