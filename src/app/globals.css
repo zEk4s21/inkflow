@@ -103,9 +103,10 @@
 }
 
 /*
- * Aparición al bajar: los elementos con data-reveal arrancan ocultos solo si hay JavaScript y
- * movimiento permitido; <ScrollReveal> les pone data-revealed al entrar en pantalla. Sin JS, o con
- * "reducir movimiento", se ven siempre. --reveal-delay escalona grupos.
+ * Aparición al bajar y al subir: los elementos con data-reveal arrancan ocultos solo si hay
+ * JavaScript y movimiento permitido; <ScrollReveal> les pone data-revealed mientras están en
+ * pantalla. Entran desde abajo al bajar y desde arriba al subir (data-reveal-side="above").
+ * Sin JS, o con "reducir movimiento", se ven siempre. --reveal-delay escalona grupos.
  */
 @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
   [data-reveal] {
@@ -115,7 +116,10 @@
   }
   [data-reveal]:not([data-revealed]) {
     opacity: 0;
-    transform: translateY(28px);
+    transform: translateY(32px) scale(0.98);
+  }
+  [data-reveal][data-reveal-side="above"]:not([data-revealed]) {
+    transform: translateY(-32px) scale(0.98);
   }
 }
 
