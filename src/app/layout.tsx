@@ -14,6 +14,8 @@ const anton = Anton({
 });
 
 export const metadata: Metadata = {
+  // Las vistas previas al compartir necesitan URLs absolutas.
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: "INKFLOW",
   description: "Plataforma para tatuadores: portfolio, consultas y turnos.",
   // Hasta que haya contenido público real.

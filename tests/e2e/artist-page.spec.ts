@@ -42,13 +42,41 @@ test.describe("página pública del tatuador", () => {
     await expect(page.locator("#trabajos ul li")).toHaveCount(2);
   });
 
-  test("abre la ficha de un trabajo y vuelve", async ({ page }) => {
+  test("abre el visor, pasa de foto y cierra", async ({ page }) => {
     await page.goto(`/artist/${studio.slug}`);
     await page.locator("#trabajos ul li a").first().click();
+    const viewer = page.getByRole("dialog");
+    await expect(viewer.getByRole("heading", { name: "Tigre" })).toBeVisible();
+    await page.keyboard.press("ArrowRight");
+    await expect(viewer.getByRole("heading", { name: "Pagoda" })).toBeVisible();
+    await page.keyboard.press("ArrowLeft");
+    await page.keyboard.press("ArrowLeft");
+    await expect(viewer.getByRole("heading", { name: "Buda" })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(viewer).toBeHidden();
+    await expect(page).toHaveURL(new RegExp(`/artist/${studio.slug}$`));
+  });
+
+  test("desde el visor abre la ficha de un trabajo y vuelve", async ({ page }) => {
+    await page.goto(`/artist/${studio.slug}`);
+    await page.locator("#trabajos ul li a").first().click();
+    await page.getByRole("dialog").getByRole("link", { name: "Ver ficha" }).click();
     await expect(page).toHaveURL(new RegExp(`/artist/${studio.slug}/work/`));
     await expect(page.getByRole("link", { name: "Quiero algo así" })).toBeVisible();
     await page.getByRole("link", { name: "← Volver a trabajos" }).click();
     await expect(page).toHaveURL(new RegExp(`/artist/${studio.slug}`));
+    // De vuelta en la página, el visor no queda abierto ni bloquea el desplazamiento.
+    await expect(page.getByRole("dialog")).toBeHidden();
+    expect(await page.evaluate(() => document.documentElement.style.overflow)).not.toBe("hidden");
+  });
+
+  test("los links tienen imagen de vista previa para compartir", async ({ page, request }) => {
+    await page.goto(`/artist/${studio.slug}`);
+    const ogImage = await page.locator('meta[property="og:image"]').getAttribute("content");
+    expect(ogImage).toContain(`/artist/${studio.slug}/opengraph-image`);
+    const response = await request.get(new URL(ogImage!).pathname + new URL(ogImage!).search);
+    expect(response.status()).toBe(200);
+    expect(response.headers()["content-type"]).toBe("image/png");
   });
 
   test("un tatuador, un trabajo inexistente o un borrador devuelven 404", async ({ page }) => {
