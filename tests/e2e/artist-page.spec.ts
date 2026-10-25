@@ -79,6 +79,25 @@ test.describe("página pública del tatuador", () => {
     await expect(header).not.toHaveAttribute("data-hidden");
   });
 
+  test("el menú lleva a la sección deslizando la página", async ({ page }) => {
+    await page.goto(`/artist/${studio.slug}`);
+    await page.evaluate(() => {
+      (window as unknown as { scrollPositions: number[] }).scrollPositions = [];
+      addEventListener("scroll", () => (window as unknown as { scrollPositions: number[] }).scrollPositions.push(scrollY));
+    });
+    await page.getByRole("link", { name: "Iniciar proyecto" }).click();
+    await expect(page.locator("#contacto")).toBeInViewport();
+    // Un salto directo deja un solo evento de scroll; deslizando pasa por varias posiciones.
+    const positions = await page.evaluate(() => (window as unknown as { scrollPositions: number[] }).scrollPositions);
+    expect(positions.length).toBeGreaterThan(3);
+  });
+
+  test("con «reducir movimiento» el menú salta directo a la sección", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto(`/artist/${studio.slug}`);
+    expect(await page.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior)).toBe("auto");
+  });
+
   test("los links tienen imagen de vista previa para compartir", async ({ page, request }) => {
     await page.goto(`/artist/${studio.slug}`);
     const ogImage = await page.locator('meta[property="og:image"]').getAttribute("content");

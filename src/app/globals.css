@@ -85,6 +85,13 @@
     color-scheme: dark;
     background: var(--color-ink);
   }
+  /* Ir a una sección desliza la página; cambiar de página sigue siendo instantáneo
+     (data-scroll-behavior="smooth" en el layout). Con "reducir movimiento" se salta directo. */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
   body {
     background: var(--color-ink);
     color: var(--color-fg);
