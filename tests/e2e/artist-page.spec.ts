@@ -73,8 +73,11 @@ test.describe("página pública del tatuador", () => {
   test("el menú se esconde al bajar y vuelve al subir", async ({ page }) => {
     await page.goto(`/artist/${studio.slug}`);
     const header = page.locator("header").first();
-    await page.mouse.wheel(0, 1200);
-    await expect(header).toHaveAttribute("data-hidden", "true");
+    // Si la rueda llega antes de que la página hidrate, ese primer scroll no se escucha: se insiste.
+    await expect(async () => {
+      await page.mouse.wheel(0, 600);
+      await expect(header).toHaveAttribute("data-hidden", "true", { timeout: 1000 });
+    }).toPass();
     await page.mouse.wheel(0, -400);
     await expect(header).not.toHaveAttribute("data-hidden");
   });
