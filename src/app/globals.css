@@ -45,7 +45,7 @@
   --animate-letter: letter 900ms var(--ease-out-soft) both;
   --animate-unveil: unveil 1200ms var(--ease-out-soft) both;
   --animate-settle: settle 2400ms var(--ease-out-soft) both;
-  --animate-marquee: marquee 40s linear infinite;
+  --animate-marquee: marquee 55s linear infinite;
 
   @keyframes rise {
     from { opacity: 0; transform: translateY(12px); }

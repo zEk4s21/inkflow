@@ -253,16 +253,16 @@ function HeroFrame({ delay, className, children }: { delay: number; className?: 
 /** Franja con los estilos en movimiento continuo. Decorativa: los estilos ya están en el hero. */
 function StylesMarquee({ styles }: { styles: string[] }) {
   // Se repite hasta llenar el ancho; la segunda mitad es copia para que el loop no salte.
-  const items = Array.from({ length: Math.max(2, Math.ceil(6 / styles.length)) }, () => styles).flat();
+  const items = Array.from({ length: Math.max(2, Math.ceil(10 / styles.length)) }, () => styles).flat();
   return (
-    <div aria-hidden className="overflow-hidden border-t border-line py-6 sm:py-8">
-      <div className="flex w-max animate-marquee hover:[animation-play-state:paused]">
+    <div aria-hidden className="overflow-hidden border-t border-line py-4 sm:py-5">
+      <div className="flex w-max animate-marquee">
         {[0, 1].map((copy) => (
           <div key={copy} className="flex items-center">
             {items.map((style, index) => (
-              <span key={index} className="flex items-center font-display text-5xl whitespace-nowrap uppercase sm:text-7xl">
+              <span key={index} className="flex items-center font-display text-3xl whitespace-nowrap uppercase sm:text-5xl">
                 <span className={index % 2 === 1 ? "text-outline" : "text-fg"}>{style}</span>
-                <span className="mx-6 text-3xl text-accent sm:mx-10 sm:text-5xl">✦</span>
+                <span className="mx-5 text-xl text-accent sm:mx-8 sm:text-3xl">✦</span>
               </span>
             ))}
           </div>
