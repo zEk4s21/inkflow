@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="es-AR" className={`${geistSans.variable} ${anton.variable} h-full`}>
+    <html lang="es-AR" data-scroll-behavior="smooth" className={`${geistSans.variable} ${anton.variable} h-full`}>
       <body className="flex min-h-full flex-col">{children}</body>
     </html>
   );
