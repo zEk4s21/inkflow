@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import Link from "next/link";
-import { Suspense } from "react";
+import { Suspense, type CSSProperties, type ReactNode } from "react";
 import { buttonClasses } from "@/components/ui/button";
 import { ArtistHeader } from "@/components/public/artist-header";
 import { PortfolioGrid } from "@/components/public/portfolio-grid";
 import { RequestForm } from "@/components/public/request-form";
+import { ScrollReveal } from "@/components/public/scroll-reveal";
 import { PublicSection } from "@/components/public/section";
 import { WorkImage } from "@/components/public/work-image";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -29,6 +30,7 @@ export async function generateMetadata({ params }: PageProps<"/artist/[slug]">):
     title: `${artist.artistName} · Tatuajes`,
     description,
     openGraph: { title: `${artist.artistName} · Tatuajes`, description, type: "profile" },
+    twitter: { card: "summary_large_image" },
   };
 }
 
@@ -43,26 +45,36 @@ export default async function ArtistPage({ params }: PageProps<"/artist/[slug]">
   const heroWorks = works.slice(0, 3);
 
   return (
-    <>
+    <div className="grain">
+      <ScrollReveal />
       <ArtistHeader slug={artist.slug} artistName={artist.artistName} />
 
       <main id="contenido">
         {/* Hero */}
-        <section className="mx-auto grid max-w-6xl gap-12 px-4 pt-12 pb-20 sm:px-8 lg:grid-cols-[1.1fr_1fr] lg:items-center lg:pt-20">
+        <section className="mx-auto grid max-w-6xl gap-12 px-4 pt-10 pb-16 sm:px-8 lg:min-h-[calc(100svh-4rem)] lg:grid-cols-[1.1fr_1fr] lg:items-center lg:py-16">
           <div className="flex flex-col gap-8">
             {artist.locationLabel && (
-              <p className="animate-rise text-xs font-medium tracking-[0.2em] text-fg-subtle uppercase">
+              <p className="flex animate-rise items-center gap-3 text-xs font-medium tracking-[0.2em] text-fg-subtle uppercase">
+                <span className="hidden h-px w-8 shrink-0 bg-accent sm:block" aria-hidden />
                 {artist.locationLabel}
               </p>
             )}
-            <h1
-              className="animate-rise font-display text-[clamp(4.5rem,18vw,11rem)] leading-[0.85] uppercase"
-              style={{ animationDelay: "60ms" }}
-            >
-              {artist.artistName}
-              <span className="sr-only"> · {artist.fullName}</span>
+            <h1 className="font-display text-[clamp(5rem,30vw,12rem)] leading-[0.85] uppercase">
+              <span className="sr-only">
+                {artist.artistName} · {artist.fullName}
+              </span>
+              {/* Cada letra sube desde atrás de su propia máscara. */}
+              <span aria-hidden className="flex">
+                {Array.from(artist.artistName).map((letter, index) => (
+                  <span key={index} className="inline-block overflow-hidden pb-[0.04em]">
+                    <span className="inline-block animate-letter whitespace-pre" style={{ animationDelay: `${150 + index * 70}ms` }}>
+                      {letter}
+                    </span>
+                  </span>
+                ))}
+              </span>
             </h1>
-            <ul className="animate-rise flex flex-wrap gap-x-3 gap-y-1 text-lg text-fg-muted" style={{ animationDelay: "120ms" }}>
+            <ul className="animate-rise flex flex-wrap gap-x-3 gap-y-1 text-lg text-fg-muted" style={{ animationDelay: "450ms" }}>
               {artist.styles.map((style, index) => (
                 <li key={style} className="flex items-center gap-3 whitespace-nowrap">
                   {style}
@@ -70,7 +82,7 @@ export default async function ArtistPage({ params }: PageProps<"/artist/[slug]">
                 </li>
               ))}
             </ul>
-            <div className="animate-rise flex flex-wrap gap-3" style={{ animationDelay: "180ms" }}>
+            <div className="animate-rise flex flex-wrap gap-3" style={{ animationDelay: "550ms" }}>
               <a href="#contacto" className={buttonClasses({ size: "lg" })}>
                 Iniciar mi proyecto
               </a>
@@ -82,21 +94,21 @@ export default async function ArtistPage({ params }: PageProps<"/artist/[slug]">
 
           {heroWorks.length > 0 && (
             <div className="grid grid-cols-[1.4fr_1fr] gap-2 sm:gap-3" aria-hidden>
-              <WorkImage
-                {...heroWorks[0].image}
-                alt=""
-                priority
-                sizes="(min-width: 1024px) 30vw, 58vw"
-                className="h-full w-full rounded-md"
-              />
+              <HeroFrame delay={250} className="h-full">
+                <WorkImage {...heroWorks[0].image} alt="" priority sizes="(min-width: 1024px) 30vw, 58vw" className="h-full w-full" />
+              </HeroFrame>
               <div className="flex flex-col gap-2 sm:gap-3">
-                {heroWorks.slice(1).map((work) => (
-                  <WorkImage key={work.id} {...work.image} alt="" sizes="(min-width: 1024px) 20vw, 40vw" className="w-full rounded-md" />
+                {heroWorks.slice(1).map((work, index) => (
+                  <HeroFrame key={work.id} delay={450 + index * 150}>
+                    <WorkImage {...work.image} alt="" sizes="(min-width: 1024px) 20vw, 40vw" className="w-full" />
+                  </HeroFrame>
                 ))}
               </div>
             </div>
           )}
         </section>
+
+        {artist.styles.length > 0 && <StylesMarquee styles={artist.styles} />}
 
         <PublicSection id="trabajos" eyebrow="Portfolio" title="Trabajos">
           {works.length > 0 ? (
@@ -108,10 +120,10 @@ export default async function ArtistPage({ params }: PageProps<"/artist/[slug]">
 
         <PublicSection id="sobre-mi" eyebrow="Perfil" title={artist.fullName}>
           <div className="grid gap-10 md:grid-cols-2">
-            <p className="max-w-prose text-lg leading-relaxed text-fg-muted">
+            <p data-reveal className="max-w-prose text-lg leading-relaxed text-fg-muted">
               {artist.bio ?? "La biografía todavía no está cargada."}
             </p>
-            <dl className="grid gap-6 text-sm">
+            <dl data-reveal className="grid gap-6 text-sm" style={{ "--reveal-delay": "120ms" } as CSSProperties}>
               {artist.styles.length > 0 && (
                 <div className="flex flex-col gap-1 border-b border-line pb-4">
                   <dt className="text-fg-subtle">Especialidad</dt>
@@ -142,8 +154,13 @@ export default async function ArtistPage({ params }: PageProps<"/artist/[slug]">
           <PublicSection id="proceso" eyebrow="Cómo trabajo" title="El proceso">
             <ol className="grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
               {artist.process.map((step, index) => (
-                <li key={index} className="flex flex-col gap-3 bg-ink p-6">
-                  <span className="font-display text-4xl text-accent-text">{String(index + 1).padStart(2, "0")}</span>
+                <li
+                  key={index}
+                  data-reveal
+                  className="group flex flex-col gap-3 bg-ink p-6 transition-colors duration-500 hover:bg-surface-1"
+                  style={{ "--reveal-delay": `${(index % 3) * 90}ms` } as CSSProperties}
+                >
+                  <span className="font-display text-4xl text-accent-text transition-transform duration-500 ease-(--ease-out-soft) group-hover:-translate-y-1">{String(index + 1).padStart(2, "0")}</span>
                   <h3 className="text-lg font-medium">{step.title}</h3>
                   <p className="text-sm leading-relaxed text-fg-muted">{step.description}</p>
                 </li>
@@ -156,7 +173,7 @@ export default async function ArtistPage({ params }: PageProps<"/artist/[slug]">
           <PublicSection id="preguntas" eyebrow="FAQ" title="Preguntas frecuentes">
             <div className="divide-y divide-line border-y border-line">
               {artist.faq.map((item, index) => (
-                <details key={index} className="group py-5">
+                <details key={index} data-reveal className="group py-5">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-lg font-medium marker:hidden">
                     {item.question}
                     <span
@@ -218,7 +235,40 @@ export default async function ArtistPage({ params }: PageProps<"/artist/[slug]">
       <footer className="border-t border-line py-10 text-center text-xs text-fg-subtle">
         {artist.artistName} · Hecho con INKFLOW
       </footer>
-    </>
+    </div>
+  );
+}
+
+/** Marco de foto del hero: se descubre de abajo hacia arriba mientras la foto se asienta. */
+function HeroFrame({ delay, className, children }: { delay: number; className?: string; children: ReactNode }) {
+  return (
+    <div className={`animate-unveil overflow-hidden rounded-md ${className ?? ""}`} style={{ animationDelay: `${delay}ms` }}>
+      <div className="h-full animate-settle" style={{ animationDelay: `${delay}ms` }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/** Franja con los estilos en movimiento continuo. Decorativa: los estilos ya están en el hero. */
+function StylesMarquee({ styles }: { styles: string[] }) {
+  // Se repite hasta llenar el ancho; la segunda mitad es copia para que el loop no salte.
+  const items = Array.from({ length: Math.max(2, Math.ceil(6 / styles.length)) }, () => styles).flat();
+  return (
+    <div aria-hidden className="overflow-hidden border-t border-line py-6 sm:py-8">
+      <div className="flex w-max animate-marquee hover:[animation-play-state:paused]">
+        {[0, 1].map((copy) => (
+          <div key={copy} className="flex items-center">
+            {items.map((style, index) => (
+              <span key={index} className="flex items-center font-display text-5xl whitespace-nowrap uppercase sm:text-7xl">
+                <span className={index % 2 === 1 ? "text-outline" : "text-fg"}>{style}</span>
+                <span className="mx-6 text-3xl text-accent sm:mx-10 sm:text-5xl">✦</span>
+              </span>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 

@@ -28,7 +28,8 @@ export async function generateMetadata({ params }: PageProps<"/artist/[slug]/wor
   return {
     title: `${work.title} · ${artist.artistName}`,
     description: work.image.alt,
-    openGraph: { images: [{ url: work.image.src, width: work.image.width, height: work.image.height }] },
+    // La imagen de vista previa sale de opengraph-image.tsx (foto + título).
+    twitter: { card: "summary_large_image" },
   };
 }
 

@@ -42,6 +42,10 @@
   --animate-rise: rise 600ms var(--ease-out-soft) both;
   --animate-fade: fade 400ms var(--ease-out-soft) both;
   --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-letter: letter 900ms var(--ease-out-soft) both;
+  --animate-unveil: unveil 1200ms var(--ease-out-soft) both;
+  --animate-settle: settle 2400ms var(--ease-out-soft) both;
+  --animate-marquee: marquee 40s linear infinite;
 
   @keyframes rise {
     from { opacity: 0; transform: translateY(12px); }
@@ -50,6 +54,25 @@
   @keyframes fade {
     from { opacity: 0; }
     to { opacity: 1; }
+  }
+  /* Letra que sube desde atrás de una máscara (el contenedor tiene overflow hidden). */
+  @keyframes letter {
+    from { transform: translateY(105%); }
+    to { transform: translateY(0); }
+  }
+  /* Foto que se descubre de abajo hacia arriba. */
+  @keyframes unveil {
+    from { clip-path: inset(100% 0 0 0); }
+    to { clip-path: inset(0 0 0 0); }
+  }
+  /* Zoom lento hacia el tamaño final, acompaña al unveil. */
+  @keyframes settle {
+    from { transform: scale(1.12); }
+    to { transform: scale(1); }
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
   }
   @keyframes shimmer {
     from { background-position: -200% 0; }
@@ -77,6 +100,53 @@
     outline: 2px solid var(--color-accent);
     outline-offset: 3px;
   }
+}
+
+/*
+ * Aparición al bajar: los elementos con data-reveal arrancan ocultos solo si hay JavaScript y
+ * movimiento permitido; <ScrollReveal> les pone data-revealed al entrar en pantalla. Sin JS, o con
+ * "reducir movimiento", se ven siempre. --reveal-delay escalona grupos.
+ */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  [data-reveal] {
+    transition:
+      opacity 900ms var(--ease-out-soft) var(--reveal-delay, 0ms),
+      transform 900ms var(--ease-out-soft) var(--reveal-delay, 0ms);
+  }
+  [data-reveal]:not([data-revealed]) {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+}
+
+/* Textura de grano muy suave sobre las páginas públicas (como papel fotográfico). */
+.grain::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.06;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Texto con solo el contorno (franja de estilos). */
+.text-outline {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--color-fg-subtle);
+}
+
+/* Visor del portfolio: el fondo entra con fundido; la foto viaja con View Transitions si hay. */
+dialog.lightbox::backdrop {
+  background: rgb(5 5 6 / 0.94);
+  backdrop-filter: blur(6px);
+}
+dialog.lightbox[open] {
+  animation: var(--animate-fade);
+}
+::view-transition-group(obra-activa) {
+  animation-duration: 500ms;
+  animation-timing-function: var(--ease-out-soft);
 }
 
 @media (prefers-reduced-motion: reduce) {
