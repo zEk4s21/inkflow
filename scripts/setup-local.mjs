@@ -28,6 +28,10 @@ function run(command, args) {
 step("Levantando la base de datos local (Supabase en Docker)…");
 run("pnpm", ["exec", "supabase", "start"]);
 
+// Si la base ya existía, `supabase start` no aplica las migraciones nuevas de cada fase.
+step("Aplicando las migraciones pendientes…");
+run("pnpm", ["exec", "supabase", "migration", "up", "--local"]);
+
 step(`Escribiendo ${ENV_FILE}…`);
 const status = JSON.parse(execFileSync("pnpm", ["exec", "supabase", "status", "-o", "json"], { encoding: "utf8" }));
 const local = {
