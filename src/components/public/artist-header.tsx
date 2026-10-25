@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { buttonClasses } from "@/components/ui/button";
+import { HideOnScroll } from "./hide-on-scroll";
 
 const links = [
   { href: "#trabajos", label: "Trabajos" },
@@ -10,7 +11,7 @@ const links = [
 
 export function ArtistHeader({ slug, artistName }: { slug: string; artistName: string }) {
   return (
-    <header className="sticky top-0 z-30 border-b border-line/60 bg-ink/80 backdrop-blur-md">
+    <HideOnScroll className="sticky top-0 z-30 border-b border-line/60 bg-ink/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-8">
         <Link href={`/artist/${slug}`} className="font-display text-2xl tracking-wide uppercase">
           {artistName}
@@ -31,6 +32,6 @@ export function ArtistHeader({ slug, artistName }: { slug: string; artistName: s
           Iniciar proyecto
         </a>
       </div>
-    </header>
+    </HideOnScroll>
   );
 }

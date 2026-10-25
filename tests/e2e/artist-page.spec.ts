@@ -70,6 +70,15 @@ test.describe("página pública del tatuador", () => {
     expect(await page.evaluate(() => document.documentElement.style.overflow)).not.toBe("hidden");
   });
 
+  test("el menú se esconde al bajar y vuelve al subir", async ({ page }) => {
+    await page.goto(`/artist/${studio.slug}`);
+    const header = page.locator("header").first();
+    await page.mouse.wheel(0, 1200);
+    await expect(header).toHaveAttribute("data-hidden", "true");
+    await page.mouse.wheel(0, -400);
+    await expect(header).not.toHaveAttribute("data-hidden");
+  });
+
   test("los links tienen imagen de vista previa para compartir", async ({ page, request }) => {
     await page.goto(`/artist/${studio.slug}`);
     const ogImage = await page.locator('meta[property="og:image"]').getAttribute("content");
