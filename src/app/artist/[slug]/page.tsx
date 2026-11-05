@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
+import Image from "next/image";
 import { Suspense, type CSSProperties, type ReactNode } from "react";
 import { buttonClasses } from "@/components/ui/button";
 import { ArtistHeader } from "@/components/public/artist-header";
@@ -9,8 +10,10 @@ import { RequestForm } from "@/components/public/request-form";
 import { ScrollReveal } from "@/components/public/scroll-reveal";
 import { PublicSection } from "@/components/public/section";
 import { WorkImage } from "@/components/public/work-image";
+import { InstagramIcon } from "@/components/public/instagram-icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getPublicArtist, getPublishedWorks, listPublicArtistSlugs } from "@/server/artists/public-artist";
+import { getInstagramWorks } from "@/server/instagram/feed";
 import { getPublicAvailability, toSlotDays } from "@/server/availability/public";
 import { getCaptchaConfig } from "@/server/requests/captcha";
 
@@ -36,14 +39,16 @@ export default async function ArtistPage({ params }: PageProps<"/artist/[slug]">
   const { slug } = await params;
   const artist = await getPublicArtist(slug);
   if (!artist) notFound();
-  const works = await getPublishedWorks(slug);
+  // Si el tatuador conectó Instagram, el portfolio son sus últimas publicaciones.
+  const instagramWorks = await getInstagramWorks(slug);
+  const works = instagramWorks ?? (await getPublishedWorks(slug));
   const captcha = getCaptchaConfig();
   const heroWorks = works.slice(0, 3);
 
   return (
     <div className="grain">
       <ScrollReveal />
-      <ArtistHeader slug={artist.slug} artistName={artist.artistName} />
+      <ArtistHeader slug={artist.slug} artistName={artist.artistName} logo={artist.logo} />
 
       <main id="contenido">
         {/* Hero */}
@@ -55,21 +60,39 @@ export default async function ArtistPage({ params }: PageProps<"/artist/[slug]">
                 {artist.locationLabel}
               </p>
             )}
-            <h1 className="font-display text-[clamp(5rem,30vw,12rem)] leading-[0.85] uppercase">
-              <span className="sr-only">
-                {artist.artistName} · {artist.fullName}
-              </span>
-              {/* Cada letra sube desde atrás de su propia máscara. */}
-              <span aria-hidden className="flex">
-                {Array.from(artist.artistName).map((letter, index) => (
-                  <span key={index} className="inline-block overflow-hidden pb-[0.04em]">
-                    <span className="inline-block animate-letter whitespace-pre" style={{ animationDelay: `${150 + index * 70}ms` }}>
-                      {letter}
+            {artist.logo ? (
+              <h1>
+                <span className="sr-only">
+                  {artist.artistName} · {artist.fullName}
+                </span>
+                <Image
+                  src={artist.logo.src}
+                  alt=""
+                  width={artist.logo.width}
+                  height={artist.logo.height}
+                  priority
+                  sizes="(min-width: 1024px) 560px, 90vw"
+                  className="w-full max-w-[560px] animate-rise"
+                  style={{ animationDelay: "150ms" }}
+                />
+              </h1>
+            ) : (
+              <h1 className="font-display text-[clamp(5rem,30vw,12rem)] leading-[0.85] uppercase">
+                <span className="sr-only">
+                  {artist.artistName} · {artist.fullName}
+                </span>
+                {/* Cada letra sube desde atrás de su propia máscara. */}
+                <span aria-hidden className="flex">
+                  {Array.from(artist.artistName).map((letter, index) => (
+                    <span key={index} className="inline-block overflow-hidden pb-[0.04em]">
+                      <span className="inline-block animate-letter whitespace-pre" style={{ animationDelay: `${150 + index * 70}ms` }}>
+                        {letter}
+                      </span>
                     </span>
-                  </span>
-                ))}
-              </span>
-            </h1>
+                  ))}
+                </span>
+              </h1>
+            )}
             <ul className="animate-rise flex flex-wrap gap-x-3 gap-y-1 text-lg text-fg-muted" style={{ animationDelay: "450ms" }}>
               {artist.styles.map((style, index) => (
                 <li key={style} className="flex items-center gap-3 whitespace-nowrap">
@@ -108,7 +131,24 @@ export default async function ArtistPage({ params }: PageProps<"/artist/[slug]">
 
         <PublicSection id="trabajos" eyebrow="Portfolio" title="Trabajos">
           {works.length > 0 ? (
-            <PortfolioGrid slug={artist.slug} works={works} />
+            <div className="flex flex-col gap-6">
+              {instagramWorks && artist.instagram && (
+                <p className="flex items-center gap-2 text-sm text-fg-muted">
+                  <InstagramIcon className="size-4" />
+                  <span>
+                    Últimas publicaciones de{" "}
+                    <a href={artist.instagram.url} target="_blank" rel="noopener" className="text-fg underline-offset-4 hover:underline">
+                      @{artist.instagram.handle}
+                    </a>
+                  </span>
+                </p>
+              )}
+              <PortfolioGrid
+                slug={artist.slug}
+                works={works}
+                author={{ name: artist.instagram?.handle ?? artist.artistName, logoSrc: artist.logo?.src ?? null, location: artist.locationLabel }}
+              />
+            </div>
           ) : (
             <p className="text-fg-muted">Todavía no hay trabajos publicados.</p>
           )}

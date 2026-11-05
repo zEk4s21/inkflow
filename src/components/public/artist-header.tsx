@@ -1,4 +1,6 @@
+import Image from "next/image";
 import Link from "next/link";
+import type { ArtistLogo } from "@/server/artists/types";
 import { buttonClasses } from "@/components/ui/button";
 import { HideOnScroll } from "./hide-on-scroll";
 
@@ -9,12 +11,16 @@ const links = [
   { href: "#contacto", label: "Contacto" },
 ];
 
-export function ArtistHeader({ slug, artistName }: { slug: string; artistName: string }) {
+export function ArtistHeader({ slug, artistName, logo }: { slug: string; artistName: string; logo: ArtistLogo | null }) {
   return (
     <HideOnScroll className="sticky top-0 z-30 border-b border-line/60 bg-ink/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-8">
         <Link href={`/artist/${slug}`} className="font-display text-2xl tracking-wide uppercase">
-          {artistName}
+          {logo ? (
+            <Image src={logo.src} alt={artistName} width={logo.width} height={logo.height} priority className="h-8 w-auto sm:h-9" />
+          ) : (
+            artistName
+          )}
         </Link>
         <nav aria-label="Secciones" className="hidden md:block">
           <ul className="flex gap-8 text-sm text-fg-muted">
