@@ -45,10 +45,8 @@ export function checkProductionEnv(env) {
     }
   }
 
-  // Modos de prueba: en el deploy de producción la app ya los ignora, pero no tienen que estar.
+  // Modo de prueba: en el deploy de producción la app ya lo ignora, pero no tiene que estar.
   if (value(env, "INKFLOW_ALLOW_NO_CAPTCHA")) errors.push("INKFLOW_ALLOW_NO_CAPTCHA: es solo para desarrollo; sacala.");
-  if (value(env, "INKFLOW_ALLOW_SIMULATED_AI")) errors.push("INKFLOW_ALLOW_SIMULATED_AI: es solo para desarrollo; sacala.");
-  if (value(env, "AI_PROVIDER") === "simulated") errors.push('AI_PROVIDER: "simulated" no es una IA; usá un proveedor real o dejalo vacío.');
 
   // Captcha: sin claves el formulario de consulta queda como no disponible.
   const siteKey = value(env, "NEXT_PUBLIC_TURNSTILE_SITE_KEY");
@@ -57,17 +55,6 @@ export function checkProductionEnv(env) {
     errors.push("NEXT_PUBLIC_TURNSTILE_SITE_KEY y TURNSTILE_SECRET_KEY: faltan; sin captcha el formulario de consulta no se muestra.");
   } else if (TURNSTILE_TEST_KEY.test(siteKey) || TURNSTILE_TEST_KEY.test(secretKey)) {
     errors.push("Turnstile: son las claves de prueba de Cloudflare (aprueban a cualquiera); cargá las del sitio real.");
-  }
-
-  // Asistente: opcional.
-  const aiKey = value(env, "AI_API_KEY");
-  const aiModel = value(env, "AI_MODEL");
-  if (!aiKey && !aiModel) {
-    warnings.push("AI_API_KEY y AI_MODEL: vacías; el Ink Assistant se muestra como no disponible.");
-  } else if (!aiKey || !aiModel) {
-    errors.push(`${aiKey ? "AI_MODEL" : "AI_API_KEY"}: falta; con una sola de las dos el asistente no anda.`);
-  } else if (!value(env, "AI_MONTHLY_TOKEN_BUDGET_PER_WORKSPACE")) {
-    warnings.push("AI_MONTHLY_TOKEN_BUDGET_PER_WORKSPACE: vacía; el asistente no tiene tope mensual de gasto.");
   }
 
   // Emails: opcionales.

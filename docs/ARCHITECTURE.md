@@ -9,7 +9,7 @@ Navegador ──► Next.js (Vercel)
                │     valida con zod → verifica sesión y permisos → llama a src/server/services
                ├─ src/server/services     reglas de negocio, testeables sin Next
                ├─ src/server/repositories acceso a datos con la sesión del usuario
-               └─ src/server/integrations IA, email, captcha, storage
+               └─ src/server/integrations email, captcha, storage
                          │
                          ▼
                Supabase: Postgres (RLS) · Auth · Storage
@@ -35,7 +35,6 @@ Navegador ──► Next.js (Vercel)
 | D2 | Doble barrera de autorización: servidor + RLS | Si una Server Action tiene un bug, Postgres igual rechaza filas de otro workspace. |
 | D3 | Sin ORM | La seguridad vive en RLS. Un ORM con conexión directa la saltearía. Se usan tipos generados por el CLI de Supabase. |
 | D4 | Escrituras públicas vía función `SECURITY DEFINER` acotada | Los visitantes no tienen cuenta; la función valida y solo permite crear lo previsto. |
-| D5 | La IA no escribe en la base | Devuelve JSON validado con zod; la solicitud se crea solo con confirmación explícita del cliente. |
 | D6 | Turnos protegidos por constraint de exclusión | Dos confirmaciones simultáneas no pueden solaparse: lo garantiza Postgres, no el código. |
 | D7 | Configuración regional centralizada | `src/config/regional.ts` + overrides por workspace. Ningún componente asume `ARS` ni `es-AR`. |
 | D8 | TypeScript 5.9 en lugar de 7.0 | Es lo que instala la plantilla oficial de Next 16.4. TS 7.0.2 compiló y buildeó bien en una prueba (14/10/2026); se reevalúa cuando Next lo adopte por defecto. |
@@ -57,7 +56,6 @@ Navegador ──► Next.js (Vercel)
 | Vercel | Hosting | 1 |
 | Cloudflare Turnstile | Anti-spam | 2 |
 | Resend | Emails | 2 |
-| Proveedor de IA (Anthropic por defecto) | Ink Assistant | 4 |
 
 ## Sistema de diseño
 

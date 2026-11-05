@@ -1,9 +1,9 @@
 # INKFLOW
 
-Plataforma web para tatuadores: página pública con portfolio, consultas, asistente de IA, solicitudes, clientes y turnos.
+Plataforma web para tatuadores: página pública con portfolio, consultas, solicitudes, clientes y turnos.
 Arranca como microapp para un tatuador y está preparada para funcionar como SaaS multi-tatuador.
 
-> Estado: **Fases 0 a 5 completas en código** (página pública, consultas, asistente, turnos, presupuestos, pagos manuales, link para el cliente, controles y emails). Falta la puesta en producción (Fase 6) y conectar los servicios externos: IA, captcha y email funcionan en modo "no configurado" hasta cargar sus claves. Ver [docs/ROADMAP.md](docs/ROADMAP.md).
+> Estado: **Fases 0 a 5 completas en código** (página pública, consultas, turnos, presupuestos, pagos manuales, link para el cliente, controles y emails). Falta la puesta en producción (Fase 6) y conectar los servicios externos: captcha y email funcionan en modo "no configurado" hasta cargar sus claves. Ver [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Tecnologías
 
@@ -45,7 +45,7 @@ pnpm dev
 ```
 
 `local:setup` levanta Supabase local, escribe en `.env.local` la URL y las claves locales (respeta el resto
-de las variables que ya tengas, como `AI_API_KEY`), habilita el formulario sin captcha (solo local), da acceso
+de las variables que ya tengas, como `EMAIL_API_KEY`), habilita el formulario sin captcha (solo local), da acceso
 al panel si pasás un email, aplica las migraciones nuevas si la base ya existía y carga el portfolio de ejemplo si hay fotos en `public/demo/` (no se versionan).
 Se puede correr de nuevo sin romper nada. El link para entrar al panel llega a Mailpit: http://127.0.0.1:54324.
 
@@ -99,7 +99,7 @@ Paso a paso en [docs/DEPLOY.md](docs/DEPLOY.md):
 - Alta del estudio con `pnpm studio:create` y `pnpm member:add`.
 - Chequeo previo con `pnpm check:prod`, que revisa las variables sin mostrar valores.
 
-En el deploy de producción de Vercel (`VERCEL_ENV=production`) la app ignora los modos de prueba (`INKFLOW_ALLOW_NO_CAPTCHA`, IA simulada).
+En el deploy de producción de Vercel (`VERCEL_ENV=production`) la app ignora el modo de prueba sin captcha (`INKFLOW_ALLOW_NO_CAPTCHA`).
 
 Los textos legales están en [docs/legal](docs/legal/) como **borradores para revisión legal**: todavía no se publican en la app.
 

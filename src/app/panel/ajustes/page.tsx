@@ -5,15 +5,11 @@ import { CareForm } from "@/components/panel/settings/care-form";
 import { EmailStatusCard, type EmailLogEntry } from "@/components/panel/settings/email-status";
 import { PageContentForm } from "@/components/panel/settings/page-content-form";
 import { ProfileForm } from "@/components/panel/settings/profile-form";
-import { Badge } from "@/components/ui/badge";
 import { Button, buttonClasses } from "@/components/ui/button";
-import { resolveRegional, type RegionalSettings } from "@/config/regional";
-import { formatNumber } from "@/lib/format";
+import { resolveRegional } from "@/config/regional";
 import { parseFaq, parseProcess } from "@/server/artists/page-content";
 import { signOut } from "@/server/auth/actions";
 import { requireWorkspace } from "@/server/auth/panel-context";
-import { monthStartUtc } from "@/server/assistant/conversation";
-import { getAiStatus, type AIStatus } from "@/server/integrations/ai";
 import { getEmailStatus } from "@/server/integrations/email";
 import { createSupabaseServerClient } from "@/server/supabase/server";
 
@@ -90,9 +86,6 @@ export default async function SettingsPage() {
             ))}
           </dl>
         </Card>
-        <Card title="Ink Assistant">
-          <AssistantStatus status={getAiStatus()} usage={await getMonthlyAiUsage(workspace.id)} regional={regional} />
-        </Card>
         <Card title="Emails">
           <EmailStatusCard status={getEmailStatus()} log={await getEmailLog(workspace.id)} regional={regional} />
         </Card>
@@ -127,112 +120,4 @@ async function getEmailLog(workspaceId: string): Promise<EmailLogEntry[]> {
     .order("created_at", { ascending: false })
     .limit(8);
   return (data ?? []).map((row) => ({ ...row, createdAt: row.created_at }));
-}
-
-/** Estado de la IA leído de las variables del servidor. Nunca muestra la clave. */
-/** Consumo del mes (UTC, igual que el tope), leído con la sesión del miembro (RLS). */
-async function getMonthlyAiUsage(workspaceId: string): Promise<AIUsage | null> {
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
-    .rpc("workspace_ai_usage", { p_workspace: workspaceId, p_since: monthStartUtc().toISOString() })
-    .single();
-  return error ? null : data;
-}
-
-type AIUsage = { conversations: number; requests: number; tokens: number };
-
-function AssistantStatus({ status, usage, regional }: { status: AIStatus; usage: AIUsage | null; regional: RegionalSettings }) {
-  if (status.status === "configured") {
-    const budget = status.monthlyTokenBudget;
-    const share = usage && budget ? Math.min(1, usage.tokens / budget) : null;
-    return (
-      <div className="flex flex-col gap-4 text-sm">
-        <span className="self-start">
-          {status.simulated ? <Badge tone="warning">Simulado (sin IA)</Badge> : <Badge tone="success">Configurado</Badge>}
-        </span>
-        <dl className="flex flex-col divide-y divide-line">
-          {[
-            ["Proveedor", status.providerLabel],
-            ["Modelo", status.model],
-            ["Mensajes por conversación", `Hasta ${status.maxMessagesPerConversation}`],
-            ["Presupuesto mensual", status.monthlyTokenBudget ? `${formatNumber(status.monthlyTokenBudget, regional)} tokens` : "Sin tope"],
-          ].map(([label, value]) => (
-            <div key={label} className="flex flex-col gap-1 py-3 sm:flex-row sm:justify-between sm:gap-6">
-              <dt className="text-fg-subtle">{label}</dt>
-              <dd className="text-fg sm:text-right">{value}</dd>
-            </div>
-          ))}
-        </dl>
-        <div className="flex flex-col gap-3">
-          <h3 className="text-fg-subtle">Este mes</h3>
-          {usage ? (
-            <>
-              <dl className="grid grid-cols-3 gap-3">
-                {[
-                  ["Conversaciones", usage.conversations],
-                  ["Consultas enviadas", usage.requests],
-                  ["Tokens", usage.tokens],
-                ].map(([label, value]) => (
-                  <div key={label} className="flex flex-col gap-1 rounded-md border border-line p-3">
-                    <dt className="text-xs text-fg-subtle">{label}</dt>
-                    <dd className="text-lg tabular-nums">{formatNumber(Number(value), regional)}</dd>
-                  </div>
-                ))}
-              </dl>
-              {share !== null && budget ? (
-                <div className="flex flex-col gap-2">
-                  <div
-                    role="meter"
-                    aria-label="Tokens usados del tope mensual"
-                    aria-valuemin={0}
-                    aria-valuemax={budget}
-                    aria-valuenow={Math.min(usage.tokens, budget)}
-                    className="h-2 overflow-hidden rounded-full bg-surface-2"
-                  >
-                    <div className={share >= 1 ? "h-full bg-danger" : share >= 0.8 ? "h-full bg-warning" : "h-full bg-success"} style={{ width: `${share * 100}%` }} />
-                  </div>
-                  <p className={share >= 1 ? "text-danger" : "text-fg-muted"}>
-                    {share >= 1
-                      ? "Llegaste al tope del mes: el asistente se muestra como no disponible hasta el día 1 y las consultas siguen entrando por el formulario."
-                      : `${formatNumber(Math.round(share * 100), regional)} % del tope mensual.`}
-                  </p>
-                </div>
-              ) : (
-                <p className="text-fg-muted">Sin tope mensual: para poner uno, cargá AI_MONTHLY_TOKEN_BUDGET_PER_WORKSPACE en el servidor.</p>
-              )}
-            </>
-          ) : (
-            <p className="text-fg-muted">No se pudo leer el consumo del mes.</p>
-          )}
-          <p className="text-xs text-fg-subtle">
-            El mes se cuenta en UTC. El costo en plata depende del modelo: se ve en la consola del proveedor.
-          </p>
-        </div>
-        <p className="text-fg-muted">
-          {status.simulated
-            ? "Las respuestas son fijas y la página lo avisa: sirve solo para probar la pantalla, nunca en producción."
-            : "Los clientes ya pueden conversar con el asistente en tu página y mandarte la consulta desde ahí."}
-        </p>
-      </div>
-    );
-  }
-  return (
-    <div className="flex flex-col gap-4 text-sm">
-      <span className="self-start">
-        <Badge tone="warning">No configurado</Badge>
-      </span>
-      {status.status === "missing" ? (
-        <p className="text-fg-muted">
-          Falta cargar en el servidor: {status.missing.map((name) => <code key={name} className="mx-0.5 rounded bg-surface-2 px-1.5 py-0.5 text-xs">{name}</code>)}.
-        </p>
-      ) : (
-        <ul className="flex list-disc flex-col gap-1 pl-5 text-fg-muted">
-          {status.problems.map((problem) => (
-            <li key={problem}>{problem}</li>
-          ))}
-        </ul>
-      )}
-      <p className="text-fg-muted">Mientras tanto, tu página sigue recibiendo consultas por el formulario.</p>
-    </div>
-  );
 }

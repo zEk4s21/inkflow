@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
-import Link from "next/link";
 import { Suspense, type CSSProperties, type ReactNode } from "react";
 import { buttonClasses } from "@/components/ui/button";
 import { ArtistHeader } from "@/components/public/artist-header";
@@ -13,7 +12,6 @@ import { WorkImage } from "@/components/public/work-image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getPublicArtist, getPublishedWorks, listPublicArtistSlugs } from "@/server/artists/public-artist";
 import { getPublicAvailability, toSlotDays } from "@/server/availability/public";
-import { getAiConfig } from "@/server/integrations/ai";
 import { getCaptchaConfig } from "@/server/requests/captcha";
 
 export async function generateStaticParams() {
@@ -40,8 +38,6 @@ export default async function ArtistPage({ params }: PageProps<"/artist/[slug]">
   if (!artist) notFound();
   const works = await getPublishedWorks(slug);
   const captcha = getCaptchaConfig();
-  // El asistente necesita IA y captcha; si falta algo no se ofrece (su página igual lo explica).
-  const assistantAvailable = getAiConfig().status === "configured" && captcha.mode !== "missing";
   const heroWorks = works.slice(0, 3);
 
   return (
@@ -200,17 +196,6 @@ export default async function ArtistPage({ params }: PageProps<"/artist/[slug]">
               </Suspense>
             )}
             <div className="flex flex-col gap-6 self-start">
-              {assistantAvailable && (
-                <div className="flex flex-col gap-4 rounded-lg border border-line bg-surface-1 p-6">
-                  <h3 className="text-lg font-medium">¿No sabés cómo contarla?</h3>
-                  <p className="text-sm leading-relaxed text-fg-muted">
-                    El asistente te hace unas preguntas y arma el resumen de tu idea: zona, tamaño, estilo y detalles.
-                  </p>
-                  <Link href={`/artist/${artist.slug}/assistant`} className={buttonClasses({ variant: "secondary", className: "self-start" })}>
-                    Armar mi idea con el asistente
-                  </Link>
-                </div>
-              )}
               <div className="flex flex-col gap-4 rounded-lg border border-line bg-surface-1 p-6">
                 <h3 className="text-lg font-medium">¿Tenés referencias?</h3>
                 <p className="text-sm leading-relaxed text-fg-muted">

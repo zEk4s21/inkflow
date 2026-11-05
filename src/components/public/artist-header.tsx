@@ -27,7 +27,7 @@ export function ArtistHeader({ slug, artistName }: { slug: string; artistName: s
             ))}
           </ul>
         </nav>
-        {/* Con la ruta completa, los enlaces también sirven desde las páginas internas (trabajo, asistente). */}
+        {/* Con la ruta completa, los enlaces también sirven desde las páginas internas (trabajo). */}
         <a href={`/artist/${slug}#contacto`} className={buttonClasses({ size: "sm" })}>
           Iniciar proyecto
         </a>

@@ -33,7 +33,9 @@ Alcance: microapp para un tatuador, con base preparada para venderse como SaaS.
 - [x] 3.2 Pedido de turno público: el formulario de consulta ofrece elegir día y hora entre los turnos libres de las próximas tres semanas (opcional). El turno queda "a confirmar" y no ocupa el horario; el servidor vuelve a verificar que siga libre antes de guardarlo. Se ve en la solicitud y en "Turnos pedidos" de `/panel/agenda`
 - [x] 3.3 Gestión de turnos: confirmar, rechazar, reprogramar y cancelar desde la agenda o la solicitud; marcar como realizado o ausente una vez que empezó; dar turnos a mano desde una solicitud. Postgres impide dos turnos confirmados superpuestos (contando el margen), probado con confirmaciones en paralelo. Los cambios no se le avisan al cliente todavía: lo indica el panel
 
-## Fase 4 · Ink Assistant ✅
+## Fase 4 · Ink Assistant ✅ (retirado)
+
+> Se sacó de la app el 05/11/2026 (código, panel, tests y variables). Las tablas `conversations` y `conversation_messages`, sus funciones y el job de pg_cron siguen en la base con lo ya guardado.
 
 - [x] 4.1 Proveedor configurable + estado "no configurado": interfaz `AIProvider` con adaptador de Anthropic (Messages API, sin SDK), configuración por variables de entorno validada, estado en Ajustes (nunca muestra la clave) y `/artist/[slug]/assistant` que, sin asistente, manda al formulario. Probado con fetch simulado: sin clave real no se llamó a la API
 - [x] 4.2 Conversación con brief estructurado: chat en `/artist/[slug]/assistant` con resumen al costado (idea, zona, tamaño, estilo, color, cover up, otros detalles). El modelo devuelve JSON que valida zod; el servidor une el resumen sin borrar datos y decide cuándo está listo. Conversación por cookie httpOnly (en la base solo el hash), captcha y límite al empezar, tope de mensajes y de tokens por mes. Probado con un proveedor simulado (`AI_PROVIDER=simulated`, marcado en pantalla); falta probarlo con la clave real. Mandar la consulta desde el chat queda para la 4.3
@@ -55,10 +57,10 @@ Alcance: microapp para un tatuador, con base preparada para venderse como SaaS.
   - Workflow manual "Base de producción" para las migraciones (por defecto solo muestra qué aplicaría).
   - `pnpm studio:create` para dar de alta un estudio vacío.
   - `pnpm check:prod` para revisar las variables sin mostrar valores.
-  - En el deploy de producción de Vercel la app ignora el modo sin captcha y la IA simulada.
+  - En el deploy de producción de Vercel la app ignora el modo sin captcha.
   - Borradores de privacidad y términos ([legal](legal/README.md)) con lo que pide la Ley 25.326. **Requieren revisión legal**: no se publican en la app hasta entonces.
 - [ ] 6.2 Puesta en línea: cuentas, claves y dominio del dueño del proyecto, siguiendo DEPLOY.md. Pendiente de decisión: no se conecta ninguna clave hasta terminar el resto.
-- [ ] 6.3 Textos legales publicados (`/privacidad`, `/terminos`) y aviso del art. 6 en el formulario y el asistente, después de la revisión legal y la inscripción en la AAIP si corresponde.
+- [ ] 6.3 Textos legales publicados (`/privacidad`, `/terminos`) y aviso del art. 6 en el formulario, después de la revisión legal y la inscripción en la AAIP si corresponde.
 
 ## Después de validar con el tatuador
 

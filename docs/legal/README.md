@@ -7,7 +7,7 @@
 | Archivo | Para qué |
 |---|---|
 | [privacidad.md](privacidad.md) | Política de privacidad de la página pública de un estudio (Ley 25.326) |
-| [terminos.md](terminos.md) | Términos de uso de la página pública: consultas, asistente y link del cliente |
+| [terminos.md](terminos.md) | Términos de uso de la página pública: consultas y link del cliente |
 
 ## Normativa consultada
 
@@ -39,7 +39,7 @@
 2. Inscribir la base en la AAIP, si el abogado lo confirma.
 3. Recién ahí:
    - Publicar los textos en la app como páginas `/privacidad` y `/terminos`.
-   - Sumar al formulario y al asistente el aviso del art. 6, con el enlace y la leyenda de la Disp. 10/2008.
+   - Sumar al formulario el aviso del art. 6, con el enlace y la leyenda de la Disp. 10/2008.
    - Si el abogado lo pide, sumar una casilla de consentimiento.
    
    Hoy el formulario solo dice "Tus datos se usan solo para responder esta consulta".
