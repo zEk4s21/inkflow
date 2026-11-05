@@ -2,12 +2,12 @@ import "server-only";
 import { createSupabaseAdminClient } from "@/server/supabase/admin";
 import { RATE_LIMITS } from "./rate-limit";
 
-// Alta de consultas públicas (formulario y asistente), siempre con la clave secreta.
+// Alta de consultas públicas (formulario), siempre con la clave secreta.
 
 type Admin = ReturnType<typeof createSupabaseAdminClient>;
 
 /**
- * Límite de consultas por hora, compartido por el formulario y el asistente: por conexión
+ * Límite de consultas por hora, por conexión
  * (`hash`, HMAC de la IP) y por estudio. Devuelve null si no se pudo consultar.
  */
 export async function isRequestRateLimited(admin: Admin, workspaceId: string, hash: string | null): Promise<boolean | null> {

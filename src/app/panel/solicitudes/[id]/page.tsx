@@ -22,7 +22,6 @@ import {
   type RequestStatus,
 } from "@/config/request-status";
 import { localDateOf } from "@/lib/availability";
-import { COLOR_LABELS } from "@/server/assistant/brief";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import { getRequestAppointments, getSlotMinutes } from "@/server/appointments/queries";
 import { appointmentView } from "@/server/appointments/view";
@@ -33,12 +32,13 @@ import { paymentTotals, referenceQuote } from "@/server/payments/schemas";
 import { getRequestQuotes } from "@/server/quotes/queries";
 import { requireWorkspace } from "@/server/auth/panel-context";
 import {
-  getConversationMessages,
   getMemberNames,
   getRequest,
   getRequestActivity,
   getWorkspaceRegional,
 } from "@/server/requests/queries";
+
+const COLOR_LABELS = { black_grey: "Negro y grises", color: "Color" } as const;
 
 const SOURCE_LABEL: Record<string, string> = {
   form: "desde el formulario",
@@ -58,12 +58,11 @@ export default async function RequestDetailPage({
     getWorkspaceRegional(workspace.id),
   ]);
   if (!request) notFound();
-  const [activity, names, appointments, slotMinutes, conversation, quotes, payments, followUps] = await Promise.all([
+  const [activity, names, appointments, slotMinutes, quotes, payments, followUps] = await Promise.all([
     getRequestActivity(workspace.id, request.id),
     getMemberNames(workspace.id),
     getRequestAppointments(workspace.id, request.id),
     profile ? getSlotMinutes(profile.id) : null,
-    request.conversation_id ? getConversationMessages(request.conversation_id) : null,
     getRequestQuotes(workspace.id, request.id),
     getPaymentsForRequests(workspace.id, [request.id]),
     getRequestFollowUps(workspace.id, request.id),
@@ -73,10 +72,10 @@ export default async function RequestDetailPage({
   const money = (amount: number) => formatMoney(amount, regional);
   // Uno abierto (borrador o enviado) a la vez: lo garantiza un índice único en la base.
   const hasOpenQuote = quotes.some((quote) => quote.status === "draft" || quote.status === "sent");
-  // Datos que suma el asistente: solo se muestran los que vinieron.
+  // Datos extra de las consultas que llegaron por el asistente (ya retirado): solo los que vinieron.
   const extras = [
     ["Estilo", request.style],
-    ["Color", request.color_mode ? COLOR_LABELS[request.color_mode as keyof typeof COLOR_LABELS] : null],
+    ["Color", request.color_mode ? COLOR_LABELS[request.color_mode as keyof typeof COLOR_LABELS] ?? null : null],
     ["Cubre otro tatuaje", request.is_cover_up === null ? null : request.is_cover_up ? "Sí" : "No"],
   ].filter((entry): entry is [string, string] => entry[1] !== null);
   const canEdit = role === "owner" || role === "artist";
@@ -137,32 +136,6 @@ export default async function RequestDetailPage({
               )}
             </dl>
           </section>
-
-          {conversation && conversation.length > 0 && (
-            <section aria-label="Conversación con el asistente" className="rounded-lg border border-line bg-surface-1/40 p-6">
-              <details className="group">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-medium">
-                  Conversación con el asistente
-                  <span className="text-sm font-normal text-fg-subtle group-open:hidden">Ver ({conversation.length} mensajes)</span>
-                </summary>
-                <ol className="mt-4 flex flex-col gap-3 text-sm">
-                  {conversation.map((message) => (
-                    <li
-                      key={message.id}
-                      className={
-                        message.role === "user"
-                          ? "max-w-[85%] self-end rounded-2xl bg-accent/15 px-4 py-3 whitespace-pre-wrap"
-                          : "max-w-[85%] self-start rounded-2xl bg-surface-2 px-4 py-3 whitespace-pre-wrap text-fg-muted"
-                      }
-                    >
-                      <span className="sr-only">{message.role === "user" ? "Cliente: " : "Asistente: "}</span>
-                      {message.content}
-                    </li>
-                  ))}
-                </ol>
-              </details>
-            </section>
-          )}
 
           <section className="flex flex-col gap-5 rounded-lg border border-line bg-surface-1/40 p-6">
             <h2 className="font-medium">Seguimiento</h2>

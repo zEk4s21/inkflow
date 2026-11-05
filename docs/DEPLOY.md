@@ -1,6 +1,6 @@
 # Salir a producción
 
-Guía para poner INKFLOW en línea con Supabase (base, login y archivos), Vercel (la app), Cloudflare Turnstile (captcha) y Resend (emails). El asistente de IA es opcional.
+Guía para poner INKFLOW en línea con Supabase (base, login y archivos), Vercel (la app), Cloudflare Turnstile (captcha) y Resend (emails).
 
 Todo se crea con cuentas del dueño del proyecto. Las claves se cargan **solo** en los paneles de Supabase, Vercel y GitHub: nunca en el repo, en el chat ni en un archivo que se suba.
 
@@ -23,7 +23,7 @@ Los datos de cada servicio (límites, nombres de menús) se revisaron el 19/10/2
    Después: Actions > **Base de producción** > Run workflow. La primera vez dejá tildado "Solo mostrar" y revisá la lista. Después corrélo destildado. Se repite con cada fase nueva que agregue migraciones.
 3. **Verificar después de la primera migración**:
    - Storage tiene el bucket `portfolio`.
-   - Integrations > Cron muestra el job `inkflow-purge-conversations` (borra a diario las charlas vencidas del asistente).
+   - Integrations > Cron muestra el job `inkflow-purge-conversations` (limpia a diario las tablas del asistente que se sacó de la app; en una base nueva quedan vacías).
 
    La migración crea pg_cron con `create extension`. Supabase documenta también activarlo desde el dashboard ([pg_cron](https://supabase.com/docs/guides/cron/install)). Si el job no aparece, activalo ahí y volvé a correr el workflow.
 4. **Login** (Authentication):
@@ -53,7 +53,7 @@ Sin este paso la app funciona igual, pero no se puede entrar al panel (no llega 
 
 En Cloudflare: Turnstile > Add widget, con el dominio como hostname y el modo Managed. Copiar la *site key* y la *secret key* ([doc](https://developers.cloudflare.com/turnstile/get-started/widget-management/dashboard/)). El plan Free alcanza ([planes](https://developers.cloudflare.com/turnstile/plans/)).
 
-Sin estas claves el formulario de consulta y el asistente se muestran como no disponibles.
+Sin estas claves el formulario de consulta se muestra como no disponible.
 
 ## 4. Vercel
 
@@ -68,9 +68,8 @@ Sin estas claves el formulario de consulta y el asistente se muestran como no di
    | `NEXT_PUBLIC_SITE_URL` | `https://tu-dominio` |
    | `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Turnstile, paso 3 |
    | `EMAIL_API_KEY`, `EMAIL_FROM` | Resend, paso 2 (`EMAIL_FROM` del dominio verificado, por ejemplo `Esti Tattoo <avisos@tu-dominio>`) |
-   | `AI_API_KEY`, `AI_MODEL`, `AI_MONTHLY_TOKEN_BUDGET_PER_WORKSPACE` | Opcional: Anthropic. Elegir el modelo y poner un tope mensual |
 
-   **Nunca** cargar en producción `INKFLOW_ALLOW_NO_CAPTCHA`, `INKFLOW_ALLOW_SIMULATED_AI` ni `AI_PROVIDER=simulated`. Igual, en el deploy de producción la app los ignora.
+   **Nunca** cargar en producción `INKFLOW_ALLOW_NO_CAPTCHA`. Igual, en el deploy de producción la app la ignora.
 3. Dejar activada la opción que expone las **System Environment Variables** (Settings > Environment Variables). La app usa `VERCEL_ENV` para saber que está en producción y apagar los modos de prueba ([doc](https://vercel.com/docs/environment-variables/system-environment-variables)).
 4. Settings > Domains: agregar el dominio y seguir las instrucciones de DNS.
 5. **Chequeo previo**: con la [CLI de Vercel](https://vercel.com/docs/cli/env), ejecutar:
@@ -81,7 +80,7 @@ Sin estas claves el formulario de consulta y el asistente se muestran como no di
    rm .env.production.local
    ```
 
-   Marca con ✗ lo que impide salir y con ! lo que queda apagado (IA o emails). No muestra ningún valor. El archivo bajado tiene las claves: borralo al terminar (los `.env*.local` no se suben al repo).
+   Marca con ✗ lo que impide salir y con ! lo que queda apagado (emails). No muestra ningún valor. El archivo bajado tiene las claves: borralo al terminar (los `.env*.local` no se suben al repo).
 6. Hacer el deploy (Deployments > Redeploy, o un push a `main`).
 
 ## 5. Alta del estudio

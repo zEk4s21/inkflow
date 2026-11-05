@@ -53,24 +53,12 @@ export async function getRequest(workspaceId: string, id: string) {
   const { data } = await supabase
     .from("tattoo_requests")
     .select(
-      "id, status, source, idea, body_zone, size_label, style, color_mode, is_cover_up, details, conversation_id, public_token_created_at, created_at, clients!inner (id, name, email, phone, instagram_handle)",
+      "id, status, source, idea, body_zone, size_label, style, color_mode, is_cover_up, details, public_token_created_at, created_at, clients!inner (id, name, email, phone, instagram_handle)",
     )
     .eq("workspace_id", workspaceId)
     .eq("id", id)
     .is("deleted_at", null)
     .maybeSingle();
-  return data;
-}
-
-/** Mensajes de la conversación con el asistente que generó la consulta (lectura con RLS). */
-export async function getConversationMessages(conversationId: string) {
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
-    .from("conversation_messages")
-    .select("id, role, content")
-    .eq("conversation_id", conversationId)
-    .order("created_at");
-  if (error) throw new Error("No se pudo leer la conversación con el asistente.");
   return data;
 }
 

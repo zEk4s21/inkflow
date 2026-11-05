@@ -17,14 +17,13 @@ La página y el panel funcionan con INKFLOW, una herramienta que el estudio usa 
 
 ## Qué datos pedimos y para qué
 
-Cuando nos escribís desde el formulario o el asistente (Ink Assistant), pedimos:
+Cuando nos escribís desde el formulario, pedimos:
 
 | Dato | ¿Obligatorio? | Para qué |
 |---|---|---|
 | Nombre | Sí | Saber con quién hablamos |
 | Email o WhatsApp | Al menos uno | Responderte la consulta |
 | Tu idea, zona del cuerpo y tamaño | La idea sí; el resto no | Evaluar el diseño y armar un presupuesto |
-| Estilo, color, si es un cover up y otros detalles (asistente) | No | Lo mismo |
 | Día y hora que preferís | No | Proponerte un turno, que queda a confirmar |
 
 **Si no dejás nombre, idea y un medio de contacto, no podemos recibir la consulta.** Si un dato es inexacto, puede que no podamos responderte. Lo demás es opcional y no cambia que te respondamos.
@@ -34,9 +33,6 @@ Además, sin que lo escribas:
 - **Para frenar envíos automáticos**:
   - Guardamos una huella irreversible (hash) de la dirección IP desde la que enviás, no la IP en sí, durante `[COMPLETAR plazo]`.
   - Usamos el captcha de Cloudflare Turnstile.
-- **Si usás el asistente**, se guarda la conversación:
-  - Si no terminás enviando una consulta, lo charlado se borra a los 7 días.
-  - Si la enviás, queda junto con la consulta.
 
 Usamos tus datos **solo** para responder tu consulta y, si avanzás, para:
 
@@ -49,7 +45,7 @@ No los vendemos, no los usamos para publicidad y no los mostramos en la página 
 
 ## Datos de salud
 
-**No pongas en el formulario ni en el asistente datos sobre tu salud** (alergias, medicación, enfermedades, embarazo). Son datos sensibles y nadie está obligado a darlos. Si hacen falta para la sesión, los hablamos en persona. `[REVISAR: cómo se registra la información de salud que el tatuador necesite antes de tatuar]`.
+**No pongas en el formulario datos sobre tu salud** (alergias, medicación, enfermedades, embarazo). Son datos sensibles y nadie está obligado a darlos. Si hacen falta para la sesión, los hablamos en persona. `[REVISAR: cómo se registra la información de salud que el tatuador necesite antes de tatuar]`.
 
 ## Con quién se comparten
 
@@ -61,7 +57,6 @@ Tus datos los ve el estudio (`[COMPLETAR quiénes: el tatuador y, si hay, su equ
 | Vercel | Servir la página | `[REVISAR]` EE.UU. y otras regiones |
 | Cloudflare (Turnstile) | Captcha anti-bots | `[REVISAR]` |
 | Resend | Mandar los avisos por email | `[REVISAR]` EE.UU. |
-| Anthropic (Claude) | Responder en el asistente, solo si lo usás | `[REVISAR]` EE.UU. |
 
 `[REVISAR: Brasil y EE.UU. no figuran como países con protección adecuada para la AAIP. Definir la base legal de la transferencia internacional (consentimiento expreso, cláusulas contractuales modelo de la Res. AAIP 198/2023 u otra) y cómo se recaba.]`
 
@@ -81,7 +76,6 @@ Lo puede ver cualquiera que tenga el link: no lo compartas. El estudio lo puede 
 
 ## Cuánto tiempo guardamos tus datos
 
-- Conversaciones del asistente que no terminaron en consulta: se borran a los 7 días.
 - Consultas, datos de contacto, presupuestos, turnos y pagos: `[COMPLETAR plazo, por ejemplo mientras haya relación y N años después; REVISAR obligaciones contables o fiscales]`.
 
 ## Tus derechos

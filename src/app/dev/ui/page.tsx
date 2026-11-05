@@ -118,7 +118,7 @@ export default function DesignSystemPage() {
           </div>
           <EmptyState
             title="Todavía no hay solicitudes"
-            description="Cuando alguien te consulte desde tu página o el asistente, la vas a ver acá."
+            description="Cuando alguien te consulte desde tu página, la vas a ver acá."
             action={<Button variant="secondary">Copiar link de mi página</Button>}
           />
         </div>

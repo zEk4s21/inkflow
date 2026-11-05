@@ -46,7 +46,7 @@ if (Object.values(local).some((value) => !value)) {
   console.error("Supabase no devolvió la URL o las claves. Revisá que Docker esté abierto y probá de nuevo.");
   process.exit(1);
 }
-// Se reemplazan solo estas variables; el resto (por ejemplo AI_API_KEY) queda como estaba.
+// Se reemplazan solo estas variables; el resto (por ejemplo EMAIL_API_KEY) queda como estaba.
 const lines = existsSync(ENV_FILE) ? readFileSync(ENV_FILE, "utf8").split("\n") : [];
 const kept = lines.filter((line) => !Object.keys(local).some((key) => line.startsWith(`${key}=`)));
 while (kept.length && kept.at(-1) === "") kept.pop();
