@@ -251,6 +251,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"instagram_connections": {
+                  Row: {
+                    "access_token": string,"created_at": string,"expires_at": string,"refreshed_at": string,"workspace_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "access_token": string,"created_at"?: string,"expires_at": string,"refreshed_at"?: string,"workspace_id": string
+                  }
+                  Update: {
+                    "access_token"?: string,"created_at"?: string,"expires_at"?: string,"refreshed_at"?: string,"workspace_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "instagram_connections_workspace_id_fkey"
+      columns: ["workspace_id"]
+isOneToOne: true
+      referencedRelation: "workspaces"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"payments": {
                   Row: {
                     "amount": number,"created_at": string,"created_by": string | null,"currency": string,"id": string,"kind": string,"method": string,"note": string | null,"paid_on": string,"request_id": string,"voided_at": string | null,"voided_by": string | null,"workspace_id": string

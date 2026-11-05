@@ -66,6 +66,7 @@ erDiagram
 | `payments` | `amount numeric(12,2) > 0`, `currency` (la del estudio), `kind in ('deposit','payment','refund')` (refund resta), `method in ('cash','transfer','card','mercadopago','other')`, `paid_on` (fecha), `note` ≤300, `created_by`, `voided_at`/`voided_by`. Un trigger exige solicitud del mismo workspace y que lo único que cambie sea la anulación, una sola vez, con fecha y usuario puestos por la base. No se borra ni se edita |
 | `follow_ups` | controles para el tatuador: `kind in ('healing_check','touch_up','custom')` (custom exige `note`), `due_on` (fecha local), `note` ≤300, `appointment_id` opcional (único por turno y tipo), `done_at`/`done_by` (los pone la base). Al pasar un turno con solicitud a `completed`, un trigger crea los controles de 7 y 30 días con la fecha local del estudio. Un trigger exige solicitud del mismo workspace y que no se cambien solicitud, turno ni tipo |
 | `email_log` | un registro por aviso: `kind in ('new_request_artist','request_received_client')`, `recipient in ('artist','client')`, `status in ('sent','skipped','failed')`, `detail` ≤200 (id del proveedor o motivo). No guarda direcciones ni contenido. Solo lo escribe la clave secreta; los miembros leen el de su estudio |
+| `instagram_connections` | 1:1 con workspace: `access_token` de la API de Instagram, `expires_at`, `refreshed_at`. Lo carga `pnpm instagram:connect` y el servidor lo renueva cuando faltan menos de 20 días. RLS activada sin políticas: solo la clave secreta lo lee y escribe |
 
 Postergadas hasta después de la v1: `audit_events`.
 

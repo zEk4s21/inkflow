@@ -48,7 +48,7 @@ export default async function WorkPage({ params }: PageProps<"/artist/[slug]/wor
 
   return (
     <>
-      <ArtistHeader slug={artist.slug} artistName={artist.artistName} />
+      <ArtistHeader slug={artist.slug} artistName={artist.artistName} logo={artist.logo} />
       <main className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-10 sm:px-8 lg:grid-cols-[1.2fr_1fr] lg:py-16">
         <WorkImage {...work.image} priority sizes="(min-width: 1024px) 55vw, 100vw" className="w-full rounded-lg" />
 

@@ -4,7 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, type PointerEvent, type RefObject } from "react";
 import { buttonClasses } from "@/components/ui/button";
-import type { PortfolioWork } from "@/server/artists/types";
+import { formatDateTime } from "@/lib/format";
+import type { InstagramPostInfo, PortfolioWork } from "@/server/artists/types";
+import { InstagramIcon } from "./instagram-icon";
+import { InstagramStats } from "./instagram-stats";
+
+/** Quién firma las publicaciones de Instagram en el visor. */
+export type PostAuthor = { name: string; logoSrc: string | null; location: string | null };
 
 /** Distancia mínima (px) de un deslizamiento horizontal para pasar de foto. */
 const SWIPE_THRESHOLD = 50;
@@ -16,6 +22,7 @@ const SWIPE_THRESHOLD = 50;
 export function PortfolioLightbox({
   slug,
   works,
+  author,
   index,
   dialogRef,
   onNavigate,
@@ -24,6 +31,7 @@ export function PortfolioLightbox({
 }: {
   slug: string;
   works: PortfolioWork[];
+  author: PostAuthor;
   index: number | null;
   dialogRef: RefObject<HTMLDialogElement | null>;
   onNavigate: (index: number) => void;
@@ -93,7 +101,19 @@ export function PortfolioLightbox({
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      {work && (
+      {work?.instagram && (
+        <InstagramPost
+          work={work}
+          post={work.instagram}
+          author={author}
+          hasMany={hasMany}
+          onPrevious={() => go(-1)}
+          onNext={() => go(1)}
+          onClose={onClose}
+          swipeHandlers={{ onPointerDown, onPointerUp, onPointerCancel: () => (swipeStart.current = null) }}
+        />
+      )}
+      {work && !work.instagram && (
         <div className="flex h-full flex-col">
           <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-8 sm:py-5">
             <p className="text-sm tabular-nums text-fg-muted" aria-hidden>
@@ -199,5 +219,144 @@ function NavButton({ direction, onClick }: { direction: "previous" | "next"; onC
     >
       {previous ? "←" : "→"}
     </button>
+  );
+}
+
+/**
+ * Publicación de Instagram dentro del visor: foto (o video) a la izquierda y el texto a la
+ * derecha; en el celular, una debajo del otro con desplazamiento.
+ */
+function InstagramPost({
+  work,
+  post,
+  author,
+  hasMany,
+  onPrevious,
+  onNext,
+  onClose,
+  swipeHandlers,
+}: {
+  work: PortfolioWork;
+  post: InstagramPostInfo;
+  author: PostAuthor;
+  hasMany: boolean;
+  onPrevious: () => void;
+  onNext: () => void;
+  onClose: () => void;
+  swipeHandlers: {
+    onPointerDown: (event: PointerEvent) => void;
+    onPointerUp: (event: PointerEvent) => void;
+    onPointerCancel: () => void;
+  };
+}) {
+  const closeIfBackdrop = (event: { target: EventTarget; currentTarget: EventTarget }) => {
+    if (event.target === event.currentTarget) onClose();
+  };
+
+  return (
+    <div className="relative flex h-full items-center justify-center sm:p-6 lg:px-24" onClick={closeIfBackdrop}>
+      <article className="grid h-full w-full max-w-5xl grid-cols-[minmax(0,1fr)] overflow-y-auto bg-surface-1 sm:h-auto sm:max-h-full sm:rounded-xl sm:border sm:border-line lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:overflow-hidden">
+        <div className="relative flex touch-pan-y items-center justify-center bg-black" {...swipeHandlers}>
+          <div
+            key={work.id}
+            className="relative aspect-[4/5] w-full animate-fade lg:max-h-[calc(100dvh-3rem)]"
+            style={{ viewTransitionName: "obra-activa" }}
+          >
+            {post.videoUrl ? (
+              <video
+                src={post.videoUrl}
+                poster={work.image.src}
+                controls
+                autoPlay
+                muted
+                playsInline
+                loop
+                className="absolute inset-0 h-full w-full object-contain"
+              />
+            ) : (
+              <Image
+                src={work.image.src}
+                alt={work.image.alt}
+                fill
+                priority
+                draggable={false}
+                sizes="(min-width: 1024px) 560px, 100vw"
+                className="object-contain select-none"
+              />
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col lg:min-h-0">
+          <header className="flex items-center gap-3 border-b border-line px-4 py-3">
+            <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-line bg-black">
+              {author.logoSrc ? (
+                <Image src={author.logoSrc} alt="" width={30} height={10} className="w-7" />
+              ) : (
+                <InstagramIcon className="size-4 text-fg-muted" />
+              )}
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">{author.name}</p>
+              <p className="truncate text-xs text-fg-subtle">
+                {[author.location, formatDateTime(new Date(post.postedAt), null, { dateStyle: "long" })].filter(Boolean).join(" · ")}
+              </p>
+            </div>
+          </header>
+
+          <div className="flex-1 px-4 py-4 text-sm leading-relaxed text-fg-muted lg:overflow-y-auto">
+            {post.caption ? <Caption text={post.caption} /> : <p className="text-fg-subtle">Sin descripción.</p>}
+          </div>
+
+          <InstagramStats
+            likes={post.likeCount}
+            comments={post.commentsCount}
+            className="border-t border-line px-4 py-3 text-sm text-fg-subtle"
+          />
+
+          <div className="flex flex-col gap-2 border-t border-line p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+            <a href="#contacto" onClick={onClose} className={buttonClasses({ className: "w-full" })}>
+              Quiero algo así
+            </a>
+            <a href={post.permalink} target="_blank" rel="noopener" className={buttonClasses({ variant: "secondary", className: "w-full" })}>
+              Ver en Instagram ↗
+            </a>
+          </div>
+        </div>
+      </article>
+
+      <button
+        type="button"
+        onClick={onClose}
+        className="absolute top-2 right-2 z-10 flex size-11 items-center justify-center rounded-full bg-ink/60 text-2xl text-fg backdrop-blur transition-colors hover:bg-surface-2 sm:top-4 sm:right-4"
+        aria-label="Cerrar"
+      >
+        ✕
+      </button>
+      {hasMany && (
+        <div className="hidden lg:block">
+          <NavButton direction="previous" onClick={onPrevious} />
+          <NavButton direction="next" onClick={onNext} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Texto de la publicación con los saltos de línea originales y los hashtags resaltados. */
+function Caption({ text }: { text: string }) {
+  const parts = text.split(/((?:^|\s)#[\p{L}\p{N}_]+)/u);
+  return (
+    <p className="whitespace-pre-line">
+      {parts.map((part, index) =>
+        /#[\p{L}\p{N}_]+/u.test(part) ? (
+          <span key={index} className="text-info">
+            {part}
+          </span>
+        ) : (
+          part
+        ),
+      )}
+    </p>
   );
 }

@@ -1,5 +1,6 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
+import { artistLogo } from "@/config/artist-branding";
 import { getPublicEnv } from "@/config/env";
 import { portfolioImageUrl } from "@/lib/storage";
 import { createSupabasePublicClient } from "@/server/supabase/public";
@@ -70,6 +71,7 @@ export async function getPublicArtist(slug: string): Promise<PublicArtist | null
     instagram: settings?.instagram_handle
       ? { handle: settings.instagram_handle, url: `https://www.instagram.com/${settings.instagram_handle}/` }
       : null,
+    logo: artistLogo(workspace.slug),
     process: parseProcess(settings?.process),
     faq: parseFaq(settings?.faq),
   };
