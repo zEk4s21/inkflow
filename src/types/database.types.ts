@@ -449,14 +449,14 @@ isOneToOne: false
                   ]
                 },"workspace_settings": {
                   Row: {
-                    "care_instructions": string | null,"created_at": string,"currency": string,"faq": NonNullable<Json>,"instagram_handle": string | null,"locale": string,"location_label": string | null,"process": NonNullable<Json>,"timezone": string,"updated_at": string,"workspace_id": string
+                    "care_instructions": string | null,"created_at": string,"currency": string,"faq": NonNullable<Json>,"instagram_handle": string | null,"locale": string,"location_label": string | null,"process": NonNullable<Json>,"timezone": string,"updated_at": string,"whatsapp_phone": string | null,"workspace_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "care_instructions"?: string | null,"created_at"?: string,"currency"?: string,"faq"?: NonNullable<Json>,"instagram_handle"?: string | null,"locale"?: string,"location_label"?: string | null,"process"?: NonNullable<Json>,"timezone"?: string,"updated_at"?: string,"workspace_id": string
+                    "care_instructions"?: string | null,"created_at"?: string,"currency"?: string,"faq"?: NonNullable<Json>,"instagram_handle"?: string | null,"locale"?: string,"location_label"?: string | null,"process"?: NonNullable<Json>,"timezone"?: string,"updated_at"?: string,"whatsapp_phone"?: string | null,"workspace_id": string
                   }
                   Update: {
-                    "care_instructions"?: string | null,"created_at"?: string,"currency"?: string,"faq"?: NonNullable<Json>,"instagram_handle"?: string | null,"locale"?: string,"location_label"?: string | null,"process"?: NonNullable<Json>,"timezone"?: string,"updated_at"?: string,"workspace_id"?: string
+                    "care_instructions"?: string | null,"created_at"?: string,"currency"?: string,"faq"?: NonNullable<Json>,"instagram_handle"?: string | null,"locale"?: string,"location_label"?: string | null,"process"?: NonNullable<Json>,"timezone"?: string,"updated_at"?: string,"whatsapp_phone"?: string | null,"workspace_id"?: string
                   }
                   Relationships: [
                     {

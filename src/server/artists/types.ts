@@ -8,6 +8,8 @@ export type PublicArtist = {
   /** null cuando el tatuador todavía no cargó su biografía. */
   bio: string | null;
   instagram: { handle: string; url: string } | null;
+  /** WhatsApp del estudio; `label` es para mostrar ("+54 9 11 3129-1602"). */
+  whatsapp: { phone: string; label: string; url: string } | null;
   /** Logo en blanco (fondo transparente). null: se muestra el nombre artístico. */
   logo: ArtistLogo | null;
   process: Array<{ title: string; description: string }>;

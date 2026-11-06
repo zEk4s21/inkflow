@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { TextAreaField, TextField } from "@/components/ui/field";
 import type { SlotDay } from "@/lib/availability";
@@ -31,9 +31,16 @@ export function RequestForm({
   const captcha = useTurnstile(turnstileSiteKey);
   const resetCaptcha = captcha.reset;
   const errors = state.status === "error" ? (state.fieldErrors ?? {}) : {};
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     if (state.status === "error") resetCaptcha();
+    // En el celular el primer error suele quedar una pantalla más arriba: se lleva el foco ahí.
+    if (state.status === "error") {
+      const target = formRef.current?.querySelector<HTMLElement>("[aria-invalid='true']") ?? formRef.current?.querySelector<HTMLElement>("[data-form-error]");
+      target?.focus({ preventScroll: true });
+      target?.scrollIntoView({ block: "center", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    }
     // Si el turno dejó de estar libre mientras completaba el formulario, se vuelve a pedir la lista.
     if (state.status === "error" && state.fieldErrors?.slot) router.refresh();
   }, [state, router, resetCaptcha]);
@@ -57,11 +64,12 @@ export function RequestForm({
     name,
     value: values[name],
     error: errors[name],
+    announceError: false,
     onChange: (event: { target: { value: string } }) => setValues((prev) => ({ ...prev, [name]: event.target.value })),
   });
 
   return (
-    <form action={formAction} noValidate className="flex min-w-0 flex-col gap-5">
+    <form ref={formRef} action={formAction} noValidate className="flex min-w-0 flex-col gap-5">
       <TextAreaField
         label="Tu idea"
         required
@@ -75,18 +83,22 @@ export function RequestForm({
         <TextField label="Tamaño aproximado" maxLength={60} placeholder="Ej.: 15 cm" {...bind("sizeLabel")} />
       </div>
       <TextField label="Nombre" required maxLength={120} autoComplete="name" {...bind("name")} />
-      <div className="grid gap-5 sm:grid-cols-2">
-        <TextField label="Email" type="email" autoComplete="email" inputMode="email" {...bind("email")} />
+      <fieldset className="flex min-w-0 flex-col gap-5">
+        <legend className="mb-1 text-sm text-fg-muted">¿Por dónde te respondo? Dejá al menos uno.</legend>
         <TextField
           label="WhatsApp"
           type="tel"
           autoComplete="tel"
           inputMode="tel"
-          hint="Con código de área. Dejá email, WhatsApp o los dos."
+          placeholder="Ej.: 11 2233-4455"
+          hint="Con código de área. Si no es de Argentina, empezá con + y el código del país."
           {...bind("phone")}
         />
-      </div>
-      <TextField label="Instagram" autoCapitalize="none" placeholder="@usuario" {...bind("instagramHandle")} />
+        <div className="grid gap-5 sm:grid-cols-2">
+          <TextField label="Instagram" autoCapitalize="none" autoComplete="off" placeholder="@usuario" {...bind("instagramHandle")} />
+          <TextField label="Email" type="email" autoComplete="email" inputMode="email" {...bind("email")} />
+        </div>
+      </fieldset>
 
       {slotDays.length > 0 && <SlotPicker days={slotDays} value={slot} onChange={setSlot} error={errors.slot} />}
       <input type="hidden" name="slot" value={slot} />
@@ -106,7 +118,7 @@ export function RequestForm({
           {slot ? "Enviar consulta y pedir turno" : "Enviar consulta"}
         </Button>
         {state.status === "error" && (
-          <p role="alert" className="text-sm text-danger">
+          <p role="alert" tabIndex={-1} data-form-error className="text-sm text-danger outline-none">
             {state.message}
           </p>
         )}
@@ -141,7 +153,7 @@ function SlotPicker({ days, value, onChange, error }: { days: SlotDay[]; value: 
               aria-label={day.longLabel}
               onClick={() => setDate(day.date)}
               className={cn(
-                "flex h-10 shrink-0 items-center rounded-full border px-4 text-sm whitespace-nowrap transition-colors duration-200 first-letter:uppercase",
+                "flex h-11 shrink-0 items-center rounded-full border px-4 text-sm whitespace-nowrap transition-colors duration-200 first-letter:uppercase",
                 pressed ? "border-fg bg-fg text-ink" : "border-line-strong text-fg-muted hover:border-fg-muted hover:text-fg",
               )}
             >
@@ -156,7 +168,7 @@ function SlotPicker({ days, value, onChange, error }: { days: SlotDay[]; value: 
             <label
               key={time.value}
               className={cn(
-                "flex h-10 cursor-pointer items-center rounded-md border px-4 text-sm tabular-nums transition-colors duration-200",
+                "flex h-11 cursor-pointer items-center rounded-md border px-4 text-sm tabular-nums transition-colors duration-200",
                 "has-focus-visible:ring-2 has-focus-visible:ring-accent/30",
                 value === time.value ? "border-accent bg-accent/15 text-fg" : "border-line-strong text-fg-muted hover:border-fg-muted",
               )}
@@ -182,7 +194,7 @@ function SlotPicker({ days, value, onChange, error }: { days: SlotDay[]; value: 
             Pedís turno para el {selectedDay.longLabel} a las{" "}
             {selectedDay.times.find((time) => time.value === value)?.label}.
           </span>
-          <button type="button" onClick={() => onChange("")} className="text-fg-muted underline-offset-4 hover:text-fg hover:underline">
+          <button type="button" onClick={() => onChange("")} className="min-h-11 text-fg-muted underline-offset-4 hover:text-fg hover:underline">
             Sin turno
           </button>
         </div>

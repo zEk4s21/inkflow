@@ -38,6 +38,7 @@ export async function updateProfile(_prev: FormState, formData: FormData): Promi
     styles: formData.get("styles") ?? "",
     locationLabel: formData.get("locationLabel") ?? "",
     instagramHandle: formData.get("instagramHandle") ?? "",
+    whatsappPhone: formData.get("whatsappPhone") ?? "",
     isPublic: formData.get("isPublic") === "on",
   });
   if (!parsed.success) {
@@ -61,7 +62,7 @@ export async function updateProfile(_prev: FormState, formData: FormData): Promi
       .select("id"),
     supabase
       .from("workspace_settings")
-      .update({ location_label: values.locationLabel, instagram_handle: values.instagramHandle })
+      .update({ location_label: values.locationLabel, instagram_handle: values.instagramHandle, whatsapp_phone: values.whatsappPhone })
       .eq("workspace_id", context.workspace.id)
       .select("workspace_id"),
   ]);

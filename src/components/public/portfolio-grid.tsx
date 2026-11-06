@@ -10,6 +10,7 @@ import { InstagramIcon } from "./instagram-icon";
 import { InstagramStats } from "./instagram-stats";
 import { PortfolioLightbox, type PostAuthor } from "./portfolio-lightbox";
 import { WorkImage } from "./work-image";
+import { PlayIcon } from "@/components/ui/icons";
 
 const TRANSITION_NAME = "obra-activa";
 
@@ -74,7 +75,7 @@ export function PortfolioGrid({ slug, works, author }: { slug: string; works: Po
   return (
     <div className="flex flex-col gap-8">
       {categories.length > 1 && (
-        <div role="group" aria-label="Filtrar trabajos por categoría" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+        <div role="group" aria-label="Filtrar trabajos por categoría" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <FilterChip label="Todos" count={works.length} pressed={active === null} onClick={() => setActive(null)} />
           {categories.map((category) => (
             <FilterChip
@@ -123,7 +124,14 @@ export function PortfolioGrid({ slug, works, author }: { slug: string; works: Po
               </div>
               {work.instagram && (
                 <span className="pointer-events-none absolute top-2 right-2 flex size-7 items-center justify-center rounded-full bg-ink/60 text-fg backdrop-blur">
-                  {work.instagram.videoUrl ? <span className="ml-0.5 text-[10px]" aria-label="Video">▶</span> : <InstagramIcon className="size-3.5" />}
+                  {work.instagram.videoUrl ? (
+                    <>
+                      <PlayIcon className="ml-0.5 size-3" />
+                      <span className="sr-only">Video</span>
+                    </>
+                  ) : (
+                    <InstagramIcon className="size-3.5" />
+                  )}
                 </span>
               )}
             </Link>
@@ -165,7 +173,7 @@ function FilterChip({
       aria-pressed={pressed}
       onClick={onClick}
       className={cn(
-        "flex h-10 shrink-0 items-center gap-2 rounded-full border px-4 text-sm transition-colors duration-200",
+        "flex h-11 shrink-0 items-center gap-2 rounded-full border px-4 text-sm transition-colors duration-200",
         pressed ? "border-fg bg-fg text-ink" : "border-line-strong text-fg-muted hover:border-fg-muted hover:text-fg",
       )}
     >

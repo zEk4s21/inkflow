@@ -12,7 +12,7 @@ export function PublicSection({
   children: ReactNode;
 }) {
   return (
-    <section id={id} aria-labelledby={`${id}-title`} className="scroll-mt-20 border-t border-line py-20 sm:py-28">
+    <section id={id} aria-labelledby={`${id}-title`} className="scroll-mt-6 border-t border-line py-20 sm:py-28">
       <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 sm:px-8">
         <div data-reveal className="flex flex-col gap-3">
           <p className="flex items-center gap-3 text-xs font-medium tracking-[0.2em] text-fg-subtle uppercase">

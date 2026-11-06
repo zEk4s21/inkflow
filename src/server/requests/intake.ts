@@ -25,12 +25,17 @@ export async function isRequestRateLimited(admin: Admin, workspaceId: string, ha
 type Contact = { name: string; email: string | null; phone: string | null; instagramHandle: string | null };
 
 /**
- * Mismo email o teléfono = mismo cliente. No pisa datos existentes con lo que escribió
+ * Mismo email, teléfono o Instagram = mismo cliente. No pisa datos existentes con lo que escribió
  * alguien en un formulario público; solo completa los que faltaban.
  */
 export async function findOrCreateClient(admin: Admin, workspaceId: string, contact: Contact): Promise<string | null> {
   const match = async () => {
-    for (const [column, value] of [["email", contact.email], ["phone", contact.phone]] as const) {
+    const keys = [
+      ["email", contact.email],
+      ["phone", contact.phone],
+      ["instagram_handle", contact.instagramHandle],
+    ] as const;
+    for (const [column, value] of keys) {
       if (!value) continue;
       const { data } = await admin
         .from("clients")

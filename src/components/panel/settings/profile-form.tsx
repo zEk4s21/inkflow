@@ -13,6 +13,7 @@ export type ProfileFormValues = {
   styles: string;
   locationLabel: string;
   instagramHandle: string;
+  whatsappPhone: string;
   isPublic: boolean;
 };
 
@@ -49,6 +50,14 @@ export function ProfileForm({ initial, slug }: { initial: ProfileFormValues; slu
         <TextField label="Estudio" maxLength={120} hint="Ej.: Estudio privado · Banfield, Buenos Aires" {...bind("locationLabel")} />
         <TextField label="Instagram" hint="Tu usuario, con o sin @." autoCapitalize="none" {...bind("instagramHandle")} />
       </div>
+      <TextField
+        label="WhatsApp"
+        type="tel"
+        inputMode="tel"
+        autoComplete="tel"
+        hint="Aparece en tu página para que te escriban. Ej.: 11 3129-1602"
+        {...bind("whatsappPhone")}
+      />
 
       <label className="flex items-start gap-3 rounded-lg border border-line bg-surface-1 p-4">
         <input

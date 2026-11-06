@@ -8,6 +8,7 @@ import { formatDateTime } from "@/lib/format";
 import type { InstagramPostInfo, PortfolioWork } from "@/server/artists/types";
 import { InstagramIcon } from "./instagram-icon";
 import { InstagramStats } from "./instagram-stats";
+import { ArrowLeftIcon, ArrowRightIcon, CloseIcon, ExternalIcon } from "@/components/ui/icons";
 
 /** Quién firma las publicaciones de Instagram en el visor. */
 export type PostAuthor = { name: string; logoSrc: string | null; location: string | null };
@@ -123,10 +124,10 @@ export function PortfolioLightbox({
             <button
               type="button"
               onClick={onClose}
-              className="flex size-11 items-center justify-center rounded-full text-2xl text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg"
+              className="flex size-11 items-center justify-center rounded-full text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg"
               aria-label="Cerrar"
             >
-              ✕
+              <CloseIcon className="size-6" />
             </button>
           </div>
 
@@ -213,11 +214,11 @@ function NavButton({ direction, onClick }: { direction: "previous" | "next"; onC
       type="button"
       onClick={onClick}
       aria-label={previous ? "Trabajo anterior" : "Trabajo siguiente"}
-      className={`absolute top-1/2 hidden size-12 -translate-y-1/2 items-center justify-center rounded-full border border-line-strong bg-ink/60 text-xl text-fg backdrop-blur transition-colors hover:border-fg-muted hover:bg-surface-2 sm:flex ${
+      className={`absolute top-1/2 hidden size-12 -translate-y-1/2 items-center justify-center rounded-full border border-line-strong bg-ink/60 text-fg backdrop-blur transition-colors hover:border-fg-muted hover:bg-surface-2 sm:flex ${
         previous ? "left-4" : "right-4"
       }`}
     >
-      {previous ? "←" : "→"}
+      {previous ? <ArrowLeftIcon className="size-5" /> : <ArrowRightIcon className="size-5" />}
     </button>
   );
 }
@@ -319,7 +320,7 @@ function InstagramPost({
               Quiero algo así
             </a>
             <a href={post.permalink} target="_blank" rel="noopener" className={buttonClasses({ variant: "secondary", className: "w-full" })}>
-              Ver en Instagram ↗
+              Ver en Instagram <ExternalIcon className="size-4" />
             </a>
           </div>
         </div>
@@ -328,10 +329,10 @@ function InstagramPost({
       <button
         type="button"
         onClick={onClose}
-        className="absolute top-2 right-2 z-10 flex size-11 items-center justify-center rounded-full bg-ink/60 text-2xl text-fg backdrop-blur transition-colors hover:bg-surface-2 sm:top-4 sm:right-4"
+        className="absolute top-2 right-2 z-10 flex size-11 items-center justify-center rounded-full bg-ink/60 text-fg backdrop-blur transition-colors hover:bg-surface-2 sm:top-4 sm:right-4"
         aria-label="Cerrar"
       >
-        ✕
+        <CloseIcon className="size-6" />
       </button>
       {hasMany && (
         <div className="hidden lg:block">

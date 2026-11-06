@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { buttonClasses } from "@/components/ui/button";
-import { ArtistHeader } from "@/components/public/artist-header";
+import { ArtistHeader, headerSections } from "@/components/public/artist-header";
 import { WorkImage } from "@/components/public/work-image";
 import {
   getPublicArtist,
@@ -48,8 +48,8 @@ export default async function WorkPage({ params }: PageProps<"/artist/[slug]/wor
 
   return (
     <>
-      <ArtistHeader slug={artist.slug} artistName={artist.artistName} logo={artist.logo} />
-      <main className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-10 sm:px-8 lg:grid-cols-[1.2fr_1fr] lg:py-16">
+      <ArtistHeader slug={artist.slug} artistName={artist.artistName} logo={artist.logo} sections={headerSections(artist)} />
+      <main id="contenido" className="mx-auto grid w-full max-w-6xl grid-cols-[minmax(0,1fr)] gap-10 px-4 py-10 sm:px-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:py-16">
         <WorkImage {...work.image} priority sizes="(min-width: 1024px) 55vw, 100vw" className="w-full rounded-lg" />
 
         <div className="flex flex-col gap-8 lg:pt-6">

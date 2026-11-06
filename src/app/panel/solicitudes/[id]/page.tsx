@@ -31,6 +31,8 @@ import { getPaymentsForRequests } from "@/server/payments/queries";
 import { paymentTotals, referenceQuote } from "@/server/payments/schemas";
 import { getRequestQuotes } from "@/server/quotes/queries";
 import { requireWorkspace } from "@/server/auth/panel-context";
+import { formatPhone, whatsappUrl } from "@/lib/phone";
+import { buttonClasses } from "@/components/ui/button";
 import {
   getMemberNames,
   getRequest,
@@ -91,7 +93,7 @@ export default async function RequestDetailPage({
   const who = (id: string | null) =>
     id === userId ? "Vos" : (id && names.get(id)) || "Alguien del estudio";
   const client = request.clients;
-  const whatsapp = client.phone ? `https://wa.me/${client.phone}` : null;
+  const whatsapp = client.phone ? whatsappUrl(client.phone) : null;
 
   return (
     <>
@@ -106,7 +108,35 @@ export default async function RequestDetailPage({
         description={`Recibida el ${formatDateTime(new Date(request.created_at), regional)} ${SOURCE_LABEL[request.source] ?? ""}.`}
         actions={<RequestStatusBadge status={status} />}
       />
-      <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+      {/* Responder es lo primero que se hace con una consulta: el contacto va arriba, a un toque. */}
+      {(whatsapp || client.instagram_handle || client.email) && (
+        <div className="-mt-4 flex flex-wrap gap-2" aria-label="Contactar al cliente" role="group">
+          {whatsapp && (
+            <a href={whatsapp} target="_blank" rel="noopener" className={buttonClasses()}>
+              WhatsApp
+            </a>
+          )}
+          {client.instagram_handle && (
+            <a
+              href={`https://www.instagram.com/${client.instagram_handle}/`}
+              target="_blank"
+              rel="noopener"
+              className={buttonClasses({ variant: whatsapp ? "secondary" : "primary" })}
+            >
+              Instagram
+            </a>
+          )}
+          {client.email && (
+            <a href={`mailto:${client.email}`} className={buttonClasses({ variant: "secondary" })}>
+              Email
+            </a>
+          )}
+          <Link href={`/panel/clientes/${client.id}`} className={buttonClasses({ variant: "ghost", className: "lg:hidden" })}>
+            Ver ficha
+          </Link>
+        </div>
+      )}
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <div className="flex flex-col gap-6">
           <section className="flex flex-col gap-4 rounded-lg border border-line bg-surface-1/40 p-6">
             <h2 className="font-medium">La idea</h2>
@@ -335,7 +365,8 @@ export default async function RequestDetailPage({
               />
             </section>
           )}
-          <section className="flex flex-col gap-4 rounded-lg border border-line bg-surface-1/40 p-6">
+          {/* En el celular el contacto ya está arriba; en la columna lateral queda el detalle. */}
+          <section className="hidden flex-col gap-4 rounded-lg border border-line bg-surface-1/40 p-6 lg:flex">
             <div className="flex items-center justify-between gap-3">
               <h2 className="font-medium">Contacto</h2>
               <Link href={`/panel/clientes/${client.id}`} className="text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline">
@@ -356,7 +387,7 @@ export default async function RequestDetailPage({
                   </dd>
                 </div>
               )}
-              {whatsapp && (
+              {whatsapp && client.phone && (
                 <div className="flex flex-col gap-1">
                   <dt className="text-fg-subtle">WhatsApp</dt>
                   <dd>
@@ -366,7 +397,7 @@ export default async function RequestDetailPage({
                       rel="noopener"
                       className="underline-offset-4 hover:underline"
                     >
-                      +{client.phone}
+                      {formatPhone(client.phone)}
                     </a>
                   </dd>
                 </div>

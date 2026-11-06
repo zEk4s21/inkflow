@@ -4,7 +4,7 @@ import { connection } from "next/server";
 import Image from "next/image";
 import { Suspense, type CSSProperties, type ReactNode } from "react";
 import { buttonClasses } from "@/components/ui/button";
-import { ArtistHeader } from "@/components/public/artist-header";
+import { ArtistHeader, headerSections } from "@/components/public/artist-header";
 import { PortfolioGrid } from "@/components/public/portfolio-grid";
 import { RequestForm } from "@/components/public/request-form";
 import { ScrollReveal } from "@/components/public/scroll-reveal";
@@ -30,6 +30,8 @@ export async function generateMetadata({ params }: PageProps<"/artist/[slug]">):
   return {
     title: `${artist.artistName} · Tatuajes`,
     description,
+    // El layout raíz no indexa nada; la página del tatuador es el contenido público real.
+    robots: { index: true, follow: true },
     openGraph: { title: `${artist.artistName} · Tatuajes`, description, type: "profile" },
     twitter: { card: "summary_large_image" },
   };
@@ -48,14 +50,14 @@ export default async function ArtistPage({ params }: PageProps<"/artist/[slug]">
   return (
     <div className="grain">
       <ScrollReveal />
-      <ArtistHeader slug={artist.slug} artistName={artist.artistName} logo={artist.logo} />
+      <ArtistHeader slug={artist.slug} artistName={artist.artistName} logo={artist.logo} sections={headerSections(artist)} />
 
       <main id="contenido">
         {/* Hero */}
-        <section className="mx-auto grid max-w-6xl gap-12 px-4 pt-10 pb-16 sm:px-8 lg:min-h-[calc(100svh-4rem)] lg:grid-cols-[1.1fr_1fr] lg:items-center lg:py-16">
+        <section className="mx-auto grid max-w-6xl gap-12 px-4 pt-10 pb-16 sm:px-8 lg:min-h-[calc(100svh-4rem)] lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-center lg:py-16">
           <div className="flex flex-col gap-8">
             {artist.locationLabel && (
-              <p className="flex animate-rise items-center gap-3 text-xs font-medium tracking-[0.2em] text-fg-subtle uppercase">
+              <p className="flex animate-rise items-center gap-3 text-xs font-medium tracking-[0.2em] text-balance text-fg-subtle uppercase">
                 <span className="hidden h-px w-8 shrink-0 bg-accent sm:block" aria-hidden />
                 {artist.locationLabel}
               </p>
@@ -137,7 +139,7 @@ export default async function ArtistPage({ params }: PageProps<"/artist/[slug]">
                   <InstagramIcon className="size-4" />
                   <span>
                     Últimas publicaciones de{" "}
-                    <a href={artist.instagram.url} target="_blank" rel="noopener" className="text-fg underline-offset-4 hover:underline">
+                    <a href={artist.instagram.url} target="_blank" rel="noopener" className="inline-flex min-h-11 items-center text-fg underline-offset-4 hover:underline">
                       @{artist.instagram.handle}
                     </a>
                   </span>
@@ -172,11 +174,21 @@ export default async function ArtistPage({ params }: PageProps<"/artist/[slug]">
                   <dd className="text-fg">{artist.locationLabel}</dd>
                 </div>
               )}
+              {artist.whatsapp && (
+                <div className="flex flex-col gap-1 border-b border-line pb-4">
+                  <dt className="text-fg-subtle">WhatsApp</dt>
+                  <dd>
+                    <a href={artist.whatsapp.url} className="inline-flex min-h-11 items-center text-fg underline-offset-4 hover:underline" rel="noopener" target="_blank">
+                      {artist.whatsapp.label}
+                    </a>
+                  </dd>
+                </div>
+              )}
               {artist.instagram && (
                 <div className="flex flex-col gap-1 border-b border-line pb-4">
                   <dt className="text-fg-subtle">Instagram</dt>
                   <dd>
-                    <a href={artist.instagram.url} className="text-fg underline-offset-4 hover:underline" rel="noopener" target="_blank">
+                    <a href={artist.instagram.url} className="inline-flex min-h-11 items-center text-fg underline-offset-4 hover:underline" rel="noopener" target="_blank">
                       @{artist.instagram.handle}
                     </a>
                   </dd>
@@ -209,8 +221,8 @@ export default async function ArtistPage({ params }: PageProps<"/artist/[slug]">
           <PublicSection id="preguntas" eyebrow="FAQ" title="Preguntas frecuentes">
             <div className="divide-y divide-line border-y border-line">
               {artist.faq.map((item, index) => (
-                <details key={index} data-reveal className="group py-5">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-lg font-medium marker:hidden">
+                <details key={index} data-reveal className="group">
+                  <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-6 py-5 text-lg font-medium marker:hidden">
                     {item.question}
                     <span
                       aria-hidden
@@ -219,7 +231,7 @@ export default async function ArtistPage({ params }: PageProps<"/artist/[slug]">
                       +
                     </span>
                   </summary>
-                  <p className="mt-3 max-w-prose leading-relaxed text-fg-muted">{item.answer}</p>
+                  <p className="-mt-2 max-w-prose pb-5 leading-relaxed text-fg-muted">{item.answer}</p>
                 </details>
               ))}
             </div>
@@ -227,15 +239,29 @@ export default async function ArtistPage({ params }: PageProps<"/artist/[slug]">
         )}
 
         <PublicSection id="contacto" eyebrow="Contacto" title="Contame tu idea">
-          <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr]">
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
             {captcha.mode === "missing" ? (
-              <p className="text-fg-muted">El formulario no está disponible por ahora. Escribime por Instagram.</p>
+              <p className="text-fg-muted">El formulario no está disponible por ahora. {artist.whatsapp ? "Escribime por WhatsApp o Instagram." : "Escribime por Instagram."}</p>
             ) : (
               <Suspense fallback={<RequestFormSkeleton />}>
                 <RequestFormWithSlots slug={artist.slug} turnstileSiteKey={captcha.mode === "turnstile" ? captcha.siteKey : null} />
               </Suspense>
             )}
             <div className="flex flex-col gap-6 self-start">
+              {artist.whatsapp && (
+                <div className="flex flex-col gap-4 rounded-lg border border-line bg-surface-1 p-6">
+                  <h3 className="text-lg font-medium">¿Preferís hablar directo?</h3>
+                  <p className="text-sm leading-relaxed text-fg-muted">Escribime por WhatsApp y lo charlamos.</p>
+                  <a
+                    href={artist.whatsapp.url}
+                    target="_blank"
+                    rel="noopener"
+                    className={buttonClasses({ className: "self-start" })}
+                  >
+                    WhatsApp {artist.whatsapp.label}
+                  </a>
+                </div>
+              )}
               <div className="flex flex-col gap-4 rounded-lg border border-line bg-surface-1 p-6">
                 <h3 className="text-lg font-medium">¿Tenés referencias?</h3>
                 <p className="text-sm leading-relaxed text-fg-muted">
@@ -248,7 +274,7 @@ export default async function ArtistPage({ params }: PageProps<"/artist/[slug]">
                     rel="noopener"
                     className={buttonClasses({ variant: "secondary", className: "self-start" })}
                   >
-                    Escribir a @{artist.instagram.handle}
+                    Mandar referencias a @{artist.instagram.handle}
                   </a>
                 )}
               </div>
