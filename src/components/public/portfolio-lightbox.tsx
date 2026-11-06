@@ -2,16 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, type PointerEvent, type RefObject } from "react";
+import { useEffect, useRef, useState, type PointerEvent, type RefObject } from "react";
 import { buttonClasses } from "@/components/ui/button";
-import { formatDateTime } from "@/lib/format";
-import type { InstagramPostInfo, PortfolioWork } from "@/server/artists/types";
-import { InstagramIcon } from "./instagram-icon";
-import { InstagramStats } from "./instagram-stats";
+import { instagramEmbedUrl } from "@/lib/instagram";
+import type { PortfolioWork } from "@/server/artists/types";
 import { ArrowLeftIcon, ArrowRightIcon, CloseIcon, ExternalIcon } from "@/components/ui/icons";
-
-/** Quién firma las publicaciones de Instagram en el visor. */
-export type PostAuthor = { name: string; logoSrc: string | null; location: string | null };
 
 /** Distancia mínima (px) de un deslizamiento horizontal para pasar de foto. */
 const SWIPE_THRESHOLD = 50;
@@ -23,7 +18,6 @@ const SWIPE_THRESHOLD = 50;
 export function PortfolioLightbox({
   slug,
   works,
-  author,
   index,
   dialogRef,
   onNavigate,
@@ -32,7 +26,6 @@ export function PortfolioLightbox({
 }: {
   slug: string;
   works: PortfolioWork[];
-  author: PostAuthor;
   index: number | null;
   dialogRef: RefObject<HTMLDialogElement | null>;
   onNavigate: (index: number) => void;
@@ -102,11 +95,11 @@ export function PortfolioLightbox({
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      {work?.instagram && (
+      {work?.instagramUrl && (
         <InstagramPost
+          key={work.id}
           work={work}
-          post={work.instagram}
-          author={author}
+          postUrl={work.instagramUrl}
           hasMany={hasMany}
           onPrevious={() => go(-1)}
           onNext={() => go(1)}
@@ -114,7 +107,7 @@ export function PortfolioLightbox({
           swipeHandlers={{ onPointerDown, onPointerUp, onPointerCancel: () => (swipeStart.current = null) }}
         />
       )}
-      {work && !work.instagram && (
+      {work && !work.instagramUrl && (
         <div className="flex h-full flex-col">
           <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-8 sm:py-5">
             <p className="text-sm tabular-nums text-fg-muted" aria-hidden>
@@ -223,14 +216,16 @@ function NavButton({ direction, onClick }: { direction: "previous" | "next"; onC
   );
 }
 
+/** Alto por defecto del embed hasta que Instagram informa el real. */
+const EMBED_FALLBACK_HEIGHT = 720;
+
 /**
- * Publicación de Instagram dentro del visor: foto (o video) a la izquierda y el texto a la
- * derecha; en el celular, una debajo del otro con desplazamiento.
+ * Publicación de Instagram dentro del visor, con el embed oficial (no necesita token). Mientras
+ * carga se ve la foto del portfolio. Instagram avisa el alto del contenido por postMessage.
  */
 function InstagramPost({
   work,
-  post,
-  author,
+  postUrl,
   hasMany,
   onPrevious,
   onNext,
@@ -238,8 +233,7 @@ function InstagramPost({
   swipeHandlers,
 }: {
   work: PortfolioWork;
-  post: InstagramPostInfo;
-  author: PostAuthor;
+  postUrl: string;
   hasMany: boolean;
   onPrevious: () => void;
   onNext: () => void;
@@ -250,79 +244,61 @@ function InstagramPost({
     onPointerCancel: () => void;
   };
 }) {
+  const frameRef = useRef<HTMLIFrameElement>(null);
+  const [loaded, setLoaded] = useState(false);
+  const [height, setHeight] = useState<number | null>(null);
+
+  useEffect(() => {
+    const onMessage = (event: MessageEvent) => {
+      if (event.origin !== "https://www.instagram.com" || event.source !== frameRef.current?.contentWindow) return;
+      try {
+        const data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
+        const measured = Number(data?.details?.height);
+        if (data?.type === "MEASURE" && measured > 0) {
+          setHeight(Math.ceil(measured));
+          setLoaded(true);
+        }
+      } catch {
+        // Otros mensajes de Instagram que no son el alto.
+      }
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
+
   const closeIfBackdrop = (event: { target: EventTarget; currentTarget: EventTarget }) => {
     if (event.target === event.currentTarget) onClose();
   };
 
   return (
-    <div className="relative flex h-full items-center justify-center sm:p-6 lg:px-24" onClick={closeIfBackdrop}>
-      <article className="grid h-full w-full max-w-5xl grid-cols-[minmax(0,1fr)] overflow-y-auto bg-surface-1 sm:h-auto sm:max-h-full sm:rounded-xl sm:border sm:border-line lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:overflow-hidden">
-        <div className="relative flex touch-pan-y items-center justify-center bg-black" {...swipeHandlers}>
-          <div
-            key={work.id}
-            className="relative aspect-[4/5] w-full animate-fade lg:max-h-[calc(100dvh-3rem)]"
-            style={{ viewTransitionName: "obra-activa" }}
-          >
-            {post.videoUrl ? (
-              <video
-                src={post.videoUrl}
-                poster={work.image.src}
-                controls
-                autoPlay
-                muted
-                playsInline
-                loop
-                className="absolute inset-0 h-full w-full object-contain"
-              />
-            ) : (
-              <Image
-                src={work.image.src}
-                alt={work.image.alt}
-                fill
-                priority
-                draggable={false}
-                sizes="(min-width: 1024px) 560px, 100vw"
-                className="object-contain select-none"
-              />
-            )}
-          </div>
-        </div>
-
-        <div className="flex flex-col lg:min-h-0">
-          <header className="flex items-center gap-3 border-b border-line px-4 py-3">
-            <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-line bg-black">
-              {author.logoSrc ? (
-                <Image src={author.logoSrc} alt="" width={30} height={10} className="w-7" />
-              ) : (
-                <InstagramIcon className="size-4 text-fg-muted" />
-              )}
-            </span>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold">{author.name}</p>
-              <p className="truncate text-xs text-fg-subtle">
-                {[author.location, formatDateTime(new Date(post.postedAt), null, { dateStyle: "long" })].filter(Boolean).join(" · ")}
-              </p>
+    <div className="relative flex h-full items-center justify-center sm:p-6" onClick={closeIfBackdrop} {...swipeHandlers}>
+      <article className="flex h-full w-full max-w-[540px] flex-col overflow-y-auto bg-surface-1 sm:h-auto sm:max-h-full sm:rounded-xl sm:border sm:border-line">
+        <div className="relative shrink-0 bg-white" style={{ minHeight: loaded ? undefined : "min(560px, 70dvh)" }}>
+          {!loaded && (
+            <div className="absolute inset-0 animate-fade" aria-hidden>
+              <Image src={work.image.src} alt="" fill sizes="540px" className="object-cover opacity-70" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="rounded-full bg-ink/70 px-4 py-2 text-sm text-fg backdrop-blur">Cargando publicación…</span>
+              </div>
             </div>
-          </header>
-
-          <div className="flex-1 px-4 py-4 text-sm leading-relaxed text-fg-muted lg:overflow-y-auto">
-            {post.caption ? <Caption text={post.caption} /> : <p className="text-fg-subtle">Sin descripción.</p>}
-          </div>
-
-          <InstagramStats
-            likes={post.likeCount}
-            comments={post.commentsCount}
-            className="border-t border-line px-4 py-3 text-sm text-fg-subtle"
+          )}
+          <iframe
+            ref={frameRef}
+            src={instagramEmbedUrl(postUrl)}
+            title={`Publicación de Instagram: ${work.title}`}
+            onLoad={() => setLoaded(true)}
+            scrolling={height ? "no" : "auto"}
+            className="relative block w-full border-0"
+            style={{ height: height ?? EMBED_FALLBACK_HEIGHT }}
           />
-
-          <div className="flex flex-col gap-2 border-t border-line p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-            <a href="#contacto" onClick={onClose} className={buttonClasses({ className: "w-full" })}>
-              Quiero algo así
-            </a>
-            <a href={post.permalink} target="_blank" rel="noopener" className={buttonClasses({ variant: "secondary", className: "w-full" })}>
-              Ver en Instagram <ExternalIcon className="size-4" />
-            </a>
-          </div>
+        </div>
+        <div className="flex flex-col gap-2 border-t border-line p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row">
+          <a href="#contacto" onClick={onClose} className={buttonClasses({ className: "sm:flex-1" })}>
+            Quiero algo así
+          </a>
+          <a href={postUrl} target="_blank" rel="noopener" className={buttonClasses({ variant: "secondary", className: "sm:flex-1" })}>
+            Ver en Instagram <ExternalIcon className="size-4" />
+          </a>
         </div>
       </article>
 
@@ -335,29 +311,11 @@ function InstagramPost({
         <CloseIcon className="size-6" />
       </button>
       {hasMany && (
-        <div className="hidden lg:block">
+        <div className="hidden md:block">
           <NavButton direction="previous" onClick={onPrevious} />
           <NavButton direction="next" onClick={onNext} />
         </div>
       )}
     </div>
-  );
-}
-
-/** Texto de la publicación con los saltos de línea originales y los hashtags resaltados. */
-function Caption({ text }: { text: string }) {
-  const parts = text.split(/((?:^|\s)#[\p{L}\p{N}_]+)/u);
-  return (
-    <p className="whitespace-pre-line">
-      {parts.map((part, index) =>
-        /#[\p{L}\p{N}_]+/u.test(part) ? (
-          <span key={index} className="text-info">
-            {part}
-          </span>
-        ) : (
-          part
-        ),
-      )}
-    </p>
   );
 }

@@ -8,6 +8,7 @@ export type WorkFieldValues = {
   bodyZone: string;
   description: string;
   altText: string;
+  instagramUrl: string;
   published: boolean;
 };
 
@@ -17,6 +18,7 @@ export const EMPTY_WORK: WorkFieldValues = {
   bodyZone: "",
   description: "",
   altText: "",
+  instagramUrl: "",
   published: true,
 };
 
@@ -74,6 +76,17 @@ export function WorkFields({
         value={values.altText}
         onChange={set("altText")}
         error={errors.altText}
+      />
+      <TextField
+        label="Link de Instagram"
+        type="url"
+        inputMode="url"
+        maxLength={300}
+        placeholder="https://www.instagram.com/p/…"
+        hint="En Instagram: ··· en la publicación > Copiar enlace. En la página se abre la publicación al tocar el trabajo."
+        value={values.instagramUrl}
+        onChange={set("instagramUrl")}
+        error={errors.instagramUrl}
       />
       <label className="flex items-center gap-3 text-sm">
         <input

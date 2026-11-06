@@ -8,6 +8,7 @@ const work = (id: string, category: string): PortfolioWork => ({
   category,
   bodyZone: null,
   description: null,
+  instagramUrl: null,
   image: { src: "", alt: "", width: 1, height: 1 },
 });
 

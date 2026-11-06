@@ -93,7 +93,7 @@ export async function getPublishedWorks(slug: string): Promise<PortfolioWork[]> 
 
   const { data, error } = await supabase
     .from("portfolio_items")
-    .select("id, title, category, body_zone, description, image_path, image_width, image_height, alt_text")
+    .select("id, title, category, body_zone, description, instagram_url, image_path, image_width, image_height, alt_text")
     .eq("workspace_id", workspace.id)
     .order("position")
     .order("id");
@@ -106,6 +106,7 @@ export async function getPublishedWorks(slug: string): Promise<PortfolioWork[]> 
     category: work.category,
     bodyZone: work.body_zone,
     description: work.description,
+    instagramUrl: work.instagram_url,
     image: {
       src: portfolioImageUrl(supabaseUrl, work.image_path),
       alt: work.alt_text,

@@ -28,7 +28,7 @@ export const TINY_PNG = Buffer.from(
   "base64",
 );
 
-type FixtureWork = { title: string; category: string; status?: "draft" | "published" };
+type FixtureWork = { title: string; category: string; status?: "draft" | "published"; instagramUrl?: string };
 
 /**
  * Estudio de prueba aislado: workspace público, perfil, trabajos y (opcional) un usuario miembro.
@@ -58,6 +58,7 @@ export async function createStudio(label: string, options: { role?: "owner" | "a
         image_width: 800,
         image_height: 1000,
         alt_text: work.title,
+        instagram_url: work.instagramUrl ?? null,
       })
       .select("id")
       .single()

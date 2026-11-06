@@ -7,10 +7,8 @@ import { cn } from "@/lib/cn";
 import { categoriesWithWorks } from "@/lib/portfolio";
 import type { PortfolioWork } from "@/server/artists/types";
 import { InstagramIcon } from "./instagram-icon";
-import { InstagramStats } from "./instagram-stats";
-import { PortfolioLightbox, type PostAuthor } from "./portfolio-lightbox";
+import { PortfolioLightbox } from "./portfolio-lightbox";
 import { WorkImage } from "./work-image";
-import { PlayIcon } from "@/components/ui/icons";
 
 const TRANSITION_NAME = "obra-activa";
 
@@ -37,7 +35,7 @@ function withPhotoTransition(thumb: HTMLElement | null, update: () => void, dire
   });
 }
 
-export function PortfolioGrid({ slug, works, author }: { slug: string; works: PortfolioWork[]; author: PostAuthor }) {
+export function PortfolioGrid({ slug, works }: { slug: string; works: PortfolioWork[] }) {
   const [active, setActive] = useState<string | null>(null);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -97,8 +95,7 @@ export function PortfolioGrid({ slug, works, author }: { slug: string; works: Po
             style={{ "--reveal-delay": `${(index % 4) * 70}ms` } as CSSProperties}
           >
             <Link
-              // Los de Instagram no tienen ficha propia: abiertos en otra pestaña van a la publicación.
-              href={work.instagram?.permalink ?? `/artist/${slug}/work/${work.id}`}
+              href={`/artist/${slug}/work/${work.id}`}
               onClick={(event) => open(event, index)}
               ref={(element) => {
                 if (element) thumbs.current.set(work.id, element);
@@ -113,25 +110,13 @@ export function PortfolioGrid({ slug, works, author }: { slug: string; works: Po
               />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/0 to-transparent opacity-80 transition-opacity duration-500 group-hover:opacity-100" />
               <div className="pointer-events-none absolute inset-x-0 bottom-0 p-3 transition-transform duration-500 ease-(--ease-out-soft) sm:translate-y-2 sm:group-hover:translate-y-0">
-                {work.instagram ? (
-                  <InstagramStats likes={work.instagram.likeCount} comments={work.instagram.commentsCount} className="text-sm text-fg" />
-                ) : (
-                  <>
-                    <p className="text-sm font-medium text-fg">{work.title}</p>
-                    <p className="text-xs text-fg-muted">{work.category}</p>
-                  </>
-                )}
+                <p className="text-sm font-medium text-fg">{work.title}</p>
+                <p className="text-xs text-fg-muted">{work.category}</p>
               </div>
-              {work.instagram && (
+              {work.instagramUrl && (
                 <span className="pointer-events-none absolute top-2 right-2 flex size-7 items-center justify-center rounded-full bg-ink/60 text-fg backdrop-blur">
-                  {work.instagram.videoUrl ? (
-                    <>
-                      <PlayIcon className="ml-0.5 size-3" />
-                      <span className="sr-only">Video</span>
-                    </>
-                  ) : (
-                    <InstagramIcon className="size-3.5" />
-                  )}
+                  <InstagramIcon className="size-3.5" />
+                  <span className="sr-only">Publicado en Instagram</span>
                 </span>
               )}
             </Link>
@@ -142,7 +127,6 @@ export function PortfolioGrid({ slug, works, author }: { slug: string; works: Po
       <PortfolioLightbox
         slug={slug}
         works={visible}
-        author={author}
         index={openIndex}
         dialogRef={dialogRef}
         onNavigate={setOpenIndex}

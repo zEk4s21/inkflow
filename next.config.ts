@@ -22,12 +22,7 @@ const nextConfig: NextConfig = {
     ];
   },
   images: {
-    remotePatterns: [
-      new URL(`${supabaseUrl.origin}/storage/v1/object/public/portfolio/**`),
-      // Fotos del portfolio que vienen de Instagram (ver src/server/instagram/feed.ts).
-      { protocol: "https", hostname: "**.cdninstagram.com" },
-      { protocol: "https", hostname: "**.fbcdn.net" },
-    ],
+    remotePatterns: [new URL(`${supabaseUrl.origin}/storage/v1/object/public/portfolio/**`)],
     // Solo con Supabase local (desarrollo y CI). En producción el host es público.
     dangerouslyAllowLocalIP: isLocalSupabase,
   },
