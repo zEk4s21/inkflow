@@ -51,7 +51,9 @@ test.describe("consultas desde la página pública", () => {
     await page.getByRole("link", { name: /Un tigre japonés/ }).click();
     // Con cacheComponents el listado anterior queda en la página, oculto: solo cuenta lo visible.
     await expect(page.getByText("Un tigre japonés en la espalda completa").filter({ visible: true })).toBeVisible();
-    await expect(page.getByRole("link", { name: "lucia@example.com" })).toHaveAttribute("href", "mailto:lucia@example.com");
+    // Los botones de contacto de arriba se ven en celu y escritorio (el bloque "Contacto" lateral, solo en escritorio).
+    const contact = page.getByRole("group", { name: "Contactar al cliente" });
+    await expect(contact.getByRole("link", { name: "Email", exact: true })).toHaveAttribute("href", "mailto:lucia@example.com");
 
     await page.goto("/panel/clientes");
     await expect(page.getByText("Lucía Gómez")).toHaveCount(1);
