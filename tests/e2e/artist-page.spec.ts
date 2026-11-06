@@ -157,6 +157,9 @@ test.describe("trabajos con link de Instagram", () => {
     const viewer = page.getByRole("dialog");
     const embed = viewer.locator('iframe[title="Publicación de Instagram: Virgen"]');
     await expect(embed).toBeVisible();
+    // Cuando Instagram avisa el alto, la foto de espera se va y queda la publicación.
+    await expect(viewer.getByText("Cargando publicación…")).toBeHidden();
+    await expect(embed).toHaveCSS("height", "640px");
     await expect(viewer.getByRole("link", { name: "Ver en Instagram" })).toHaveAttribute("href", "https://www.instagram.com/p/DAbc123xyz/");
 
     await page.keyboard.press("ArrowRight");
