@@ -218,6 +218,11 @@ function NavButton({ direction, onClick }: { direction: "previous" | "next"; onC
 
 /** Alto por defecto del embed hasta que Instagram informa el real. */
 const EMBED_FALLBACK_HEIGHT = 720;
+/**
+ * El iframe termina de cargar antes de que Instagram dibuje la publicación (queda en blanco
+ * unos segundos). Se muestra cuando Instagram avisa el alto o, si nunca avisa, pasado este tiempo.
+ */
+const EMBED_REVEAL_FALLBACK_MS = 8000;
 
 /**
  * Publicación de Instagram dentro del visor, con el embed oficial (no necesita token). Mientras
@@ -245,7 +250,7 @@ function InstagramPost({
   };
 }) {
   const frameRef = useRef<HTMLIFrameElement>(null);
-  const [loaded, setLoaded] = useState(false);
+  const [ready, setReady] = useState(false);
   const [height, setHeight] = useState<number | null>(null);
 
   useEffect(() => {
@@ -256,14 +261,18 @@ function InstagramPost({
         const measured = Number(data?.details?.height);
         if (data?.type === "MEASURE" && measured > 0) {
           setHeight(Math.ceil(measured));
-          setLoaded(true);
+          setReady(true);
         }
       } catch {
         // Otros mensajes de Instagram que no son el alto.
       }
     };
     window.addEventListener("message", onMessage);
-    return () => window.removeEventListener("message", onMessage);
+    const fallback = window.setTimeout(() => setReady(true), EMBED_REVEAL_FALLBACK_MS);
+    return () => {
+      window.removeEventListener("message", onMessage);
+      window.clearTimeout(fallback);
+    };
   }, []);
 
   const closeIfBackdrop = (event: { target: EventTarget; currentTarget: EventTarget }) => {
@@ -273,9 +282,10 @@ function InstagramPost({
   return (
     <div className="relative flex h-full items-center justify-center sm:p-6" onClick={closeIfBackdrop} {...swipeHandlers}>
       <article className="flex h-full w-full max-w-[540px] flex-col overflow-y-auto bg-surface-1 sm:h-auto sm:max-h-full sm:rounded-xl sm:border sm:border-line">
-        <div className="relative shrink-0 bg-white" style={{ minHeight: loaded ? undefined : "min(560px, 70dvh)" }}>
-          {!loaded && (
-            <div className="absolute inset-0 animate-fade" aria-hidden>
+        <div className="relative shrink-0 bg-black" style={{ minHeight: ready ? undefined : "min(560px, 70dvh)" }}>
+          {/* Mientras Instagram dibuja la publicación se ve la foto del trabajo, nunca el recuadro en blanco. */}
+          {!ready && (
+            <div className="absolute inset-0 z-10 animate-fade" aria-hidden>
               <Image src={work.image.src} alt="" fill sizes="540px" className="object-cover opacity-70" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="rounded-full bg-ink/70 px-4 py-2 text-sm text-fg backdrop-blur">Cargando publicación…</span>
@@ -286,13 +296,13 @@ function InstagramPost({
             ref={frameRef}
             src={instagramEmbedUrl(postUrl)}
             title={`Publicación de Instagram: ${work.title}`}
-            onLoad={() => setLoaded(true)}
             scrolling={height ? "no" : "auto"}
-            className="relative block w-full border-0"
+            className={`block w-full border-0 bg-white transition-opacity duration-300 ${ready ? "opacity-100" : "opacity-0"}`}
             style={{ height: height ?? EMBED_FALLBACK_HEIGHT }}
           />
         </div>
-        <div className="flex flex-col gap-2 border-t border-line p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row">
+        {/* Fijos abajo: la publicación suele ser más alta que la pantalla. */}
+        <div className="sticky bottom-0 z-20 flex flex-col gap-2 border-t border-line bg-surface-1 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row">
           <a href="#contacto" onClick={onClose} className={buttonClasses({ className: "sm:flex-1" })}>
             Quiero algo así
           </a>
