@@ -60,11 +60,14 @@ test.describe("clientes en el panel", () => {
     await page.getByRole("dialog").getByRole("button", { name: "Unir" }).click();
     await expect(page.getByRole("heading", { name: "Solicitudes (2)" })).toBeVisible();
     await expect(page.getByText("Retoque del dragón por WhatsApp")).toBeVisible();
-    await expect(field("WhatsApp")).toHaveValue("5491155556666");
+    // Se guarda como 5491155556666 (lo que pide wa.me), pero el panel lo muestra legible.
+    await expect(field("WhatsApp")).toHaveValue("+54 9 11 5555-6666");
 
     await page.reload();
-    await expect(field("WhatsApp")).toHaveValue("5491155556666");
+    await expect(field("WhatsApp")).toHaveValue("+54 9 11 5555-6666");
     await expect(field("Instagram")).toHaveValue("sofi.ruiz");
+    const { data: merged } = await adminClient().from("clients").select("phone").eq("id", ids.byEmail).single().throwOnError();
+    expect(merged.phone).toBe("5491155556666");
 
     await page.goto("/panel/clientes");
     await expect(page.locator("main ul li")).toHaveCount(1);
