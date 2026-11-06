@@ -30,6 +30,12 @@ describe("profileFormSchema", () => {
     isPublic: true,
   };
 
+  it("guarda el WhatsApp del estudio listo para wa.me", () => {
+    expect(profileFormSchema.parse({ ...base, whatsappPhone: "54 1131291602" }).whatsappPhone).toBe("5491131291602");
+    expect(profileFormSchema.parse({ ...base, whatsappPhone: "" }).whatsappPhone).toBeNull();
+    expect(profileFormSchema.safeParse({ ...base, whatsappPhone: "123" }).success).toBe(false);
+  });
+
   it("normaliza vacíos a null y separa estilos", () => {
     const parsed = profileFormSchema.parse(base);
     expect(parsed).toMatchObject({

@@ -73,7 +73,7 @@ export function PortfolioGrid({ slug, works }: { slug: string; works: PortfolioW
   return (
     <div className="flex flex-col gap-8">
       {categories.length > 1 && (
-        <div role="group" aria-label="Filtrar trabajos por categoría" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+        <div role="group" aria-label="Filtrar trabajos por categoría" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <FilterChip label="Todos" count={works.length} pressed={active === null} onClick={() => setActive(null)} />
           {categories.map((category) => (
             <FilterChip
@@ -157,7 +157,7 @@ function FilterChip({
       aria-pressed={pressed}
       onClick={onClick}
       className={cn(
-        "flex h-10 shrink-0 items-center gap-2 rounded-full border px-4 text-sm transition-colors duration-200",
+        "flex h-11 shrink-0 items-center gap-2 rounded-full border px-4 text-sm transition-colors duration-200",
         pressed ? "border-fg bg-fg text-ink" : "border-line-strong text-fg-muted hover:border-fg-muted hover:text-fg",
       )}
     >

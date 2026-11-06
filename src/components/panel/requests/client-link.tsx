@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { createClientLink, revokeClientLink } from "@/server/client-link/actions";
+import { whatsappUrl } from "@/lib/phone";
 
 /**
  * Link privado para que el cliente siga su consulta. Se muestra una sola vez al generarlo (en la
@@ -67,7 +68,7 @@ export function ClientLink({
             </Button>
             {phone && (
               <a
-                href={`https://wa.me/${phone}?text=${encodeURIComponent(`Acá podés ver cómo va tu consulta: ${url}`)}`}
+                href={whatsappUrl(phone, `Acá podés ver cómo va tu consulta: ${url}`)}
                 target="_blank"
                 rel="noopener"
                 className={buttonClasses({ variant: "secondary", size: "sm" })}

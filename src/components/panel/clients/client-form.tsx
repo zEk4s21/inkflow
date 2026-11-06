@@ -33,7 +33,7 @@ export function ClientForm({ clientId, initial }: { clientId: string; initial: C
     <form action={formAction} className="flex flex-col gap-5" noValidate>
       <TextField label="Nombre" required maxLength={120} autoComplete="off" {...bind("name")} />
       <TextField label="Email" type="email" inputMode="email" autoComplete="off" {...bind("email")} />
-      <TextField label="WhatsApp" type="tel" inputMode="tel" autoComplete="off" hint="Con código de país. Ej.: 54 9 11 2233-4455" {...bind("phone")} />
+      <TextField label="WhatsApp" type="tel" inputMode="tel" autoComplete="off" hint="Ej.: 11 2233-4455. De otro país: con + y el código." {...bind("phone")} />
       <TextField label="Instagram" autoCapitalize="none" placeholder="@usuario" {...bind("instagramHandle")} />
       <div className="flex flex-wrap items-center gap-4">
         <Button type="submit" loading={pending}>

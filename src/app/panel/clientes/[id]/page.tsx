@@ -14,6 +14,7 @@ import { getPaymentsForRequests } from "@/server/payments/queries";
 import { paymentTotals } from "@/server/payments/schemas";
 import { getQuotesForRequests } from "@/server/quotes/queries";
 import { getClient, getWorkspaceRegional, listClients } from "@/server/requests/queries";
+import { formatPhone } from "@/lib/phone";
 
 export const metadata: Metadata = { title: "Cliente" };
 
@@ -37,7 +38,7 @@ export default async function ClientDetailPage({ params }: PageProps<"/panel/cli
       </Link>
       <PanelPageHeader title={client.name} description={`Cliente desde el ${formatDateTime(new Date(client.created_at), regional)}`} />
 
-      <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <Card title={`Solicitudes (${client.requests.length})`}>
           {client.requests.length === 0 ? (
             <p className="text-sm text-fg-muted">Este cliente no tiene solicitudes.</p>
@@ -77,7 +78,7 @@ export default async function ClientDetailPage({ params }: PageProps<"/panel/cli
                 initial={{
                   name: client.name,
                   email: client.email ?? "",
-                  phone: client.phone ?? "",
+                  phone: client.phone ? formatPhone(client.phone) : "",
                   instagramHandle: client.instagram_handle ?? "",
                 }}
               />
@@ -85,7 +86,7 @@ export default async function ClientDetailPage({ params }: PageProps<"/panel/cli
               <dl className="flex flex-col gap-3 text-sm">
                 {[
                   ["Email", client.email],
-                  ["WhatsApp", client.phone && `+${client.phone}`],
+                  ["WhatsApp", client.phone && formatPhone(client.phone)],
                   ["Instagram", client.instagram_handle && `@${client.instagram_handle}`],
                 ].map(([label, value]) => (
                   <div key={label} className="flex flex-col gap-1">
@@ -104,7 +105,7 @@ export default async function ClientDetailPage({ params }: PageProps<"/panel/cli
                 clientName={client.name}
                 options={others.map((other) => ({
                   id: other.id,
-                  label: [other.name, other.email ?? (other.phone && `+${other.phone}`)].filter(Boolean).join(" · "),
+                  label: [other.name, other.email ?? (other.phone && formatPhone(other.phone))].filter(Boolean).join(" · "),
                 }))}
               />
             </Card>

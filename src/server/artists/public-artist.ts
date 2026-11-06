@@ -2,6 +2,7 @@ import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { artistLogo } from "@/config/artist-branding";
 import { getPublicEnv } from "@/config/env";
+import { formatPhone, whatsappUrl } from "@/lib/phone";
 import { portfolioImageUrl } from "@/lib/storage";
 import { createSupabasePublicClient } from "@/server/supabase/public";
 import { parseFaq, parseProcess } from "./page-content";
@@ -53,7 +54,7 @@ export async function getPublicArtist(slug: string): Promise<PublicArtist | null
       .maybeSingle(),
     supabase
       .from("workspace_settings")
-      .select("location_label, instagram_handle, process, faq")
+      .select("location_label, instagram_handle, whatsapp_phone, process, faq")
       .eq("workspace_id", workspace.id)
       .maybeSingle(),
   ]);
@@ -70,6 +71,9 @@ export async function getPublicArtist(slug: string): Promise<PublicArtist | null
     bio: profile.bio,
     instagram: settings?.instagram_handle
       ? { handle: settings.instagram_handle, url: `https://www.instagram.com/${settings.instagram_handle}/` }
+      : null,
+    whatsapp: settings?.whatsapp_phone
+      ? { phone: settings.whatsapp_phone, label: formatPhone(settings.whatsapp_phone), url: whatsappUrl(settings.whatsapp_phone) }
       : null,
     logo: artistLogo(workspace.slug),
     process: parseProcess(settings?.process),

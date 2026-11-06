@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizePhone } from "@/lib/phone";
 import { faqSchema, processSchema } from "@/server/artists/page-content";
 
 const optionalText = (max: number, message: string) =>
@@ -44,6 +45,12 @@ export const profileFormSchema = z.object({
     ),
   locationLabel: optionalText(120, "Máximo 120 caracteres."),
   instagramHandle: instagramHandleSchema,
+  whatsappPhone: z
+    .string()
+    .default("")
+    .transform(normalizePhone)
+    .transform((value) => (value === "" ? null : value))
+    .pipe(z.string().regex(/^[0-9]{6,15}$/, "WhatsApp inválido.").nullable()),
   isPublic: z.boolean(),
 });
 

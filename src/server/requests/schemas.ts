@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { instagramHandleSchema } from "@/server/settings/schemas";
 import { REQUEST_STATUSES } from "@/config/request-status";
+import { normalizePhone } from "@/lib/phone";
 
 const optionalText = (max: number) =>
   z
@@ -9,10 +10,7 @@ const optionalText = (max: number) =>
     .max(max, `Máximo ${max} caracteres.`)
     .transform((value) => (value === "" ? null : value));
 
-/** Deja solo dígitos. "+54 9 11 2233-4455" → "5491122334455". */
-export function normalizePhone(value: string) {
-  return value.replace(/\D/g, "");
-}
+export { normalizePhone } from "@/lib/phone";
 
 // Datos de contacto: los comparten el formulario público y la edición de clientes del panel.
 const contactFields = {
@@ -31,7 +29,9 @@ const contactFields = {
   instagramHandle: instagramHandleSchema,
 };
 
-const hasContact = (data: { email: string | null; phone: string | null }) => data.email !== null || data.phone !== null;
+// Instagram también sirve: muchos clientes de tatuajes solo se manejan por mensaje directo.
+const hasContact = (data: { email: string | null; phone: string | null; instagramHandle: string | null }) =>
+  data.email !== null || data.phone !== null || data.instagramHandle !== null;
 
 export const requestFormSchema = z
   .object({
@@ -47,11 +47,11 @@ export const requestFormSchema = z
       .transform((value) => (value === "" ? null : value))
       .pipe(z.iso.datetime({ error: "Turno inválido." }).nullable()),
   })
-  .refine(hasContact, { message: "Dejá un email o un teléfono para responderte.", path: ["email"] });
+  .refine(hasContact, { message: "Dejá un WhatsApp, un email o tu Instagram para responderte.", path: ["phone"] });
 
 export const clientFormSchema = z
   .object(contactFields)
-  .refine(hasContact, { message: "Tiene que quedar un email o un WhatsApp.", path: ["email"] });
+  .refine(hasContact, { message: "Tiene que quedar un WhatsApp, un email o un Instagram.", path: ["phone"] });
 
 export type ClientFormValues = z.input<typeof clientFormSchema>;
 

@@ -93,7 +93,7 @@ export function NewWorkForm({ workspaceId, categories }: { workspaceId: string; 
   return (
     <form onSubmit={submit} noValidate className="flex flex-col gap-6 rounded-lg border border-line bg-surface-1/40 p-6">
       <h2 className="font-medium">Nuevo trabajo</h2>
-      <div className="grid gap-6 md:grid-cols-[14rem_1fr]">
+      <div className="grid gap-6 md:grid-cols-[14rem_minmax(0,1fr)]">
         <div className="flex flex-col gap-2">
           <label htmlFor={fileId} className="text-sm font-medium">
             Foto <span className="text-fg-subtle" aria-hidden>*</span>
