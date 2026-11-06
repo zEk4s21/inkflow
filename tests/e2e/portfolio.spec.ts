@@ -56,6 +56,33 @@ test.describe("portfolio administrable", () => {
     }
   });
 
+  test("guarda el link de Instagram de un trabajo y rechaza los que no son de una publicación", async ({ page }, testInfo) => {
+    const studio = await createStudio(`iglink-${testInfo.project.name}`, {
+      role: "owner",
+      works: [{ title: "Tigre", category: "Animales" }],
+    });
+    try {
+      await signIn(page, studio.email);
+      await page.goto("/panel/portfolio");
+      const card = page.getByRole("listitem").filter({ hasText: "Tigre" });
+      await card.getByRole("button", { name: "Editar" }).click();
+      const link = card.getByLabel("Link de Instagram");
+
+      await link.fill("https://www.instagram.com/tattoobyesti/");
+      await card.getByRole("button", { name: "Guardar" }).click();
+      await expect(card.getByText("Pegá el link de una publicación")).toBeVisible();
+
+      await link.fill("https://www.instagram.com/p/DAbc123xyz/?igsh=abc");
+      await card.getByRole("button", { name: "Guardar" }).click();
+      await expect(card.getByRole("button", { name: "Editar" })).toBeVisible();
+      await card.getByRole("button", { name: "Editar" }).click();
+      // Se guarda sin los parámetros de rastreo.
+      await expect(card.getByLabel("Link de Instagram")).toHaveValue("https://www.instagram.com/p/DAbc123xyz/");
+    } finally {
+      await studio.cleanup();
+    }
+  });
+
   test("reordenar cambia el orden de la página pública", async ({ page }, testInfo) => {
     const studio = await createStudio(`orden-${testInfo.project.name}`, {
       role: "owner",

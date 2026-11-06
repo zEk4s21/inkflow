@@ -17,7 +17,6 @@
     "db:types": "supabase gen types typescript --local > src/types/database.types.ts",
     "studio:create": "node --env-file-if-exists=.env.local scripts/create-studio.mjs",
     "member:add": "node --env-file-if-exists=.env.local scripts/add-member.mjs",
-    "instagram:connect": "node --env-file-if-exists=.env.local scripts/connect-instagram.mjs",
     "local:setup": "node scripts/setup-local.mjs",
     "check:prod": "node scripts/check-production.mjs",
     "db:seed-portfolio": "node --env-file-if-exists=.env.local scripts/seed-demo-portfolio.mjs"

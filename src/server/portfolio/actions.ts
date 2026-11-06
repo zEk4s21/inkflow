@@ -66,6 +66,7 @@ export async function createWork(input: NewWorkInput): Promise<WorkActionResult>
     body_zone: work.bodyZone,
     description: work.description,
     alt_text: work.altText ?? work.title,
+    instagram_url: work.instagramUrl,
     status: work.published ? "published" : "draft",
     position: (first?.position ?? 1) - 1,
     image_path: work.imagePath,
@@ -96,6 +97,7 @@ export async function updateWork(id: string, input: WorkFields): Promise<WorkAct
       body_zone: work.bodyZone,
       description: work.description,
       alt_text: work.altText ?? work.title,
+      instagram_url: work.instagramUrl,
       status: work.published ? "published" : "draft",
     })
     .eq("id", id)

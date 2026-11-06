@@ -17,7 +17,7 @@ export default async function PanelPortfolioPage() {
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase
     .from("portfolio_items")
-    .select("id, title, category, body_zone, description, alt_text, status, image_path, image_width, image_height")
+    .select("id, title, category, body_zone, description, alt_text, instagram_url, status, image_path, image_width, image_height")
     .eq("workspace_id", workspace.id)
     .is("deleted_at", null)
     .order("position")
@@ -29,6 +29,7 @@ export default async function PanelPortfolioPage() {
     title: work.title,
     category: work.category,
     bodyZone: work.body_zone,
+    instagramUrl: work.instagram_url,
     description: work.description,
     altText: work.alt_text,
     published: work.status === "published",

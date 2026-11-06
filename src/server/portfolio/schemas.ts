@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizeInstagramPostUrl } from "@/lib/instagram";
 
 const optionalText = (max: number) =>
   z
@@ -13,6 +14,19 @@ export const workFieldsSchema = z.object({
   bodyZone: optionalText(40),
   description: optionalText(600),
   altText: optionalText(200),
+  instagramUrl: z
+    .string()
+    .trim()
+    .max(300, "Máximo 300 caracteres.")
+    .transform((value, ctx) => {
+      if (value === "") return null;
+      const url = normalizeInstagramPostUrl(value);
+      if (!url) {
+        ctx.addIssue({ code: "custom", message: "Pegá el link de una publicación (instagram.com/p/… o /reel/…)." });
+        return z.NEVER;
+      }
+      return url;
+    }),
   published: z.boolean(),
 });
 

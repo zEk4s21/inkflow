@@ -15,6 +15,7 @@ export type PanelWork = {
   bodyZone: string | null;
   description: string | null;
   altText: string;
+  instagramUrl: string | null;
   published: boolean;
   image: { src: string; width: number; height: number };
 };
@@ -67,7 +68,15 @@ export function WorkCard({
 
       {canEdit && !editing && (
         <div className="flex flex-wrap gap-1">
-          <Button size="sm" variant="secondary" onClick={() => setEditing(true)}>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => {
+              // Siempre parte de lo guardado (por ejemplo, el link de Instagram ya normalizado).
+              setValues(toValues(work));
+              setEditing(true);
+            }}
+          >
             Editar
           </Button>
           <Button size="sm" variant="ghost" disabled={pending} onClick={() => run(() => setWorkPublished(work.id, !work.published))}>
@@ -139,6 +148,7 @@ function toValues(work: PanelWork): WorkFieldValues {
     bodyZone: work.bodyZone ?? "",
     description: work.description ?? "",
     altText: work.altText === work.title ? "" : work.altText,
+    instagramUrl: work.instagramUrl ?? "",
     published: work.published,
   };
 }

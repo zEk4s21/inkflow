@@ -21,20 +21,8 @@ export type PortfolioWork = {
   bodyZone: string | null;
   description: string | null;
   image: { src: string; alt: string; width: number; height: number };
-  /** Solo en los trabajos que vienen de Instagram: datos de la publicación original. */
-  instagram?: InstagramPostInfo;
+  /** Link normalizado a la publicación de Instagram (ver src/lib/instagram.ts), si lo cargaron. */
+  instagramUrl: string | null;
 };
 
 export type ArtistLogo = { src: string; width: number; height: number };
-
-export type InstagramPostInfo = {
-  permalink: string;
-  caption: string | null;
-  /** ISO 8601. */
-  postedAt: string;
-  /** null cuando Instagram no lo informa (por ejemplo, si el autor ocultó los likes). */
-  likeCount: number | null;
-  commentsCount: number | null;
-  /** Video del reel, si es un video. */
-  videoUrl: string | null;
-};

@@ -10,10 +10,8 @@ import { RequestForm } from "@/components/public/request-form";
 import { ScrollReveal } from "@/components/public/scroll-reveal";
 import { PublicSection } from "@/components/public/section";
 import { WorkImage } from "@/components/public/work-image";
-import { InstagramIcon } from "@/components/public/instagram-icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getPublicArtist, getPublishedWorks, listPublicArtistSlugs } from "@/server/artists/public-artist";
-import { getInstagramWorks } from "@/server/instagram/feed";
 import { getPublicAvailability, toSlotDays } from "@/server/availability/public";
 import { getCaptchaConfig } from "@/server/requests/captcha";
 
@@ -39,9 +37,7 @@ export default async function ArtistPage({ params }: PageProps<"/artist/[slug]">
   const { slug } = await params;
   const artist = await getPublicArtist(slug);
   if (!artist) notFound();
-  // Si el tatuador conectó Instagram, el portfolio son sus últimas publicaciones.
-  const instagramWorks = await getInstagramWorks(slug);
-  const works = instagramWorks ?? (await getPublishedWorks(slug));
+  const works = await getPublishedWorks(slug);
   const captcha = getCaptchaConfig();
   const heroWorks = works.slice(0, 3);
 
@@ -131,24 +127,7 @@ export default async function ArtistPage({ params }: PageProps<"/artist/[slug]">
 
         <PublicSection id="trabajos" eyebrow="Portfolio" title="Trabajos">
           {works.length > 0 ? (
-            <div className="flex flex-col gap-6">
-              {instagramWorks && artist.instagram && (
-                <p className="flex items-center gap-2 text-sm text-fg-muted">
-                  <InstagramIcon className="size-4" />
-                  <span>
-                    Últimas publicaciones de{" "}
-                    <a href={artist.instagram.url} target="_blank" rel="noopener" className="text-fg underline-offset-4 hover:underline">
-                      @{artist.instagram.handle}
-                    </a>
-                  </span>
-                </p>
-              )}
-              <PortfolioGrid
-                slug={artist.slug}
-                works={works}
-                author={{ name: artist.instagram?.handle ?? artist.artistName, logoSrc: artist.logo?.src ?? null, location: artist.locationLabel }}
-              />
-            </div>
+            <PortfolioGrid slug={artist.slug} works={works} />
           ) : (
             <p className="text-fg-muted">Todavía no hay trabajos publicados.</p>
           )}

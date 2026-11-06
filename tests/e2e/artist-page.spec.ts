@@ -123,3 +123,46 @@ test.describe("página pública del tatuador", () => {
     await expect(page.getByText("Imagen no disponible").first()).toBeVisible();
   });
 });
+
+test.describe("trabajos con link de Instagram", () => {
+  test.skip(!hasDatabase, "Necesita Supabase local");
+
+  let studio: Awaited<ReturnType<typeof createStudio>>;
+
+  test.beforeAll(async ({}, testInfo) => {
+    studio = await createStudio(`igpub-${testInfo.project.name}`, {
+      works: [
+        { title: "Virgen", category: "Religioso", instagramUrl: "https://www.instagram.com/p/DAbc123xyz/" },
+        { title: "Buda", category: "Oriental" },
+      ],
+    });
+  });
+
+  test.afterAll(async () => {
+    await studio?.cleanup();
+  });
+
+  test("abre la publicación de Instagram en el visor y los demás trabajos siguen igual", async ({ page }) => {
+    // Instagram no está disponible en los tests: se simula su embed, que avisa el alto como el real.
+    await page.route("https://www.instagram.com/p/DAbc123xyz/embed/captioned/", (route) =>
+      route.fulfill({
+        contentType: "text/html",
+        body: `<p>Publicación simulada</p><script>parent.postMessage(JSON.stringify({ type: "MEASURE", details: { height: 640 } }), "*");</script>`,
+      }),
+    );
+    await page.goto(`/artist/${studio.slug}`);
+    await expect(page.locator("#trabajos ul li").first().getByText("Publicado en Instagram")).toBeAttached();
+    await page.locator("#trabajos ul li a").first().click();
+
+    const viewer = page.getByRole("dialog");
+    const embed = viewer.locator('iframe[title="Publicación de Instagram: Virgen"]');
+    await expect(embed).toBeVisible();
+    await expect(viewer.getByRole("link", { name: "Ver en Instagram ↗" })).toHaveAttribute("href", "https://www.instagram.com/p/DAbc123xyz/");
+
+    await page.keyboard.press("ArrowRight");
+    await expect(viewer.getByRole("heading", { name: "Buda" })).toBeVisible();
+    await expect(viewer.locator("iframe")).toHaveCount(0);
+    await page.keyboard.press("Escape");
+    await expect(viewer).toBeHidden();
+  });
+});

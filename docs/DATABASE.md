@@ -50,7 +50,7 @@ erDiagram
 | `workspace_members` | PK (`workspace_id`, `user_id`), `role in ('owner','artist','staff')` |
 | `workspace_settings` | 1:1 con workspace; `locale`, `currency`, `timezone` (validada contra `pg_timezone_names`), `location_label`, `instagram_handle`, proceso y FAQ (`jsonb`), `care_instructions` (≤4000, solo owner; se lee con la misma política pública que el resto) |
 | `artist_profiles` | `workspace_id`, `user_id` (opcional), `display_name`, `full_name`, `bio`, `styles text[]`, `is_public` |
-| `portfolio_items` | `status in ('draft','published')`, `position`, `category` (texto), una foto por trabajo (`image_path`, `image_width`, `image_height`, `alt_text`); `image_path` debe empezar con el `workspace_id`; borrado lógico |
+| `portfolio_items` | `status in ('draft','published')`, `position`, `category` (texto), una foto por trabajo (`image_path`, `image_width`, `image_height`, `alt_text`); `instagram_url` opcional, normalizado a `https://www.instagram.com/<p|reel>/<código>/` (la página pública muestra el embed oficial); `image_path` debe empezar con el `workspace_id`; borrado lógico |
 | ~~`portfolio_images`~~ | Postergada: v1 usa una foto por trabajo |
 | ~~`portfolio_categories`~~ | Postergada: la categoría es texto en el trabajo y los filtros salen de los publicados |
 | `clients` | email o teléfono obligatorio; teléfono solo dígitos; owner o artista editan nombre y contacto; `merge_clients(source, target)` une duplicados en una transacción; únicos parciales (`workspace_id`, `lower(email)`) y (`workspace_id`, `phone`) donde `deleted_at is null`; borrado lógico |
@@ -66,7 +66,6 @@ erDiagram
 | `payments` | `amount numeric(12,2) > 0`, `currency` (la del estudio), `kind in ('deposit','payment','refund')` (refund resta), `method in ('cash','transfer','card','mercadopago','other')`, `paid_on` (fecha), `note` ≤300, `created_by`, `voided_at`/`voided_by`. Un trigger exige solicitud del mismo workspace y que lo único que cambie sea la anulación, una sola vez, con fecha y usuario puestos por la base. No se borra ni se edita |
 | `follow_ups` | controles para el tatuador: `kind in ('healing_check','touch_up','custom')` (custom exige `note`), `due_on` (fecha local), `note` ≤300, `appointment_id` opcional (único por turno y tipo), `done_at`/`done_by` (los pone la base). Al pasar un turno con solicitud a `completed`, un trigger crea los controles de 7 y 30 días con la fecha local del estudio. Un trigger exige solicitud del mismo workspace y que no se cambien solicitud, turno ni tipo |
 | `email_log` | un registro por aviso: `kind in ('new_request_artist','request_received_client')`, `recipient in ('artist','client')`, `status in ('sent','skipped','failed')`, `detail` ≤200 (id del proveedor o motivo). No guarda direcciones ni contenido. Solo lo escribe la clave secreta; los miembros leen el de su estudio |
-| `instagram_connections` | 1:1 con workspace: `access_token` de la API de Instagram, `expires_at`, `refreshed_at`. Lo carga `pnpm instagram:connect` y el servidor lo renueva cuando faltan menos de 20 días. RLS activada sin políticas: solo la clave secreta lo lee y escribe |
 
 Postergadas hasta después de la v1: `audit_events`.
 
