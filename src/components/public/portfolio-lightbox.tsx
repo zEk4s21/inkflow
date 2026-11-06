@@ -251,6 +251,8 @@ function InstagramPost({
 }) {
   const frameRef = useRef<HTMLIFrameElement>(null);
   const [ready, setReady] = useState(false);
+  // La foto de espera se desvanece después de que aparece la publicación, no antes.
+  const [placeholderGone, setPlaceholderGone] = useState(false);
   const [height, setHeight] = useState<number | null>(null);
 
   useEffect(() => {
@@ -284,8 +286,12 @@ function InstagramPost({
       <article className="flex h-full w-full max-w-[540px] flex-col overflow-y-auto bg-surface-1 sm:h-auto sm:max-h-full sm:rounded-xl sm:border sm:border-line">
         <div className="relative shrink-0 bg-black" style={{ minHeight: ready ? undefined : "min(560px, 70dvh)" }}>
           {/* Mientras Instagram dibuja la publicación se ve la foto del trabajo, nunca el recuadro en blanco. */}
-          {!ready && (
-            <div className="absolute inset-0 z-10 animate-fade" aria-hidden>
+          {!placeholderGone && (
+            <div
+              className={`absolute inset-0 z-10 transition-opacity duration-500 ${ready ? "pointer-events-none opacity-0 delay-1000" : "opacity-100"}`}
+              onTransitionEnd={() => ready && setPlaceholderGone(true)}
+              aria-hidden
+            >
               <Image src={work.image.src} alt="" fill sizes="540px" className="object-cover opacity-70" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="rounded-full bg-ink/70 px-4 py-2 text-sm text-fg backdrop-blur">Cargando publicación…</span>

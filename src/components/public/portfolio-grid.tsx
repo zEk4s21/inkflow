@@ -30,7 +30,9 @@ function withPhotoTransition(thumb: HTMLElement | null, update: () => void, dire
     update();
     if (direction === "close") thumb.style.viewTransitionName = TRANSITION_NAME;
   });
-  transition.finished.finally(() => {
+  // Si la transición se corta (por ejemplo, otro clic en plena animación) no es un error.
+  transition.ready.catch(() => {});
+  transition.finished.catch(() => {}).finally(() => {
     thumb.style.viewTransitionName = "";
   });
 }
