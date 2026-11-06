@@ -6,6 +6,9 @@ const isLocalSupabase = ["127.0.0.1", "localhost"].includes(supabaseUrl.hostname
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
+  // Se mantiene la precarga de siempre. Activarlo (true) pide mover los `params` de la página
+  // pública detrás de Suspense: ver node_modules/next/dist/docs/.../adopting-partial-prefetching.md.
+  partialPrefetching: false,
   // El link de seguimiento lleva un token privado en la ruta: que no salga en el Referer ni se indexe.
   async headers() {
     return [

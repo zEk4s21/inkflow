@@ -7,6 +7,7 @@ import { formatDateTime } from "@/lib/format";
 import type { FollowUp, PendingFollowUp } from "@/server/follow-ups/queries";
 import { followUpTiming } from "@/server/follow-ups/schemas";
 import { FollowUpToggle } from "./follow-up-toggle";
+import { whatsappUrl } from "@/lib/phone";
 
 function formatDay(date: string, regional: RegionalSettings) {
   return formatDateTime(new Date(`${date}T00:00:00Z`), { ...regional, timeZone: "UTC" }, { weekday: "short", day: "numeric", month: "short" });
@@ -51,7 +52,7 @@ export function FollowUpList({
                 {!item.done && timing === "overdue" && <Badge tone="warning">Vencido</Badge>}
                 {!item.done && timing === "today" && <Badge tone="accent">Hoy</Badge>}
                 {withClient && client?.phone && (
-                  <a href={`https://wa.me/${client.phone}`} target="_blank" rel="noopener" className="underline-offset-4 hover:text-fg hover:underline">
+                  <a href={whatsappUrl(client.phone)} target="_blank" rel="noopener" className="underline-offset-4 hover:text-fg hover:underline">
                     WhatsApp
                   </a>
                 )}

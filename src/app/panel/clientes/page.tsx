@@ -4,6 +4,7 @@ import { PanelPageHeader } from "@/components/panel/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { requireWorkspace } from "@/server/auth/panel-context";
 import { listClients } from "@/server/requests/queries";
+import { formatPhone } from "@/lib/phone";
 
 export const metadata: Metadata = { title: "Clientes" };
 
@@ -32,7 +33,7 @@ export default async function ClientsPage() {
                   <div className="flex min-w-0 flex-col gap-1">
                     <span className="font-medium">{client.name}</span>
                     <span className="truncate text-sm text-fg-muted">
-                      {[client.email, client.phone && `+${client.phone}`, client.instagram_handle && `@${client.instagram_handle}`]
+                      {[client.email, client.phone && formatPhone(client.phone), client.instagram_handle && `@${client.instagram_handle}`]
                         .filter(Boolean)
                         .join(" · ")}
                     </span>

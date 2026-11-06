@@ -1,21 +1,9 @@
 import type { SVGProps } from "react";
+import { Icon } from "@/components/ui/icons";
 
-/** Íconos de trazo uniforme (1.5px, 24x24) para mantener consistencia en todo el panel. */
-function Icon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-      {...props}
-    />
-  );
-}
+export { ExternalIcon } from "@/components/ui/icons";
 
+// Íconos del panel. La base (trazo 1.5px, 24x24) es la misma que la del resto de la app.
 export const HomeIcon = (p: SVGProps<SVGSVGElement>) => (
   <Icon {...p}>
     <path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1z" />
@@ -49,11 +37,6 @@ export const ImageIcon = (p: SVGProps<SVGSVGElement>) => (
 export const SettingsIcon = (p: SVGProps<SVGSVGElement>) => (
   <Icon {...p}>
     <circle cx="12" cy="12" r="3" />
-    <path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8" />
-  </Icon>
-);
-export const ExternalIcon = (p: SVGProps<SVGSVGElement>) => (
-  <Icon {...p}>
-    <path d="M14 5h5v5M19 5l-8 8M17 14v4a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h4" />
+    <path d="M10.3 3.6a1 1 0 0 1 1-.85h1.4a1 1 0 0 1 1 .85l.3 1.9a7 7 0 0 1 1.7 1l1.8-.7a1 1 0 0 1 1.2.43l.7 1.2a1 1 0 0 1-.23 1.27l-1.5 1.2a7 7 0 0 1 0 2l1.5 1.2a1 1 0 0 1 .23 1.27l-.7 1.2a1 1 0 0 1-1.2.43l-1.8-.7a7 7 0 0 1-1.7 1l-.3 1.9a1 1 0 0 1-1 .85h-1.4a1 1 0 0 1-1-.85l-.3-1.9a7 7 0 0 1-1.7-1l-1.8.7a1 1 0 0 1-1.2-.43l-.7-1.2a1 1 0 0 1 .23-1.27l1.5-1.2a7 7 0 0 1 0-2l-1.5-1.2a1 1 0 0 1-.23-1.27l.7-1.2a1 1 0 0 1 1.2-.43l1.8.7a7 7 0 0 1 1.7-1z" />
   </Icon>
 );

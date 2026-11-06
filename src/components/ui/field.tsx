@@ -3,7 +3,7 @@ import { cn } from "@/lib/cn";
 
 const control =
   "w-full rounded-md border bg-surface-1 px-4 text-fg placeholder:text-fg-subtle " +
-  "transition-colors duration-200 hover:border-line-strong " +
+  "transition-colors duration-200 hover:border-fg-subtle " +
   "focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/30 " +
   "disabled:opacity-50 aria-invalid:border-danger";
 
@@ -12,11 +12,16 @@ type FieldShellProps = {
   hint?: string;
   error?: string;
   required?: boolean;
+  /**
+   * Anunciar el error apenas aparece. Los formularios largos lo apagan: ya anuncian un resumen y
+   * llevan el foco al primer campo con error, que lee este texto por aria-describedby.
+   */
+  announceError?: boolean;
   children: (ids: { id: string; describedBy?: string; invalid: boolean }) => ReactNode;
 };
 
 /** Etiqueta, ayuda y error conectados por aria-describedby para lectores de pantalla. */
-function FieldShell({ label, hint, error, required, children }: FieldShellProps) {
+function FieldShell({ label, hint, error, required, announceError = true, children }: FieldShellProps) {
   const id = useId();
   const hintId = hint ? `${id}-hint` : undefined;
   const errorId = error ? `${id}-error` : undefined;
@@ -40,7 +45,7 @@ function FieldShell({ label, hint, error, required, children }: FieldShellProps)
         </p>
       )}
       {error && (
-        <p id={errorId} role="alert" className="text-sm text-danger">
+        <p id={errorId} role={announceError ? "alert" : undefined} className="text-sm text-danger">
           {error}
         </p>
       )}
@@ -48,18 +53,18 @@ function FieldShell({ label, hint, error, required, children }: FieldShellProps)
   );
 }
 
-type Common = { label: string; hint?: string; error?: string };
+type Common = { label: string; hint?: string; error?: string; announceError?: boolean };
 
-export function TextField({ label, hint, error, className, required, ...props }: Common & InputHTMLAttributes<HTMLInputElement>) {
+export function TextField({ label, hint, error, className, required, announceError, ...props }: Common & InputHTMLAttributes<HTMLInputElement>) {
   return (
-    <FieldShell label={label} hint={hint} error={error} required={required}>
+    <FieldShell label={label} hint={hint} error={error} required={required} announceError={announceError}>
       {({ id, describedBy, invalid }) => (
         <input
           id={id}
           required={required}
           aria-describedby={describedBy}
           aria-invalid={invalid || undefined}
-          className={cn(control, "h-12 border-line", className)}
+          className={cn(control, "h-12 border-line-input", className)}
           {...props}
         />
       )}
@@ -67,16 +72,16 @@ export function TextField({ label, hint, error, className, required, ...props }:
   );
 }
 
-export function TextAreaField({ label, hint, error, className, required, ...props }: Common & TextareaHTMLAttributes<HTMLTextAreaElement>) {
+export function TextAreaField({ label, hint, error, className, required, announceError, ...props }: Common & TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
-    <FieldShell label={label} hint={hint} error={error} required={required}>
+    <FieldShell label={label} hint={hint} error={error} required={required} announceError={announceError}>
       {({ id, describedBy, invalid }) => (
         <textarea
           id={id}
           required={required}
           aria-describedby={describedBy}
           aria-invalid={invalid || undefined}
-          className={cn(control, "min-h-32 border-line py-3 leading-relaxed", className)}
+          className={cn(control, "min-h-32 border-line-input py-3 leading-relaxed", className)}
           {...props}
         />
       )}
@@ -90,11 +95,12 @@ export function SelectField({
   error,
   className,
   required,
+  announceError,
   children,
   ...props
 }: Common & SelectHTMLAttributes<HTMLSelectElement>) {
   return (
-    <FieldShell label={label} hint={hint} error={error} required={required}>
+    <FieldShell label={label} hint={hint} error={error} required={required} announceError={announceError}>
       {({ id, describedBy, invalid }) => (
         <div className="relative">
         <select
@@ -102,7 +108,7 @@ export function SelectField({
           required={required}
           aria-describedby={describedBy}
           aria-invalid={invalid || undefined}
-          className={cn(control, "h-12 appearance-none border-line pr-10", className)}
+          className={cn(control, "h-12 appearance-none border-line-input pr-10", className)}
           {...props}
         >
           {children}

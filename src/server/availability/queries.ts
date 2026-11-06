@@ -41,3 +41,14 @@ export async function getAvailability(artistId: string) {
       .sort((a, b) => a.start.getTime() - b.start.getTime()),
   };
 }
+
+/** Si el tatuador ya cargó su horario semanal: sin horario la página no ofrece turnos. */
+export async function hasWeeklySchedule(artistId: string): Promise<boolean> {
+  const supabase = await createSupabaseServerClient();
+  const { count, error } = await supabase
+    .from("availability_rules")
+    .select("weekday", { count: "exact", head: true })
+    .eq("artist_id", artistId);
+  // Ante un error no se muestra el aviso: es una ayuda, no algo que tenga que bloquear el inicio.
+  return error ? true : (count ?? 0) > 0;
+}

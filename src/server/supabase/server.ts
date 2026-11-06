@@ -1,5 +1,6 @@
 import "server-only";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { getPublicEnv } from "@/config/env";
 import type { Database } from "@/types/database.types";
@@ -9,6 +10,9 @@ import type { Database } from "@/types/database.types";
  * Usa la publishable key: todo acceso queda sujeto a las políticas RLS.
  */
 export async function createSupabaseServerClient() {
+  // La sesión es de cada request. Se marca antes de crear el cliente porque este lee la hora
+  // al iniciar (Date.now), algo que Cache Components no permite durante el prerender.
+  await connection();
   const env = getPublicEnv();
   const cookieStore = await cookies();
 

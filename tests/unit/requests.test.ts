@@ -17,10 +17,17 @@ const base = {
 };
 
 describe("requestFormSchema", () => {
-  it("exige email o teléfono", () => {
+  it("exige algún contacto: WhatsApp, email o Instagram", () => {
     const result = requestFormSchema.safeParse(base);
     expect(result.success).toBe(false);
-    expect(result.error?.issues[0]?.path).toEqual(["email"]);
+    expect(result.error?.issues[0]?.path).toEqual(["phone"]);
+  });
+
+  it("acepta Instagram como único contacto", () => {
+    const parsed = requestFormSchema.parse({ ...base, instagramHandle: "@ana.tattoo" });
+    expect(parsed.instagramHandle).toBe("ana.tattoo");
+    expect(parsed.email).toBeNull();
+    expect(parsed.phone).toBeNull();
   });
 
   it("normaliza email y teléfono", () => {
@@ -41,8 +48,19 @@ describe("requestFormSchema", () => {
     expect(requestFormSchema.safeParse({ ...withContact, slot: "mañana a la tarde" }).success).toBe(false);
   });
 
-  it("normalizePhone deja solo dígitos", () => {
-    expect(normalizePhone("(011) 15-2233-4455")).toBe("01115223344" + "55");
+  it("normalizePhone completa los números argentinos para wa.me", () => {
+    for (const written of ["11 2233-4455", "(011) 15-2233-4455", "+54 9 11 2233-4455", "54 11 2233-4455", "011 2233 4455"]) {
+      expect(normalizePhone(written), written).toBe("5491122334455");
+    }
+    expect(normalizePhone("0221 15 412-3456")).toBe("5492214123456");
+    expect(normalizePhone("5491122334455")).toBe("5491122334455");
+  });
+
+  it("normalizePhone respeta otros países si vienen con +", () => {
+    expect(normalizePhone("+34 612 345 678")).toBe("34612345678");
+    expect(normalizePhone("+1 (415) 555-0100")).toBe("14155550100");
+    expect(normalizePhone("0034 612 345 678")).toBe("34612345678");
+    expect(normalizePhone("")).toBe("");
   });
 });
 
@@ -88,9 +106,13 @@ describe("clientFormSchema", () => {
     expect(parsed).toEqual({ name: "Ana", email: "ana@mail.com", phone: "5491122334455", instagramHandle: "ana.tattoo" });
   });
 
-  it("no deja al cliente sin email ni WhatsApp", () => {
-    const result = clientFormSchema.safeParse({ ...client, instagramHandle: "ana" });
+  it("no deja al cliente sin ningún contacto", () => {
+    const result = clientFormSchema.safeParse({ ...client, instagramHandle: "" });
     expect(result.success).toBe(false);
-    expect(result.error?.issues[0]?.path).toEqual(["email"]);
+    expect(result.error?.issues[0]?.path).toEqual(["phone"]);
+  });
+
+  it("alcanza con el Instagram del cliente", () => {
+    expect(clientFormSchema.safeParse({ ...client, instagramHandle: "ana" }).success).toBe(true);
   });
 });

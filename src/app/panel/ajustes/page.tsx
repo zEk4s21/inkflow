@@ -7,6 +7,7 @@ import { PageContentForm } from "@/components/panel/settings/page-content-form";
 import { ProfileForm } from "@/components/panel/settings/profile-form";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { resolveRegional } from "@/config/regional";
+import { formatPhone } from "@/lib/phone";
 import { parseFaq, parseProcess } from "@/server/artists/page-content";
 import { signOut } from "@/server/auth/actions";
 import { requireWorkspace } from "@/server/auth/panel-context";
@@ -20,7 +21,7 @@ export default async function SettingsPage() {
   const supabase = await createSupabaseServerClient();
   const { data: settings } = await supabase
     .from("workspace_settings")
-    .select("locale, currency, timezone, location_label, instagram_handle, process, faq, care_instructions")
+    .select("locale, currency, timezone, location_label, instagram_handle, whatsapp_phone, process, faq, care_instructions")
     .eq("workspace_id", workspace.id)
     .maybeSingle();
   const regional = resolveRegional({
@@ -54,6 +55,7 @@ export default async function SettingsPage() {
                 styles: profile.styles.join(", "),
                 locationLabel: settings?.location_label ?? "",
                 instagramHandle: settings?.instagram_handle ?? "",
+                whatsappPhone: settings?.whatsapp_phone ? formatPhone(settings.whatsapp_phone) : "",
                 isPublic: profile.isPublic,
               }}
             />
@@ -71,7 +73,7 @@ export default async function SettingsPage() {
         </Card>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-2">
         <Card title="Región">
           <dl className="flex flex-col divide-y divide-line text-sm">
             {[

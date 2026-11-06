@@ -62,7 +62,7 @@ export default async function AgendaPage() {
         description="Tus días y horarios de trabajo y las fechas que no atendés. Con esto se calculan los turnos que ofrece tu página."
       />
 
-      <div className="grid gap-6 xl:grid-cols-[1.3fr_1fr]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
         <Card title="Horario semanal" description={`Horas en la zona horaria del estudio (${regional.timeZone}).`}>
           {canEdit ? (
             <WeeklyEditor rules={rules} />
@@ -104,7 +104,7 @@ export default async function AgendaPage() {
         </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-2">
         <Card title="Turnos pedidos" description="Pedidos desde tu página. No ocupan el horario hasta que los confirmás.">
           <AppointmentList appointments={requested} empty="No hay pedidos de turno pendientes." canEdit={canEdit} regional={regional} today={today} now={now} />
         </Card>

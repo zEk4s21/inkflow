@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { deleteWork, moveWork, setWorkPublished, updateWork, type WorkActionResult } from "@/server/portfolio/actions";
 import { WorkFields, type WorkFieldValues } from "./work-fields";
+import { ArrowDownIcon, ArrowUpIcon } from "@/components/ui/icons";
 
 export type PanelWork = {
   id: string;
@@ -74,10 +75,10 @@ export function WorkCard({
             {work.published ? "Ocultar" : "Publicar"}
           </Button>
           <Button size="sm" variant="ghost" disabled={pending || isFirst} aria-label={`Subir ${work.title}`} onClick={() => run(() => moveWork(work.id, -1))}>
-            ↑
+            <ArrowUpIcon className="size-5" />
           </Button>
           <Button size="sm" variant="ghost" disabled={pending || isLast} aria-label={`Bajar ${work.title}`} onClick={() => run(() => moveWork(work.id, 1))}>
-            ↓
+            <ArrowDownIcon className="size-5" />
           </Button>
           <ConfirmDialog
             trigger={

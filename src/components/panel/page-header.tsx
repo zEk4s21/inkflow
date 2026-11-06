@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 
 export function PanelPageHeader({ title, description, actions }: { title: string; description?: string; actions?: ReactNode }) {
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-      <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex min-w-0 flex-col gap-1.5">
         <h1 className="font-display text-4xl uppercase sm:text-5xl">{title}</h1>
         {description && <p className="max-w-xl text-sm text-fg-muted">{description}</p>}
       </div>

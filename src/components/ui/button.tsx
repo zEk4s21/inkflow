@@ -18,7 +18,8 @@ const variants: Record<Variant, string> = {
 };
 
 const sizes: Record<Size, string> = {
-  sm: "h-9 px-4 text-sm",
+  // En pantallas táctiles todos los botones llegan a 44px; con mouse el chico sigue siendo chico.
+  sm: "h-9 px-4 text-sm pointer-coarse:h-11",
   md: "h-11 px-5 text-sm",
   lg: "h-13 px-7 text-base",
 };

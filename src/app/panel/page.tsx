@@ -11,10 +11,12 @@ import { localDateOf } from "@/lib/availability";
 import { listOpenAppointments } from "@/server/appointments/queries";
 import { appointmentView } from "@/server/appointments/view";
 import { requireWorkspace } from "@/server/auth/panel-context";
+import { hasWeeklySchedule } from "@/server/availability/queries";
 import { listPendingFollowUps } from "@/server/follow-ups/queries";
 import { addDays } from "@/server/follow-ups/schemas";
 import { getWorkspaceRegional, listRequests } from "@/server/requests/queries";
 import { getPublishedWorks } from "@/server/artists/public-artist";
+import { ArrowRightIcon } from "@/components/ui/icons";
 
 export const metadata: Metadata = { title: "Inicio" };
 
@@ -23,12 +25,13 @@ export default async function PanelHome() {
   const regional = await getWorkspaceRegional(workspace.id);
   const now = new Date();
   const today = localDateOf(now, regional.timeZone);
-  const [works, newRequests, appointments, followUps] = await Promise.all([
+  const [works, newRequests, appointments, followUps, hasSchedule] = await Promise.all([
     getPublishedWorks(workspace.slug),
     listRequests(workspace.id, { status: "new", limit: 5 }),
     profile ? listOpenAppointments(workspace.id, profile.id) : [],
     // Vencidos, de hoy y de la próxima semana.
     listPendingFollowUps(workspace.id, addDays(today, 7)),
+    profile ? hasWeeklySchedule(profile.id) : true,
   ]);
   const upcoming = appointments.filter((appointment) => appointment.end > now).slice(0, 5);
 
@@ -36,14 +39,27 @@ export default async function PanelHome() {
     <>
       <PanelPageHeader title="Inicio" description="Lo que necesita tu atención hoy." />
 
-      <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
+      {!hasSchedule && (
+        <Link
+          href="/panel/agenda"
+          className="flex items-center justify-between gap-4 rounded-lg border border-warning/40 bg-warning/10 p-5 transition-colors hover:bg-warning/15"
+        >
+          <span className="flex flex-col gap-1">
+            <span className="font-medium">Cargá tu horario de trabajo</span>
+            <span className="text-sm text-fg-muted">Sin horario, tu página no ofrece turnos: los clientes solo pueden mandar la consulta.</span>
+          </span>
+          <ArrowRightIcon className="size-5 shrink-0 text-fg-muted" />
+        </Link>
+      )}
+
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <section aria-labelledby="nuevas" className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <h2 id="nuevas" className="text-sm font-medium text-fg-muted">
               Solicitudes nuevas
             </h2>
             {newRequests.length > 0 && (
-              <Link href="/panel/solicitudes" className="text-sm text-fg-muted hover:text-fg">
+              <Link href="/panel/solicitudes" className="inline-flex min-h-11 items-center text-sm text-fg-muted hover:text-fg">
                 Ver todas
               </Link>
             )}
@@ -65,7 +81,7 @@ export default async function PanelHome() {
               <h2 id="turnos" className="text-sm font-medium text-fg-muted">
                 Próximos turnos
               </h2>
-              <Link href="/panel/agenda" className="text-sm text-fg-muted hover:text-fg">
+              <Link href="/panel/agenda" className="inline-flex min-h-11 items-center text-sm text-fg-muted hover:text-fg">
                 Ver agenda
               </Link>
             </div>
@@ -139,9 +155,7 @@ function QuickLink({ href, title, detail }: { href: string; title: string; detai
         <span className="font-medium">{title}</span>
         <span className="text-sm text-fg-subtle">{detail}</span>
       </span>
-      <span aria-hidden className="text-fg-subtle transition-transform group-hover:translate-x-1">
-        →
-      </span>
+      <ArrowRightIcon className="size-5 shrink-0 text-fg-subtle transition-transform group-hover:translate-x-1" />
     </Link>
   );
 }

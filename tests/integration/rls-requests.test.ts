@@ -204,8 +204,8 @@ describe.skipIf(!url || !publishableKey || !secretKey)("RLS de clientes y solici
     expect(byStaff.data ?? []).toHaveLength(0);
     const byOther = await ownerB.from("clients").update({ name: "Cambiado" }).eq("id", clients.a).select("id");
     expect(byOther.data ?? []).toHaveLength(0);
-    // Sin email ni teléfono no puede quedar.
-    expect((await ownerA.from("clients").update({ email: null }).eq("id", clients.a)).error).not.toBeNull();
+    // Sin email, teléfono ni Instagram no puede quedar (con solo Instagram, sí).
+    expect((await ownerA.from("clients").update({ email: null, instagram_handle: null }).eq("id", clients.a)).error).not.toBeNull();
   });
 
   it("une dos clientes: mueve solicitudes, completa datos y da de baja el repetido", async () => {
