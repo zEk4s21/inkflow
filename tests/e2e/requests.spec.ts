@@ -49,7 +49,8 @@ test.describe("consultas desde la página pública", () => {
     await page.goto("/panel/solicitudes");
     await expect(page.getByRole("link", { name: /Lucía Gómez/ })).toHaveCount(2);
     await page.getByRole("link", { name: /Un tigre japonés/ }).click();
-    await expect(page.getByText("Un tigre japonés en la espalda completa")).toBeVisible();
+    // Con cacheComponents el listado anterior queda en la página, oculto: solo cuenta lo visible.
+    await expect(page.getByText("Un tigre japonés en la espalda completa").filter({ visible: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "lucia@example.com" })).toHaveAttribute("href", "mailto:lucia@example.com");
 
     await page.goto("/panel/clientes");
