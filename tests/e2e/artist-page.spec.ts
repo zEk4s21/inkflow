@@ -161,6 +161,18 @@ test.describe("trabajos con link de Instagram", () => {
     await expect(viewer.getByText("Cargando publicación…")).toBeHidden();
     await expect(embed).toHaveCSS("height", "640px");
     await expect(viewer.getByRole("link", { name: "Ver en Instagram" })).toHaveAttribute("href", "https://www.instagram.com/p/DAbc123xyz/");
+    // La publicación entra entera, con los botones, sin scroll dentro del visor.
+    const card = viewer.locator("article");
+    expect(await card.evaluate((element) => element.scrollHeight <= element.clientHeight)).toBe(true);
+    const box = await card.boundingBox();
+    expect(box && box.y + box.height).toBeLessThanOrEqual(page.viewportSize()!.height);
+    // Tocar la publicación no lleva a Instagram: la tapa una capa (solo abre el botón).
+    const shownEmbed = await embed.boundingBox();
+    const onTop = await page.evaluate(
+      ({ x, y }) => document.elementFromPoint(x, y)?.tagName,
+      { x: shownEmbed!.x + shownEmbed!.width / 2, y: shownEmbed!.y + 40 },
+    );
+    expect(onTop).toBe("DIV");
 
     await page.keyboard.press("ArrowRight");
     await expect(viewer.getByRole("heading", { name: "Buda" })).toBeVisible();
