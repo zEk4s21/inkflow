@@ -303,12 +303,9 @@ function InstagramPost({
             src={instagramEmbedUrl(postUrl)}
             title={`Publicación de Instagram: ${work.title}`}
             scrolling={height ? "no" : "auto"}
-            tabIndex={-1}
             className={`block w-full border-0 bg-white transition-opacity duration-300 ${ready ? "opacity-100" : "opacity-0"}`}
             style={{ height: height ?? EMBED_FALLBACK_HEIGHT }}
           />
-          {/* Tapa la publicación: tocarla no lleva a Instagram (para eso está el botón de abajo). */}
-          <div className="absolute inset-0 z-[5]" aria-hidden />
         </div>
         {/* Fijos abajo: la publicación suele ser más alta que la pantalla. */}
         <div className="sticky bottom-0 z-20 flex flex-col gap-2 border-t border-line bg-surface-1 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row">
