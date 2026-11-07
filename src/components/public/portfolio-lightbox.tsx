@@ -218,8 +218,6 @@ function NavButton({ direction, onClick }: { direction: "previous" | "next"; onC
 
 /** Alto por defecto del embed hasta que Instagram informa el real. */
 const EMBED_FALLBACK_HEIGHT = 720;
-/** Ancho máximo del embed de Instagram. */
-const EMBED_MAX_WIDTH = 540;
 /**
  * El iframe termina de cargar antes de que Instagram dibuje la publicación (queda en blanco
  * unos segundos). Se muestra cuando Instagram avisa el alto o, si nunca avisa, pasado este tiempo.
@@ -228,8 +226,7 @@ const EMBED_REVEAL_FALLBACK_MS = 8000;
 
 /**
  * Publicación de Instagram dentro del visor, con el embed oficial (no necesita token). Mientras
- * carga se ve la foto del portfolio. Instagram avisa el alto del contenido por postMessage y la
- * publicación se achica para verse entera sin scroll. Tocarla no lleva a Instagram: solo el botón.
+ * carga se ve la foto del portfolio. Instagram avisa el alto del contenido por postMessage.
  */
 function InstagramPost({
   work,
@@ -253,14 +250,10 @@ function InstagramPost({
   };
 }) {
   const frameRef = useRef<HTMLIFrameElement>(null);
-  const stageRef = useRef<HTMLDivElement>(null);
-  const actionsRef = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
   // La foto de espera se desvanece después de que aparece la publicación, no antes.
   const [placeholderGone, setPlaceholderGone] = useState(false);
   const [height, setHeight] = useState<number | null>(null);
-  // Lugar libre para la publicación: el ancho a dibujarla y el alto disponible sin los botones.
-  const [space, setSpace] = useState<{ width: number; height: number } | null>(null);
 
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
@@ -284,50 +277,14 @@ function InstagramPost({
     };
   }, []);
 
-  useEffect(() => {
-    const stage = stageRef.current;
-    const actions = actionsRef.current;
-    if (!stage || !actions) return;
-    const measure = () => {
-      const styles = getComputedStyle(stage);
-      const innerWidth = stage.clientWidth - parseFloat(styles.paddingLeft) - parseFloat(styles.paddingRight);
-      const innerHeight = stage.clientHeight - parseFloat(styles.paddingTop) - parseFloat(styles.paddingBottom);
-      setSpace({
-        width: Math.min(EMBED_MAX_WIDTH, Math.floor(innerWidth)),
-        // -2 por el borde del recuadro en pantallas grandes.
-        height: Math.floor(innerHeight - actions.offsetHeight - 2),
-      });
-    };
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(stage);
-    observer.observe(actions);
-    return () => observer.disconnect();
-  }, []);
-
-  // La publicación se achica entera para que entre sin scroll (nunca se agranda).
-  const frameWidth = space?.width ?? EMBED_MAX_WIDTH;
-  const frameHeight = height ?? EMBED_FALLBACK_HEIGHT;
-  const scale = space && height ? Math.min(1, space.height / height) : 1;
-
   const closeIfBackdrop = (event: { target: EventTarget; currentTarget: EventTarget }) => {
     if (event.target === event.currentTarget) onClose();
   };
 
   return (
-    <div ref={stageRef} className="relative flex h-full items-center justify-center sm:p-6" onClick={closeIfBackdrop} {...swipeHandlers}>
-      <article
-        className="flex max-h-full w-full flex-col overflow-hidden bg-surface-1 sm:rounded-xl sm:border sm:border-line"
-        style={{ maxWidth: Math.ceil(frameWidth * scale) + 2 }}
-      >
-        <div
-          className="relative shrink-0 overflow-hidden bg-black"
-          style={
-            ready
-              ? { height: Math.floor(frameHeight * scale) }
-              : { height: space ? Math.min(560, space.height) : "min(560px, 70dvh)" }
-          }
-        >
+    <div className="relative flex h-full items-center justify-center sm:p-6" onClick={closeIfBackdrop} {...swipeHandlers}>
+      <article className="flex h-full w-full max-w-[540px] flex-col overflow-y-auto bg-surface-1 sm:h-auto sm:max-h-full sm:rounded-xl sm:border sm:border-line">
+        <div className="relative shrink-0 bg-black" style={{ minHeight: ready ? undefined : "min(560px, 70dvh)" }}>
           {/* Mientras Instagram dibuja la publicación se ve la foto del trabajo, nunca el recuadro en blanco. */}
           {!placeholderGone && (
             <div
@@ -345,24 +302,20 @@ function InstagramPost({
             ref={frameRef}
             src={instagramEmbedUrl(postUrl)}
             title={`Publicación de Instagram: ${work.title}`}
-            scrolling="no"
+            scrolling={height ? "no" : "auto"}
+            className={`block w-full border-0 bg-white transition-opacity duration-300 ${ready ? "opacity-100" : "opacity-0"}`}
+            style={{ height: height ?? EMBED_FALLBACK_HEIGHT }}
             tabIndex={-1}
-            className={`block origin-top-left border-0 bg-white transition-opacity duration-300 ${ready ? "opacity-100" : "opacity-0"}`}
-            style={{ width: frameWidth, height: frameHeight, transform: scale < 1 ? `scale(${scale})` : undefined }}
           />
-          {/* Tapa la publicación: tocarla no lleva a Instagram (para eso está el botón de abajo)
-              y el deslizamiento para pasar de trabajo funciona también encima de ella. */}
+          {/* Tapa la publicación: tocarla no lleva a Instagram (para eso está el botón de abajo). */}
           <div className="absolute inset-0 z-[5]" aria-hidden />
         </div>
-        <div
-          ref={actionsRef}
-          className="flex shrink-0 flex-col gap-2 border-t border-line bg-surface-1 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
-        >
-          {/* Uno abajo del otro: la publicación achicada suele quedar angosta. */}
-          <a href="#contacto" onClick={onClose} className={buttonClasses()}>
+        {/* Fijos abajo: la publicación suele ser más alta que la pantalla. */}
+        <div className="sticky bottom-0 z-20 flex flex-col gap-2 border-t border-line bg-surface-1 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row">
+          <a href="#contacto" onClick={onClose} className={buttonClasses({ className: "sm:flex-1" })}>
             Quiero algo así
           </a>
-          <a href={postUrl} target="_blank" rel="noopener" className={buttonClasses({ variant: "secondary" })}>
+          <a href={postUrl} target="_blank" rel="noopener" className={buttonClasses({ variant: "secondary", className: "sm:flex-1" })}>
             Ver en Instagram <ExternalIcon className="size-4" />
           </a>
         </div>
